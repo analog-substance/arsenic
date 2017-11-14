@@ -1,0 +1,16 @@
+#! /bin/bash
+if [ -z $ARSENIC_INIT ]; then
+  export ARSENIC_INIT=1
+
+  which figlet 2>&1 > /dev/null && figlet arsenic
+
+  export PATH=`pwd`/bin:$PATH
+  for f in opt/*; do
+      [ -d $f/bin ] && export PATH=`pwd`/$f/bin:$PATH
+  done
+
+  source `pwd`/.xenon.rc
+  export PS1='☠️  '$PS1
+
+
+fi

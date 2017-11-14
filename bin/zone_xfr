@@ -1,0 +1,10 @@
+#! /bin/bash
+if [ -z "$1" ]; then 
+  echo "Simple zone transfer script"
+  echo "Usage	:	$0 <domain>"
+  exit 1
+fi
+
+DOMAIN=$1
+
+host -t ns $DOMAIN | awk '{print $4}' | sed 's/\.$//' | xargs -n 1 host -l $DOMAIN 

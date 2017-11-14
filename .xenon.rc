@@ -1,0 +1,6 @@
+
+XENON_ROOT=`readlink -f $(pwd)`
+XENON_OPS_ROOT="$XENON_ROOT/ops/"
+
+# default op
+XENON_HOST_ROOT="$XENON_OPS_ROOT/hackthebox.eu/hosts/"

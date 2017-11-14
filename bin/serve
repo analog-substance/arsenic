@@ -1,0 +1,31 @@
+#! /bin/bash
+
+while [[ $# -gt 0 ]] ; do
+  key="$1"
+  case $key in
+    -p)
+      PORT=$2
+      shift
+      ;;
+    *)
+      FILE=$1
+      ;;
+  esac
+  shift # past argument or value
+done
+
+if [ -z $FILE ]; then
+  echo "`basename $0` [-p port_number] file/path"
+  exit
+fi
+
+if [ -z $PORT ]; then
+  PORT=80
+fi
+
+if [ -z $FILE ]; then
+    echo "[!] not a file"
+    ncat -klvp $PORT --sh-exec "curl -si \"$FILE\""
+else
+    ncat -lvp $PORT --sh-exec "echo -e 'HTTP/1.1 200 OK\r\n'; cat $FILE"
+fi

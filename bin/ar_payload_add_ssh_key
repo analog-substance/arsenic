@@ -1,0 +1,15 @@
+#! /bin/bash
+
+if [ -z $1 ]; then
+  SSH_KEY="~/.ssh/id_rsa.pub"
+else
+  SSH_KEY=$1
+fi
+
+echo "[ -z \$HOME ] && export HOME=/root"
+echo "echo Creating  \$HOME/.ssh/"
+echo "mkdir -p \$HOME/.ssh/"
+echo "echo adding key to \$HOME/.ssh/authorized_keys"
+echo "echo $(cat $SSH_KEY) >> \$HOME/.ssh/authorized_keys"
+echo "chmod 600 \$HOME/.ssh/authorized_keys"
+echo "echo 'done with eating bananas, whats next?'"

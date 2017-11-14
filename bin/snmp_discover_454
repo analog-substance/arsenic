@@ -1,0 +1,18 @@
+#! /bin/bash
+
+onesixtyone_file=$1
+mibs_file=$2
+outdir=$3
+
+if [ -z $outdir ]; then
+    outdir='snmp-data'
+fi
+
+for ip in `awk '{print $1}' $onesixtyone_file | tail -n +2`; do
+	for mib in `awk '{print $1}' $mibs_file`; do
+		echo $ip $mib
+        mkdir -p "${outdir}/$ip"
+        snmpwalk -c public -v1 $ip $mib > "${outdir}/${ip}/snmp-$(grep $mib $mibs_file | awk '{print $2}')"
+	done
+done
+
