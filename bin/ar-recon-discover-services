@@ -1,0 +1,55 @@
+#! /bin/bash
+
+quick_scan() {
+    nmap --open -T5 -n -Pn -p- $1
+}
+
+accurate_punch(){
+  echo "[+] scanning $1"
+  ports=$(echo $(quick_scan $1 | grep open | cut -d/ -f1) | sed 's/ /,/g')
+  echo "[+] Version scanning $ports"
+
+  nmap -oA recon/nmap-punched -n -Pn -sV -p$ports $1
+}
+
+try_punch(){
+  base_dir="hosts/$ip"
+  mkdir -p $base_dir/loot/passwords $base_dir/recon
+  cd $base_dir
+  accurate_punch $ip
+  cd - 2>/dev/null
+}
+
+fist_fight(){
+  echo '[!] The fight is about to start 🔔'
+  i=0
+  for ip in `cat $1`; do
+    i=$(( i + 1))
+    try_punch &
+    if [ $i -eq 3 ]; then
+      while sleep 1; do
+        i=$(jobs | wc -l)
+        if [ $i -lt 3 ]; then
+          break;
+        fi
+      done
+    fi
+  done
+  wait
+  echo '[!] The fist fight is over 🎉'
+}
+
+if [ -z $1 ]; then
+  # no longer using -A
+  # echo Warning: This script is Aggressive
+  echo "`basename $0` [ scope_file | target ]"
+  exit
+fi
+
+if [ -f $1 ]; then
+  # its a file, lets treat each line as a host
+  fist_fight $1
+else
+  # not a fil, treat it as a host
+  accurate_punch $1
+fi

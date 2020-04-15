@@ -4,6 +4,9 @@ This repo aims to be a starting point for how I am organizing pentest data. Hope
 
 ```bash
 source .arsenic.rc
+cd op_dir
+arsenic
+
 ```
 
 ## Requirements
@@ -14,6 +17,8 @@ source .arsenic.rc
 - awk
 - sed
 - grep
+- figlet
+- exploitdb (searchsploit)
 
 ## Recommendations
 

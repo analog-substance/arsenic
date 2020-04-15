@@ -12,5 +12,4 @@ if [ -z $ARSENIC_INIT ]; then
   source `pwd`/.xenon.rc
   export PS1='☠️  '$PS1
 
-
 fi
