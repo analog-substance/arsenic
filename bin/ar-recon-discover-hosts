@@ -19,8 +19,8 @@ mkdir -p recon
 echo "[+] running nmap using $SCOPE_FILE"
 
 echo -e "\e[34m"
-nmap -iL $SCOPE_FILE -oA recon/host-discovery -sn
+nmap -iL $SCOPE_FILE -oA recon/nmap-host-discovery -sn
 echo -e "\e[0m"
 
 echo "[+] Listing Active IPs"
-cat recon/host-discovery.gnmap | grep Host: | awk '{print $2}' | sort -u | tee active-ips.txt
+cat recon/nmap-host-discovery.gnmap | grep Host: | awk '{print $2}' | sort -u | tee active-ips.txt
