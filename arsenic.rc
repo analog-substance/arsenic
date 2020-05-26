@@ -1,7 +1,13 @@
 #! /bin/bash
 if [ "$ARSENIC_INIT" != 1 ]; then
   export ARSENIC_INIT=1
-  pushd `dirname $0` > /dev/null
+
+  if [[ -n "$BASH_VERSION" ]]; then
+    pushd `dirname ${BASH_SOURCE[0]}` > /dev/null
+  else
+    pushd `dirname $0` > /dev/null
+  fi
+  
   ARSENIC_PATH=`pwd`
   popd > /dev/null
 
