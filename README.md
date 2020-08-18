@@ -11,7 +11,8 @@ arsenic
 
 ## Suggested Installation
 
-Arsenic is intended to be checked out along side other similarly purposed tools in an `opt/` directory.
+- Arsenic is intended to be checked out along side other similarly purposed tools in an `opt/` directory.
+- Arsenic will automatically add the `bin/` directory of sibling directories (eg: `opt/arsenic/bin`, `opt/xe/bin`) to your `$PATH`
 
 
 

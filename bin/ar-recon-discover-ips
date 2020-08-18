@@ -1,0 +1,26 @@
+#! /bin/bash
+
+SCOPE_FILE="scope-domains.txt"
+
+if [ ! -z $1 ]; then
+  if [ -f $1 ]; then
+    SCOPE_FILE="$1"
+  fi
+fi
+
+if [ ! -f $SCOPE_FILE ]; then
+  echo "`basename $0` scope_file"
+  exit;
+fi
+
+echo "[+] Ensuring recon directory exists 🕵️"
+
+mkdir -p recon
+echo "[+] running nmap using $SCOPE_FILE"
+
+echo -e "\e[34m"
+nmap -iL $SCOPE_FILE -oA recon/nmap-host-discovery -sn
+echo -e "\e[0m"
+
+echo "[+] Listing Active IPs"
+cat recon/nmap-host-discovery.gnmap | grep Host: | awk '{print $2}' | sort -u | tee active-ips.txt

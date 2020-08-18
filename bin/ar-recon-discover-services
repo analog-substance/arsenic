@@ -9,7 +9,7 @@ accurate_punch(){
   ports=$(echo $(quick_scan $1 | grep open | cut -d/ -f1) | sed 's/ /,/g')
   echo "[+] Version scanning $ports"
 
-  nmap -oA recon/nmap-punched -n -Pn -sV -p$ports $1
+  nmap -oA recon/nmap-punched -n -Pn -A -p$ports $1
 }
 
 try_punch(){

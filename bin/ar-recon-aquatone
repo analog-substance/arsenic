@@ -4,9 +4,9 @@ echo "[+] Running Aquatone"
 
 echo -e "\e[34m"
 
-grep -l -rP "80|443|3000|8000|8080|8443" hosts \
+grep -l -rP "80|443|3000|8000|8001|8080|8443" hosts \
 | awk -F/ '{print $2}' \
 | sort -u \
-| aquatone -ports "80,443,3000,8000,8080,8443" -out recon/aquatone
+| aquatone -ports "80,443,3000,8000,8001,8080,8443" -out recon/aquatone
 
 echo -e "\e[0m"

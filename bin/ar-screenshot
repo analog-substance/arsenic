@@ -1,0 +1,21 @@
+#! /bin/bash
+
+SCREENSHOT_DIR="$HOME/op/docs/static"
+mkdir -p "$SCREENSHOT_DIR"
+
+NAME="Screenshot"
+name="$@"
+if [ ! -z "$name" ]; then 
+echo "$name"
+NAME=$(echo "$name" | sed 's/[^A-Za-z ]//g' | sed 's/ \+/-/g')
+fi
+
+SCREENSHOT_PATH="$SCREENSHOT_DIR/$NAME-$( date +'%Y-%m-%d_%H%M' ).png"
+
+echo "[+] Saving to $SCREENSHOT_PATH"
+
+maim -s -u --format=png "$SCREENSHOT_PATH"
+
+echo "[+] $SCREENSHOT_PATH copied to clipboard"
+echo "![$name]($(echo -n "$SCREENSHOT_PATH" | sed 's|'$SCREENSHOT_DIR'|/static|'))" | xclip -selection clipboard -target text/plain -i
+

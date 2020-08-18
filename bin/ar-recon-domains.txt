@@ -1,0 +1,71 @@
+#! /bin/bash
+
+mkdir -p recon/domains hosts
+
+declare -a domain_commands=("whois" "host" "ar-crtsh-slrp")
+declare -a ip_commands=("whois")
+
+function domain_recon {
+  domain=$1
+  for cmd in "${domain_commands[@]}";  do
+      if [ ! -f "recon/domains/$domain-$cmd.txt" ]; then
+        echo "[+] running $domain $cmd"
+
+        $cmd $domain > "recon/domains/$domain-$cmd.txt"
+      else
+        echo "[!] skipping $domain $cmd"
+      fi
+  done
+}
+
+function ip_recon {
+  ip=$1
+  for cmd in "${ip_commands[@]}";  do
+      if [ ! -f "hosts/ips/$ip-$cmd.txt" ]; then
+        echo "[+] running $ip $cmd"
+
+        $cmd $ip > "recon/ips/$ip-$cmd.txt"
+      else
+        echo "[!] skipping $ip $cmd"
+      fi
+  done
+}
+
+cat scope-domains-client-provided.txt | while read domain; do
+  domain_recon "$domain"
+done
+
+cat recon/domains/*-host.txt | grep address | awk '{print $NF}' | sort -u | tee scope-ips-client-domains.txt
+
+cat scope-ips-client-domains.txt | while read ip; do
+  ip_recon "$ip"
+done
+
+cat recon/domains/*-ar-crtsh-slrp.txt | sort -u | tee scope-domains-ar-crtsh-slrp.txt
+
+cat scope-domains* | sort -u | while read domain; do
+  domain_recon "$domain"
+done
+
+cat recon/domains/*-host.txt | grep address | awk '{print $NF}' | sort -u | grep -vP "^($(echo $(cat scope-ips-client-domains.txt) | sed 's/ /|/g'))$" | tee scope-ips-discovered-domains.txt
+
+cat scope-ips-* | sort -u | while read ip; do
+  ip_recon "$ip"
+done
+
+cat scope-ips-* | sort -u > recon/all-ips.txt
+
+nmap -p443,8443 -iL recon/all-ips.txt -oA recon/nmap-https-check-all-ips --open
+
+
+cat recon/nmap-https-check-all-ips.gnmap|grep Ports: | awk '{print $2,$5}' | cut -d/ -f1 | while read l; do
+  host=$(echo $l | awk '{print $1}');
+  port=$(echo $l | awk '{print $2}');
+  ar-get-cert-domains.sh $host $port > tee recon/cert-domains/$host.txt ; done
+
+
+cat recon/cert-domains/* | tr 'A-Z' 'a-z' | sed 's/\*\.//g' | sort -u | tee scope-domains-from-certs.txt
+cat scope-domains* | sort -u | grep -vP "^($(echo $(cat scope-domains-client-provided.txt) | sed 's/ /|/g'))$" | tee scope-discovered-domains.txt
+cat scope-discovered-domains.txt| xargs -n1 host | tee  recon/host-discovered.txt
+cat recon/host-discovered.txt| grep -P "(is an alias|has (IPv6 )?address)" | awk '{print $1}' | sort -u | wc -l
+cat recon/host-discovered.txt| grep -P "(is an alias|has (IPv6 )?address)" | awk '{print $1}' | sort -u | tee scope-valid-discovered-domains.txt
