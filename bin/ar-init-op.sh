@@ -14,6 +14,8 @@ function _ {
 }
 
 ARSENIC_PATH="$( cd "$(dirname "$0")/../" >/dev/null 2>&1 ; pwd -P )"
+ARSENIC_OPT_PATH=$(dirname $ARSENIC_PATH)
+
 OP_NAME=$(basename "$OP_PATH")
 
 _ "Creating op: $OP_NAME"
@@ -58,3 +60,9 @@ if [ ! -f Makefile ]; then
     echo -e "\thugo server"
   } >> Makefile
 fi
+
+
+ls -d $ARSENIC_OPT_PATH/*/scripts/ar-init-op.sh 2>/dev/null | while read hook; do
+  echo "[+] running $hook"
+  bash "$hook"
+done
