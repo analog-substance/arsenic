@@ -3,6 +3,7 @@
 mkdir -p recon/domains hosts
 
 declare -a domain_commands=("whois" "host" "ar-crtsh-slrp")
+declare -a dig_commands=("TXT" "NS" "MX" "SOA" "A")
 declare -a ip_commands=("whois")
 
 function domain_recon {
@@ -12,13 +13,24 @@ function domain_recon {
       echo "[!] Skipping common domain: $domain"
       ;;
     *)
+      mkdir -p "recon/domains/$domain"
+
       for cmd in "${domain_commands[@]}";  do
-        if [ ! -f "recon/domains/$domain-$cmd.txt" ]; then
+        if [ ! -f "recon/domains/$domain/$cmd.txt" ]; then
           echo "[+] running $domain $cmd"
 
-          $cmd $domain | tr 'A-Z' 'a-z' > "recon/domains/$domain-$cmd.txt" &
+          $cmd $domain | tr 'A-Z' 'a-z' > "recon/domains/$domain/$cmd.txt" &
         else
           echo "[!] skipping $domain $cmd"
+        fi
+      done
+      for cmd in "${dig_commands[@]}";  do
+        if [ ! -f "recon/domains/$domain/dig-$cmd.txt" ]; then
+          echo "[+] running dig $domain $cmd"
+
+          dig $cmd $domain | tr 'A-Z' 'a-z' > "recon/domains/$domain/dig-$cmd.txt" &
+        else
+          echo "[!] skipping dig $domain $cmd"
         fi
       done
       wait
@@ -33,6 +45,15 @@ function ip_recon {
       ;;
     *)
       mkdir -p "hosts/$ip/recon/"
+      if [ ! -f "hosts/$ip/recon/nmap-punched.xml" ]; then
+        echo "[+] no nmap. discovering services for $ip"
+
+        bash -c "cd `pwd`/hosts/$ip/; ar-recon-discover-services $ip" &
+      else
+        echo "[!] nmap exists. Skipping $ip"
+      fi
+      fi
+
       for cmd in "${ip_commands[@]}";  do
         if [ ! -f "hosts/$ip/recon/$cmd.txt" ]; then
           echo "[+] running $ip $cmd"
@@ -53,19 +74,19 @@ cat scope-domains-* | sort -u | while read domain; do
   domain_recon "$domain"
 done
 
-cat recon/domains/*-host.txt | grep address | awk '{print $NF}' | sort -u | tee scope-ips-client-domains.txt
+cat recon/domains/*/host.txt | grep address | awk '{print $NF}' | sort -u | tee scope-ips-client-domains.txt
 
 cat scope-ips-client-domains.txt | while read ip; do
   ip_recon "$ip"
 done
 
-cat recon/domains/*-ar-crtsh-slrp.txt | tr 'A-Z' 'a-z' | sort -u | grep -vP "$REMOVE_DOMAIN_REGEX" | tee scope-domains-ar-crtsh-slrp.txt
+cat recon/domains/*/ar-crtsh-slrp.txt | tr 'A-Z' 'a-z' | sort -u | grep -vP "$REMOVE_DOMAIN_REGEX" | tee scope-domains-ar-crtsh-slrp.txt
 
 cat scope-domains* | sort -u | while read domain; do
   domain_recon "$domain"
 done
 
-cat recon/domains/*-host.txt | grep address | awk '{print $NF}' | sort -u | grep -vP "^($(echo $(cat scope-ips-client-domains.txt) | sed 's/ /|/g'))$" | grep -vP "1\.1\.1\.1|1\.0\.0\.1" |  tee scope-ips-discovered-domains.txt
+cat recon/domains/*/host.txt | grep address | awk '{print $NF}' | sort -u | grep -vP "^($(echo $(cat scope-ips-client-domains.txt) | sed 's/ /|/g'))$" | grep -vP "1\.1\.1\.1|1\.0\.0\.1" |  tee scope-ips-discovered-domains.txt
 
 cat scope-ips-* | sort -u | while read ip; do
   ip_recon "$ip"
@@ -91,7 +112,7 @@ cat scope-domains* | sort -u | while read domain; do
   domain_recon "$domain"
 done
 
-cat recon/domains/*-host.txt | grep address | awk '{print $NF}' | sort -u | grep -vP "^($(echo $(cat scope-ips-client-domains.txt) | sed 's/ /|/g'))$" | grep -vP "1\.1\.1\.1|1\.0\.0\.1" |  tee scope-ips-discovered-domains.txt
+cat recon/domains/*/host.txt | grep address | awk '{print $NF}' | sort -u | grep -vP "^($(echo $(cat scope-ips-client-domains.txt) | sed 's/ /|/g'))$" | grep -vP "1\.1\.1\.1|1\.0\.0\.1" |  tee scope-ips-discovered-domains.txt
 
 cat scope-ips-* | sort -u | while read ip; do
   ip_recon "$ip"
@@ -113,3 +134,5 @@ cat scope-domains-discovered-valid.txt | while read d; do
 done
 
 cat scope-domains-discovered-valid.txt | wc -l
+
+ar-update-flags.sh

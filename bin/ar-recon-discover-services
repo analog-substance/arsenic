@@ -50,6 +50,6 @@ if [ -f $1 ]; then
   # its a file, lets treat each line as a host
   fist_fight $1
 else
-  # not a fil, treat it as a host
+  # not a file, treat it as a host
   accurate_punch $1
 fi

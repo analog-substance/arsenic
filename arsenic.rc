@@ -7,13 +7,17 @@ if [ "$ARSENIC_INIT" != 1 ]; then
   else
     pushd `dirname $0` > /dev/null
   fi
-  
+
   ARSENIC_PATH=`pwd`
   popd > /dev/null
 
   ARSENIC_OPT_PATH=$(dirname $ARSENIC_PATH)
-  for f in $ARSENIC_OPT_PATH/*; do
-      [ -d $f/bin ] && export PATH=$f/bin:$PATH
+  export PATH="$(echo $(ls -d $ARSENIC_OPT_PATH/*/bin) | sed 's/ /:/g'):$PATH"
+
+  # iterate of ar.rc files and source them
+  ls -d $ARSENIC_OPT_PATH/*/*.arsenicrc | while read rcfile; do
+    echo "[+] Loading $rcfile"
+    source "$rcfile"
   done
 
   which figlet 2>&1 > /dev/null && figlet arsenic || echo Imagine arseninc in big letters...

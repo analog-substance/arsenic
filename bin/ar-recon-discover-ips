@@ -1,7 +1,7 @@
 #! /bin/bash
 
-SCOPE_FILE="scope-domains.txt"
 
+SCOPE_FILE="scope-ips.txt"
 if [ ! -z $1 ]; then
   if [ -f $1 ]; then
     SCOPE_FILE="$1"
