@@ -24,7 +24,7 @@ mkdir -p "$OP_PATH"
 cd "$OP_PATH"
 
 mkdir -p apps bin report/{findings,sections,static} hosts recon/domains
-touch {apps,bin,recon}/.keep
+touch {apps,bin,recon}/.keep report/static/.keep
 
 mkdir -p hosts/127.0.0.1/recon
 touch hosts/127.0.0.1/README.md
