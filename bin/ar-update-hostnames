@@ -1,0 +1,11 @@
+#! /bin/bash
+
+find hosts -type d -maxdepth 1 -print | tail -n +2 | while read host; do
+  ip=$(echo $host | cut -d/ -f2)
+  echo "[+] $ip"
+  {
+    cat hosts/$ip/recon/hostnames.txt
+    grep -r $ip recon/domains | awk -F/ '{print $3}'
+  } | sort -u \
+    | tee hosts/$ip/recon/hostnames.txt
+done

@@ -52,7 +52,6 @@ function ip_recon {
       else
         echo "[!] nmap exists. Skipping $ip"
       fi
-      fi
 
       for cmd in "${ip_commands[@]}";  do
         if [ ! -f "hosts/$ip/recon/$cmd.txt" ]; then
