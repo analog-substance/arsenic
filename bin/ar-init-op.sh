@@ -16,7 +16,7 @@ function _ {
 ARSENIC_PATH="$( cd "$(dirname "$0")/../" >/dev/null 2>&1 ; pwd -P )"
 ARSENIC_OPT_PATH=$(dirname $ARSENIC_PATH)
 
-OP_NAME=$(basename "$OP_PATH")
+export OP_NAME=$(basename "$OP_PATH")
 
 _ "Creating op: $OP_NAME"
 
