@@ -1,11 +1,74 @@
 #! /bin/bash
 
-find hosts -type d -maxdepth 1 -print | tail -n +2 | while read host; do
-  ip=$(echo $host | cut -d/ -f2)
-  echo "[+] $ip"
-  {
-    cat hosts/$ip/recon/hostnames.txt
-    grep -r $ip recon/domains | awk -F/ '{print $3}'
-  } | sort -u \
-    | tee hosts/$ip/recon/hostnames.txt
+find hosts -name recon -print | while read d; do
+  ip=$(echo $d | cut -d/ -f2);
+  echo $d
+  if [ ! -f hosts/$ip/recon/hostnames.txt ]; then
+	  echo attempting to find $ip in domains
+	  grep -l "$ip" recon/domains/*/host.txt | xargs -n1 dirname | xargs -n1  basename | tee  hosts/$ip/recon/hostnames.txt
+  fi
+
+  if [ ! -f hosts/$ip/hostname ]; then
+	  echo attempting to find $ip in domains
+	  hostname=$(cat hosts/$ip/recon/hostnames.txt | head -n1)
+	  echo found $ip $hostname
+    if [ "$hostname" != "" ]; then
+      echo yay
+  		echo $hostname >  hosts/$ip/hostname
+  	else
+  		echo no host found
+    fi
+  fi
+  if [ ! -f $d/host.txt ]; then
+    host $ip | sort | tee $d/host.txt;
+  fi;
+done
+
+ls hosts/*/recon/host.txt | while read d; do
+  ip=$(echo $d | cut -d/ -f2);
+  hostname=$(cat $d | grep pointer | head -n 1 | awk '{print $NF}');
+  if [ ! -f hosts/$ip/hostname ] ; then
+    [[ "$hostname" != "" ]] && echo $hostname > hosts/$ip/hostname;
+  fi
+done
+
+function getHost {
+  ip="$1"
+   {
+    cat hosts/$ip/recon/host.txt | grep pointer | awk '{print $NF}';
+    cat hosts/$ip/recon/ar-get-cert-domains.txt
+  } 2>/dev/null | sed 's/^\*\.//g' | sed 's/\.$//g' | sort -u | sed 's/^\(.\+\)$/"\1"/g'
+}
+
+find hosts -name recon -print | while read d; do
+  ip=$(echo $d | cut -d/ -f2);
+  # if [ "$ip" != "192.101.105.56" ] ; then
+  #   continue
+  # fi
+  hostnames=$( echo $(getHost "$ip") | sed 's/ /,/g')
+  if [ ! -z "$hostnames" ]; then
+    echo "hostnames = [$hostnames]"
+    echo $ip
+    if cat hosts/$ip/README.md | grep -P "^hostnames = \["; then
+      # update existing
+      cat hosts/$ip/README.md | sed 's/hostnames = \[.\+\]/hostnames = ['$hostnames']/' > hosts/$ip/README.md.new
+      mv hosts/$ip/README.md.new hosts/$ip/README.md
+    else
+      if cat hosts/$ip/README.md | grep '+++' ; then
+        # add to existing front matter
+        cat hosts/$ip/README.md | sed '0,/+++/! {0,/+++/ s/+++/hostnames = ['$hostnames']\n+++/}'  > hosts/$ip/README.md.new
+        mv hosts/$ip/README.md.new hosts/$ip/README.md
+      else
+        # no front matter found lets add it
+        {
+          echo "+++"
+          echo "hostnames = [$hostnames]"
+          echo "+++"
+          echo
+          cat hosts/$ip/README.md
+        } > hosts/$ip/README.md.new
+        mv hosts/$ip/README.md.new hosts/$ip/README.md
+      fi
+    fi
+  fi
 done
