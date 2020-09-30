@@ -1,21 +1,32 @@
 #! /bin/bash
 
+ALL_IP_SCOPE_FILE="recon/all-ips.txt"
 
-SCOPE_FILE="scope-ips.txt"
 if [ ! -z $1 ]; then
   if [ -f $1 ]; then
     SCOPE_FILE="$1"
   fi
 fi
 
-if [ ! -f $SCOPE_FILE ]; then
-  echo "`basename $0` scope_file"
-  exit;
+
+if [ ! -z $SCOPE_FILE ]; then
+  if [ ! -f $SCOPE_FILE ]; then
+    echo "Scope file does not exist"
+    exit;
+  fi
+else
+  SCOPE_FILE=$ALL_IP_SCOPE_FILE
 fi
 
 echo "[+] Ensuring recon directory exists 🕵️"
-
 mkdir -p recon
+
+
+if [ "$SCOPE_FILE" = "$ALL_IP_SCOPE_FILE" ]; then
+  echo "[+] Updating $SCOPE_FILE"
+  cat scope-ips-* | sort -u > $SCOPE_FILE
+fi
+
 echo "[+] running nmap using $SCOPE_FILE"
 
 echo -e "\e[34m"
