@@ -47,4 +47,7 @@ done
 
 
 # now that we are done remove, empty aquatone reports
-find hosts -name aquatone_urls.txt -size 0 | while read apath; do rm -rf $(dirname $(echo $apath)); done
+find hosts -name aquatone_urls.txt -size 0 \
+  | while read apath; do
+    rm -rf $(dirname $(echo $apath));
+  done
