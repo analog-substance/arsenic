@@ -42,7 +42,7 @@ getAquatonableHosts | while read host; do
     | sort -u \
     | sed 's|^.*$|'$proto'\0':$port'|'
 
-  done | sort -u | aquatone -ports "$(echo $PORT | sed 's/|/,/g')" -out hosts/$host/recon/aquatone
+  done | sort -u | aquatone -ports "$(echo $PORTS | sed 's/|/,/g')" -out hosts/$host/recon/aquatone
 done
 
 
