@@ -1,12 +1,41 @@
 #! /bin/bash
 
-echo "[+] Running Aquatone"
 
-echo -e "\e[34m"
 
-grep -l -rP "80|443|3000|8000|8001|8080|8443" hosts \
-| awk -F/ '{print $2}' \
-| sort -u \
-| aquatone -ports "80,443,3000,8000,8001,8080,8443" -out recon/aquatone
+PORTS="80|443|3000|8000|8001|8080|8443"
 
-echo -e "\e[0m"
+function getAquatonableHosts {
+  # grab all hosts with open $PORTS we're interested in
+  grep -l -rP "$PORTS" hosts \
+  | grep -v whois \
+  | awk -F/ '{print $2}' \
+  | sort -u
+}
+
+function getHostPorts {
+  # for each $host lets get a list of ports
+  grep -hroP "$PORTS" hosts/$1 \
+  | grep -v whois \
+  | sort -u
+}
+
+getAquatonableHosts | while read host; do
+  echo "[+] Running Aquatone $host"
+  getHostPorts $host | while read port; do
+
+    proto="http://"
+    if echo $port | grep 443 ; then
+      proto="https://"
+    fi
+
+    echo "${proto}${host}:$port"
+
+    # now that we know what ports are open on the host
+    # lets grab valid hostnames and create URLs for aquatone
+
+    cat hosts/$hosts/hostname hosts/$host/recon/hostnames.txt 2> /dev/null \
+    | sort -u \
+    | sed 's|^.*$|'$proto'\0':$port'|'
+
+  done | sort -u | aquatone -ports "$(echo $PORT | sed 's/|/,/g')" -out hosts/$host/recon/aquatone
+done
