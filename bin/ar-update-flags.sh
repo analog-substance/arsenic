@@ -18,7 +18,19 @@ function getFlags {
         cat  "hosts/$ip/recon/nmap-punched.nmap" | grep open | awk '{$1=$2=$3=""; print $0}' | grep -P '[^\s]+' | sed 's/^\s\+/SVC::/g' | sort -u
       fi
     else
-      echo 'no-nmap'
+      if [ -f "hosts/$ip/recon/${ip}_services.xml" ]; then
+
+        if cat "hosts/$ip/recon/${ip}_services.xml" | grep 'state="open"' > /dev/null 2>&1 ; then
+          echo 'PORTS'
+          cat "hosts/$ip/recon/${ip}_services.xml" | grep 'state="open"' | grep -oP '<service .+$' | sed 's/<\/\?[^ >]*>\? \?//g' |  sed 's/name="\([^"]\+\)" \(product="\([^"]\+\)"\)\?\(.*\)/\1\n\3/g' | grep "." |  sed 's/^/SVC::/g'
+        else
+          echo 'NOPORTS'
+          NOPORTS=1
+        fi
+      else
+        NOPORTS=1
+        echo 'no-nmap'
+      fi
     fi
     if compgen -G "hosts/$ip/recon/"wappalyzer* 2>&1 > /dev/null ; then
       ls "hosts/$ip/recon/"wappalyzer* | while read wappfile; do

@@ -4,12 +4,17 @@
 
 PORTS="80|443|3000|8000|8001|8080|8443"
 
+function getAquatonedHosts {
+  echo $(find hosts -name aquatone -type d | awk -F/ '{print $2}' | sort -u)|sed 's/ /|/g' | sed 's/\./\\./g'
+}
+
 function getAquatonableHosts {
   # grab all hosts with open $PORTS we're interested in
   grep -l -rP "$PORTS" hosts \
   | grep -v whois \
   | awk -F/ '{print $2}' \
-  | sort -u
+  | sort -u \
+  | grep -vP "$(getAquatonedHosts)"
 }
 
 function getHostPorts {
