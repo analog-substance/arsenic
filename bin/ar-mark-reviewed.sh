@@ -5,6 +5,7 @@ if [ -z "$REVIEWER" ]; then
 fi
 
 if [ -z "$1" ]; then
+  # assume we are in a host directory
   if [ -f README.md ]; then
     sed '0,/+++/s//+++\nreviewer = "'"$REVIEWER"'"/' README.md | tee README.md.new
     mv README.md.new README.md

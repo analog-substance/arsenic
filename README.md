@@ -57,6 +57,18 @@ echo 192.168.0.1/24 > scope-ips-initial.txt
 arsenic
 ```
 
+## Collaboration
+
+Working with friends? Not a problem. [arsenic-hugo](https://github.com/defektive/arsenic-hugo) should make it easier to see the big picture.
+
+### Reviewing Hosts
+
+```bash
+export REVIEWER='defektive'
+ar-mark-reviewed.sh 192.168.0.1 # this will set reviewer = 'defektive' in the README for the host
+ar-update-flags.sh git # this will update the flags for modifed hosts. in this case removing  unreviewed and adding reviewed to 192.168.0.1's flags
+```
+
 ## Suggested Installation
 
 - Arsenic is intended to be checked out along side other similarly purposed tools in an `opt/` directory.
