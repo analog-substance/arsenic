@@ -9,12 +9,18 @@ function getAquatonedHosts {
 }
 
 function getAquatonableHosts {
+  grep_options="-vP"
+  aquatoned=`getAquatonedHosts`
+  if [[ -z "$aquatoned" ]]; then
+    grep_options="-P"
+  fi
+
   # grab all hosts with open $PORTS we're interested in
   grep -l -rP "$PORTS" hosts \
   | grep -v whois \
   | awk -F/ '{print $2}' \
   | sort -u \
-  | grep -vP "$(getAquatonedHosts)"
+  | grep $grep_options "$aquatoned"
 }
 
 function getHostPorts {
