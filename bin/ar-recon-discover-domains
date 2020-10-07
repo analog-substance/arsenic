@@ -4,7 +4,6 @@ mkdir -p recon/domains hosts
 
 declare -a domain_commands=("whois" "host" "ar-crtsh-slrp")
 declare -a dig_commands=("TXT" "NS" "MX" "SOA" "A")
-declare -a ip_commands=("whois")
 REMOVE_DOMAIN_REGEX="(hscoscdn10\.net|sites\.hubspot\.net|amazonaws\.com|azurewebsites\.net|azurewebsites\.windows\.net|cloudapp\.net|readthedocs\.io|my\.jobs|googlehosted\.com|readthedocs\.org)$"
 
 function domain_recon {
@@ -71,10 +70,6 @@ cat scope-domains* | sort -u | while read domain; do
 done
 
 cat recon/domains/*/host.txt | grep address | awk '{print $NF}' | sort -u | grep -vP "^($(echo $(cat scope-ips-client-domains.txt) | sed 's/ /|/g'))$" | grep -vP "1\.1\.1\.1|1\.0\.0\.1" |  tee scope-ips-discovered-domains.txt
-
-cat scope-ips-* | sort -u | while read ip; do
-  ip_recon "$ip"
-done
 
 cat scope-domains-discovered.txt | while read d; do
   if [ -f recon/domains/$d-host.txt ]; then
