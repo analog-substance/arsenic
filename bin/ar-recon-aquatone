@@ -16,8 +16,7 @@ function getAquatonableHosts {
   fi
 
   # grab all hosts with open $PORTS we're interested in
-  grep -l -rP "$PORTS" hosts \
-  | grep -v whois \
+  grep -l -rP "$PORTS" hosts/*/recon/nmap-* \
   | awk -F/ '{print $2}' \
   | sort -u \
   | grep $grep_options "$aquatoned"
@@ -25,8 +24,7 @@ function getAquatonableHosts {
 
 function getHostPorts {
   # for each $host lets get a list of ports
-  grep -hroP "$PORTS" hosts/$1 \
-  | grep -v whois \
+  grep -hroP "$PORTS" hosts/$1/recon/nmap-* \
   | sort -u
 }
 
