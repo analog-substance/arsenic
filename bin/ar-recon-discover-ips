@@ -1,37 +1,9 @@
 #! /bin/bash
 
-ALL_IP_SCOPE_FILE="recon/all-ips.txt"
-
-if [ ! -z $1 ]; then
-  if [ -f $1 ]; then
-    SCOPE_FILE="$1"
-  fi
-fi
-
-
-if [ ! -z $SCOPE_FILE ]; then
-  if [ ! -f $SCOPE_FILE ]; then
-    echo "Scope file does not exist"
-    exit;
-  fi
-else
-  SCOPE_FILE=$ALL_IP_SCOPE_FILE
-fi
-
-echo "[+] Ensuring recon directory exists 🕵️"
-mkdir -p recon
-
-
-if [ "$SCOPE_FILE" = "$ALL_IP_SCOPE_FILE" ]; then
-  echo "[+] Updating $SCOPE_FILE"
-  cat scope-ips-* | sort -u > $SCOPE_FILE
-fi
-
-echo "[+] running nmap using $SCOPE_FILE"
-
 echo -e "\e[34m"
-nmap -iL $SCOPE_FILE -oA recon/nmap-host-discovery -sn
+nmap -iL scope-ips-public-ipv4.txt -oA recon/nmap-host-discovery-ipv4 -sn
+nmap -6 -iL scope-ips-public-ipv6.txt -oA recon/nmap-host-discovery-ipv6 -sn
 echo -e "\e[0m"
 
 echo "[+] Listing Active IPs"
-cat recon/nmap-host-discovery.gnmap | grep Host: | awk '{print $2}' | sort -u | tee active-ips.txt
+cat recon/nmap-host-discovery*.gnmap | grep Host: | awk '{print $2}' | sort -u | tee scope-ips-active.txt

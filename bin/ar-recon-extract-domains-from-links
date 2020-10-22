@@ -1,0 +1,13 @@
+#! /bin/bash
+
+set -uo pipefail
+
+
+function run {
+domain="$1"
+	lynx -listonly -nonumbers -dump  $domain    | grep -P "$(echo $(cat scope-root-domains.txt|sed 's/\./\\./g')|sed 's/ /|/g')" | cut -d/ -f3 | sort -u
+}
+
+cat scope-domains-combined.txt | while read d; do
+  run $d
+done
