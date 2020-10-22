@@ -1,6 +1,6 @@
 #! /bin/bash
 
-SCREENSHOT_DIR="$HOME/op/docs/static"
+SCREENSHOT_DIR="$HOME/op/report/static"
 mkdir -p "$SCREENSHOT_DIR"
 
 NAME="Screenshot"
