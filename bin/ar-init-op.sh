@@ -1,12 +1,18 @@
 #! /bin/bash
 
+OP_PATH="$OP_PATH"
+
+set -euo pipefail
+
+DEFAULT_OP="op"
+OP_ARG=${1:-}
+
+if [ ! -z "$OP_ARG" ]; then
+  DEFAULT_OP="$OP_ARG"
+fi
+
 if [ -z "$OP_PATH" ]; then
-  if [ ! -z "$1" ]; then
-    OP_PATH="$1"
-  else
-    # clever i know
-    OP_PATH="op"
-  fi
+  OP_PATH="$DEFAULT_OP"
 fi
 
 function _ {

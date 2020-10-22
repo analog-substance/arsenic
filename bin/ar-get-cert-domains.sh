@@ -1,4 +1,5 @@
 #! /bin/bash
+set -euo pipefail
 
 HOST="$1"
 PORT="443"
