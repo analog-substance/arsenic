@@ -1,14 +1,22 @@
 #! /bin/bash
 
 set -euo pipefail
-mkdir -p recon/domains recon/ips/ hosts
+
+
+function run {
+  ar-get-cert-domains.sh $1 $2 || echo "fail"
+}
 
 nmap -p443,8443 -iL  scope-ips-public.txt -oA recon/nmap-https-check-all-ips --open
 cat recon/nmap-https-check-all-ips.gnmap|grep Ports: | awk '{print $2,$5}' | cut -d/ -f1 | while read l; do
   host=$(echo $l | awk '{print $1}');
-  port=$(echo $l | awk '{print $2}');
-  mkdir -p "hosts/$host/recon/"
-  ar-get-cert-domains.sh $host $port
-done | tee scope-domains-ssl-certs.txt
-cat scope-domains-ssl-certs.txt | sort -u > sorted
-mv sorted scope-domains-ssl-certs.txt
+  port=$(echo $l | awk '{print $2}'); 
+  run $host $port | sed 's/^/'$host:$port' /g'
+done \
+  | sed 's/\*\.//g' \
+  | grep "\." \
+  | ar-prune-blacklisted-domains \
+  | sort -u > recon/ssl-cert-domains.txt 
+cat recon/ssl-cert-domains.txt | grep -v " fail" | awk '{print $NF}' | sort -u | tee scope-domains-ssl-certs.txt
+
+grep " fail" recon/ssl-cert-domains.txt
