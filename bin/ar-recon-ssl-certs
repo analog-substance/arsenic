@@ -1,0 +1,14 @@
+#! /bin/bash
+
+set -euo pipefail
+mkdir -p recon/domains recon/ips/ hosts
+
+nmap -p443,8443 -iL  scope-ips-public.txt -oA recon/nmap-https-check-all-ips --open
+cat recon/nmap-https-check-all-ips.gnmap|grep Ports: | awk '{print $2,$5}' | cut -d/ -f1 | while read l; do
+  host=$(echo $l | awk '{print $1}');
+  port=$(echo $l | awk '{print $2}');
+  mkdir -p "hosts/$host/recon/"
+  ar-get-cert-domains.sh $host $port
+done | tee scope-domains-ssl-certs.txt
+cat scope-domains-ssl-certs.txt | sort -u > sorted
+mv sorted scope-domains-ssl-certs.txt
