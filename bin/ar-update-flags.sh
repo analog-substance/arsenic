@@ -15,7 +15,7 @@ function getFlags {
         NOPORTS=1
       else
         echo 'PORTS'
-        cat  "hosts/$ip/recon/nmap-punched.nmap" | grep open | awk '{$1=$2=$3=""; print $0}' | grep -P '[^\s]+' | sed 's/^\s\+/SVC::/g' | sort -u
+        cat  "hosts/$ip/recon/nmap-punched.nmap" | grep -v "may be unreliable because we could not find at least 1 open and 1 closed port" | grep open | awk '{$1=$2=$3=""; print $0}' | grep -P '[^\s]+' | sed 's/^\s\+/SVC::/g' | sort -u
       fi
     else
       if [ -f "hosts/$ip/recon/${ip}_services.xml" ]; then
