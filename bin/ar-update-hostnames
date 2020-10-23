@@ -1,11 +1,18 @@
 #! /bin/bash
+function getHostNames {
+  ip="$1"
+  {
+    grep -l "$ip" recon/domains/*/host.txt 2>/dev/null | xargs -n1 dirname 2>/dev/null| xargs -n1  basename 2>/dev/null
+    grep -r "$ip" recon | grep -P "has (IPv6 )?address" | cut -d: -f2 | awk '{print $1}'
+  } | sort -u
+}
 
 find hosts -name recon -print | while read d; do
   ip=$(echo $d | cut -d/ -f2);
   echo $d
   if [ ! -f hosts/$ip/recon/hostnames.txt ]; then
 	  echo attempting to find $ip in domains
-	  grep -l "$ip" recon/domains/*/host.txt | xargs -n1 dirname | xargs -n1  basename | tee  hosts/$ip/recon/hostnames.txt
+	  getHostNames $ip | tee  hosts/$ip/recon/hostnames.txt
   fi
 
   if [ ! -f hosts/$ip/hostname ]; then
@@ -20,14 +27,15 @@ find hosts -name recon -print | while read d; do
     fi
   fi
   if [ ! -f $d/host.txt ]; then
-    host $ip | sort | tee $d/host.txt;
+    grep $ip recon/ips/resolv-ips.txt | sort -u | tee $d/host.txt
+    # host $ip | sort | tee $d/host.txt;
   fi;
 done
 
 ls hosts/*/recon/host.txt | while read d; do
   ip=$(echo $d | cut -d/ -f2);
   hostname=$(cat $d | grep pointer | head -n 1 | awk '{print $NF}');
-  if [ ! -f hosts/$ip/hostname ] ; then
+  if [ ! -f hosts/$ip/hostname ]; then
     [[ "$hostname" != "" ]] && echo $hostname > hosts/$ip/hostname;
   fi
 done
