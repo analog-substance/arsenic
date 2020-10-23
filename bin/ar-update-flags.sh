@@ -92,7 +92,7 @@ function getHosts {
   elif [ ! -z "$HOST" ]; then
     echo $HOST
   else
-    find hosts -type d -maxdepth 1 -print | tail -n +2
+    find hosts -maxdepth 1 -type d  -print | tail -n +2
   fi
 }
 
