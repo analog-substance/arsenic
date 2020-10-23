@@ -64,7 +64,7 @@ function getFlags {
       cat hosts/$ip/README.md \
       | grep flags \
       | cut -d= -f2 \
-      | sed 's/\(\[\|\]\)*//g' | sed 's/,/\n/g' | sed 's/"//g' | sed 's/^\s\+//g' | grep -vP "reviewed|responsive|WAPP::|WAPP-CAT::|NET::|SVC::|no-nmap|PORTS|dirbuster|aquatone"
+      | sed 's/\(\[\|\]\)*//g' | sed 's/,/\n/g' | sed 's/"//g' | sed 's/^\s\+//g' | grep -vP "reviewed|responsive|WAPP::|WAPP-CAT::|NET::|SVC::|no-nmap|PORTS|(dir|go)buster|aquatone"
     fi
 
     if [ ! -f "hosts/$ip/recon/whois.txt" ] ; then
@@ -74,6 +74,10 @@ function getFlags {
 
     if compgen -G "hosts/$ip/recon/dirbuster"* 2>&1 > /dev/null ; then
       echo dirbuster
+    fi
+
+    if compgen -G "hosts/$ip/recon/gobuster"* 2>&1 > /dev/null ; then
+      echo gobuster
     fi
 
     if compgen -G "hosts/$ip/recon/aquatone"* 2>&1 > /dev/null  ; then
