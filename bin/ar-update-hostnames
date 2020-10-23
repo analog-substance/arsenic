@@ -3,7 +3,7 @@ function getHostNames {
   ip="$1"
   {
     grep -l "$ip" recon/domains/*/host.txt 2>/dev/null | xargs -n1 dirname 2>/dev/null| xargs -n1  basename 2>/dev/null
-    grep -r "$ip" recon | grep -P "has (IPv6 )?address" | cut -d: -f2 | awk '{print $1}'
+    grep -rP "\b$(echo $ip | sed 's/\./\\./g')\b" recon | grep -P "has (IPv6 )?address" | cut -d: -f2 | awk '{print $1}'
   } | sort -u
 }
 
