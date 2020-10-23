@@ -1,0 +1,30 @@
+#! /bin/bash
+
+ls hosts/*/recon/nmap-punched.nmap | while read nmap; do
+  ip=$(echo $nmap | cut -d/ -f2)
+  ports=$(echo $(grep -P "tcp\s+open" $nmap | awk '{print $1}' | cut -d/ -f1) | sed 's/ /,/g')
+  if [ ! -z "$ports" ]; then
+    if cat hosts/$ip/README.md | grep -P "^ports = \[" >/dev/null ; then
+      # update existing
+      # cat hosts/$ip/README.md | sed 's/ports = \[[0-9,]\+\]/ports = ['$ports']/' | tee hosts/$ip/README.md
+      echo skip > /dev/null
+    else
+      if cat hosts/$ip/README.md | grep '+++' >/dev/null ; then
+        # add to existing front matter
+        echo "[+] Add $ports for $ip"
+        cat hosts/$ip/README.md | sed '0,/+++/! {0,/+++/ s/+++/ports = ['$ports']\n+++/}' > hosts/$ip/README.md.new
+        mv hosts/$ip/README.md.new hosts/$ip/README.md
+      else
+        # no front matter found lets add it
+        {
+          echo "+++"
+          echo "ports = [$ports]"
+          echo "+++"
+          echo
+          cat hosts/$ip/README.md
+        } > hosts/$ip/README.md.new
+        mv hosts/$ip/README.md.new hosts/$ip/README.md
+      fi
+    fi
+  fi
+done
