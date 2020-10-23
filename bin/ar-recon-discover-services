@@ -20,9 +20,13 @@ accurate_punch(){
 try_punch(){
   base_dir="hosts/$ip"
   mkdir -p $base_dir/loot/passwords $base_dir/recon
-  cd $base_dir
-  accurate_punch $ip
-  cd - 2>/dev/null
+  if [ ! -f "$base_dir/recon/nmap-punched.gnmap" ] ; then
+    cd $base_dir
+    accurate_punch $ip
+    cd - 2>/dev/null
+  else
+    echo "[!] Skipping since it was already done"
+  fi
 }
 
 fist_fight(){
