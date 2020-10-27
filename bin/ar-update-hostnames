@@ -2,21 +2,22 @@
 function getHostNames {
   ip="$1"
   {
-    grep -l "$ip" recon/domains/*/host.txt 2>/dev/null | xargs -n1 dirname 2>/dev/null| xargs -n1  basename 2>/dev/null
-    grep -rP "\b$(echo $ip | sed 's/\./\\./g')\b" recon | grep -P "has (IPv6 )?address" | cut -d: -f2 | awk '{print $1}'
-  } | sort -u
+    # grep -l "$ip" recon/domains/*/host.txt 2>/dev/null | xargs -n1 dirname 2>/dev/null| xargs -n1  basename 2>/dev/null
+    grep -rP "\b$(echo $ip | sed 's/\./\\./g')\b" recon/domains/resolv-domains.txt | grep -P "address" | cut -d: -f2 | awk '{print $1}'
+  } | tr 'A-Z' 'a-z' | sort -u
 }
 
 find hosts -name recon -print | while read d; do
   ip=$(echo $d | cut -d/ -f2);
   echo $d
   if [ ! -f hosts/$ip/recon/hostnames.txt ]; then
-	  echo attempting to find $ip in domains
+	  echo attempting to find $ip in domains/recons/resolve
 	  getHostNames $ip | tee  hosts/$ip/recon/hostnames.txt
+    echo -n .
   fi
 
   if [ ! -f hosts/$ip/hostname ]; then
-	  echo attempting to find $ip in domains
+	  echo attempting to find hostname for $ip
 	  hostname=$(cat hosts/$ip/recon/hostnames.txt | head -n1)
 	  echo found $ip $hostname
     if [ "$hostname" != "" ]; then
@@ -30,6 +31,7 @@ find hosts -name recon -print | while read d; do
     grep $ip recon/ips/resolv-ips.txt | sort -u | tee $d/host.txt
     # host $ip | sort | tee $d/host.txt;
   fi;
+  echo -n .
 done
 
 ls hosts/*/recon/host.txt | while read d; do
@@ -45,7 +47,8 @@ function getHost {
    {
     cat hosts/$ip/recon/host.txt | grep pointer | awk '{print $NF}';
     cat hosts/$ip/recon/ar-get-cert-domains.txt
-  } 2>/dev/null | sed 's/^\*\.//g' | sed 's/\.$//g' | sort -u | sed 's/^\(.\+\)$/"\1"/g'
+    cat hosts/$ip/recon/hostnames.txt
+  } 2>/dev/null | sed 's/^\*\.//g' | sed 's/\.$//g' | tr 'A-Z' 'a-z' | sort -u | sed 's/^\(.\+\)$/"\1"/g'
 }
 
 find hosts -name recon -print | while read d; do
