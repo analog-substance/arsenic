@@ -128,11 +128,11 @@ grep -riP "has (IPv6 )?address" recon/domains/  \
   | awk '{print $NF}' \
   | sort -u \
   | grep -vP "$REMOVE_IP_REGEX" \
+  | ar-prune-blacklisted-ips  \
   | tee scope-ips-client-domains.txt
 
-
 ## maybe this should be in the IPs?
-cat scope-ips-* | sort -u > scope-ips-combined.txt
+cat scope-ips-* | ar-prune-blacklisted-ips | sort -u > scope-ips-combined.txt
 
 # Create IP Scope files for public and private addresses
 cat scope-ips-combined.txt | grep -vP "^$PRIVATE_IP_REGEX\$" | grep -v ":" | sort -u > scope-ips-public-ipv4.txt
