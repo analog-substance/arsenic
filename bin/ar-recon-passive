@@ -112,7 +112,7 @@ getAllDomains >&2
 
 # check for magic
 if which fast-resolv > /dev/null 2>&1; then
-  fast-resolv -d scope-domains-combined.txt | tee recon/domains/resolv-domains.txt
+  fast-resolv -c 50 -d scope-domains-combined.txt | tee recon/domains/resolv-domains.txt
   cat recon/domains/resolv-domains.txt | sort > sorted
   mv sorted recon/domains/resolv-domains.txt
 else
@@ -145,7 +145,7 @@ cat scope-ips-combined.txt | grep -P "^$PRIVATE_IP_REGEX\$" | sort -u > scope-ip
 set -e
 
 if which fast-resolv > /dev/null; then
-  fast-resolv -d scope-ips-public*.txt | tee recon/ips/resolv-ips.txt
+  fast-resolv -c 50 -d scope-ips-public*.txt | tee recon/ips/resolv-ips.txt
   cat recon/ips/resolv-ips.txt | sort > sorted
   mv sorted recon/ips/resolv-ips.txt
 else
