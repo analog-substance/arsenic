@@ -18,11 +18,11 @@ function getFlags {
         cat  "hosts/$ip/recon/nmap-punched.nmap" | grep -v "may be unreliable because we could not find at least 1 open and 1 closed port" | grep open | awk '{$1=$2=$3=""; print $0}' | grep -P '[^\s]+' | sed 's/^\s\+/SVC::/g' | sort -u
       fi
     else
-      if [ -f "hosts/$ip/recon/${ip}_services.xml" ]; then
+      if [ -f "hosts/$ip/recon/nmap-${ip}_services.xml" ]; then
 
-        if cat "hosts/$ip/recon/${ip}_services.xml" | grep 'state="open"' > /dev/null 2>&1 ; then
+        if cat "hosts/$ip/recon/nmap-${ip}_services.xml" | grep 'state="open"' > /dev/null 2>&1 ; then
           echo 'PORTS'
-          cat "hosts/$ip/recon/${ip}_services.xml" | grep 'state="open"' | grep -oP '<service .+$' | sed 's/<\/\?[^ >]*>\? \?//g' |  sed 's/name="\([^"]\+\)" \(product="\([^"]\+\)"\)\?\(.*\)/\1\n\3/g' | grep "." |  sed 's/^/SVC::/g'
+          cat "hosts/$ip/recon/nmap-${ip}_services.xml" | grep 'state="open"' | grep -oP '<service .+$' | sed 's/<\/\?[^ >]*>\? \?//g' |  sed 's/name="\([^"]\+\)" \(product="\([^"]\+\)"\)\?\(.*\)/\1\n\3/g' | grep "." |  sed 's/^/SVC::/g'
         else
           echo 'NOPORTS'
           NOPORTS=1
