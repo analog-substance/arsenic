@@ -71,10 +71,14 @@ if [ ! -d ".hugo" ]; then
 fi
 
 echo
+ls -d $ARSENIC_OPT_PATH/*/scripts/ar-init-op.sh 2>/dev/null
+
+
 ls -d $ARSENIC_OPT_PATH/*/scripts/ar-init-op.sh 2>/dev/null | while read hook; do
   echo "[+] running $hook"
   bash "$hook"
 done
+
 echo "[+] Hooks completed"
 
 if [ -d .git ]; then
