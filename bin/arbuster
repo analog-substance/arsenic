@@ -1,0 +1,226 @@
+#!/bin/bash
+
+######################################################################
+##|A gobuster helper script
+##|Usage:
+##| arbuster [options]
+##|
+##|Options:
+##|  -h, --help                         Help for arbuster
+##|  -e, --expanded                     Expanded mode, print full URLs
+##|  -r, --followredirect               Follow redirects
+##|  -t, --token string                 Access token to be put in the Authorization header
+##|                                         Authorization: Bearer <token>
+##|  --auth string                      Authorization header value
+##|                                         Authorization: <value>
+##|  -w, --wordlist string              Path to the wordlist
+##|  -u, --url string                   The target URL. Can be used multiple times to specify more target URLs
+##|  -uf, --url-file string             The path to a file containing the target URLs
+##|  -a, --useragent [preset, custom]   The user agent string to use. Use supplied presets or a custom string
+##|                                     Presets
+##|                                         Firefox = Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101 Firefox/68.0
+##|                                         Chrome = Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36
+##|                                         Safari = Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_2) AppleWebKit/601.3.9 (KHTML, like Gecko) Version/9.0.2 Safari/601.3.9
+##|  -p, --proxy string                 Proxy to use for requests [[http(s)|socks(4|5)]://host:port]
+##|  -o, --output-dir string            Host specific output directory to write results to
+##|                                     Default: recon
+##|  -s, --status-codes string          Comma delimited list of success status codes
+##|                                     Format: [+|-]code[,code]
+##|                                         +   Use status code as success in addition to the default
+##|                                         -   Don't use status code as success from the default
+##|                                     Note: If no status codes are prepended with + or -
+##|                                           the provided list will override the default
+##|         
+##|                                     Default: 200,204,301,302,307,401,403
+##|  -k, --insecuressl                  Skip SSL certificate verification
+##|  --wildcard                         Force continued operation when wildcard found
+##|  --                                 Pass the rest of the arguments to gobuster
+######################################################################
+
+gb_args=()
+gb_args_count=0
+add_gb_args() {
+    while [[ $# -gt 0 ]]; do
+        gb_args[$gb_args_count]="$1"
+        gb_args_count=$(($gb_args_count + 1))
+        shift
+    done
+}
+show_usage() {
+    cat $0 | grep -a "^##[\|]" | sed "s/##[|]//g"
+}
+get_as_sorted_list() {
+    # replace commas with new line and sort
+    echo "$1" | sed 's/,/\n/g' | sort -u
+}
+get_difference() {
+    comm -23 <(get_as_sorted_list $1) <(get_as_sorted_list $2) | combine_lines
+}
+combine_lines() {
+    echo $(cat -) | sed 's/\s/,/g'
+}
+list_by_prefix() {
+    sed 's/,/\n/g' | grep $1 | cut -d$1 -f2
+}
+run(){
+    hostname=`echo $url | sed "s/http\(s\)\?:\/\///" | cut -d/ -f1`
+    output_file="gobuster.$(echo "$url" | sed "s/http\(s\)\?:\/\///" | sed 's/\//\./g').$wordlist_name.txt"
+    output_path="$output_dir/$output_file"
+
+    # Check if hostname is an IP
+    if echo $hostname | grep -qP "(?:(?:2(?:[0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9])\.){3}(?:(?:2([0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9]))"; then
+        host=$hostname
+
+        # Get hostname from IP
+        hostname=$(host $host | grep "domain name pointer" | awk '{print $NF}' | sed 's/\.$//')
+    else
+        # Get IP from hostname
+        host=`host $hostname | grep "has address" | cut -d' ' -f4 | head -n 1`
+        if [[ -z "$host" ]]; then
+            echo "Error resolving $hostname"
+            return 1
+        fi
+    fi
+
+    mkdir -p hosts/$host/recon
+    cd hosts/$host
+    if [[ -n "$hostname" ]]; then
+        if [ ! -f hostname ]; then
+            echo "$hostname" > hostname
+        fi
+
+        echo "$hostname" >> recon/hostnames.txt
+        cat recon/hostnames.txt | sort -u > recon/hostnames.txt.new
+        mv recon/hostnames.txt.new recon/hostnames.txt
+    fi
+    
+    gobuster dir -w $wordlist_file -u $url -o "$output_path" "${gb_args[@]}" $@
+    cd - > /dev/null
+}
+try_remove_empty_output() {
+    path="hosts/$host/$output_path"
+    if [[ -n "$output_path" && -e "$path" && ! -s "$path" ]]; then
+        rm "$path"
+    fi
+}
+graceful_exit() {
+    try_remove_empty_output
+
+    echo
+    echo "Exiting"
+    exit 0
+}
+
+trap graceful_exit SIGINT
+
+if [[ $# -eq 0 ]]; then
+    show_usage
+    exit 0
+fi
+
+output_dir="recon"
+status_codes="200,204,301,302,307,401,403"
+while [[ "$1" =~ ^- && ! "$1" == "--" ]]; do
+    case $1 in
+        -e|--expanded)
+            add_gb_args $1
+            ;;
+        -r|--followredirect)
+            add_gb_args $1
+            ;;
+        -k|--insecuressl)
+            add_gb_args $1
+            ;;
+        --wildcard)
+            add_gb_args $1
+            ;;
+        -t|--token) # access token for authorization
+            add_gb_args -H "Authorization: Bearer $2"
+            shift
+            ;;
+        --auth)
+            add_gb_args -H "Authorization: $2"
+            shift
+            ;;
+        -w|--wordlist)
+            wordlist_file=$(realpath "$2")
+            wordlist_name=`basename $wordlist_file`
+            wordlist_name="${wordlist_name%.*}"
+            shift
+            ;;
+        -u|--url)
+            url="$2"
+            if [[ -z "$urls" ]]; then
+                urls="$url"
+            else
+                urls=`echo -e "$2\n$urls" | sort -u`
+            fi
+            shift
+            ;;
+        -uf|--url-file)
+            contents=`cat "$2" | grep -v "^#"`
+            if [[ -z "$urls" ]]; then
+                urls="$contents"
+            else
+                urls=`echo -e "$contents\n$urls" | sort -u`
+            fi
+            shift
+            ;;
+        -a|--useragent)
+            agent="$2"
+
+            case "$agent" in
+                Firefox|firefox)
+                    agent='Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101 Firefox/68.0'
+                    ;;
+                Safari|safari)
+                    agent='Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_2) AppleWebKit/601.3.9 (KHTML, like Gecko) Version/9.0.2 Safari/601.3.9'
+                    ;;
+                Chrome|chrome)
+                    agent='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36'
+                    ;;
+            esac
+            add_gb_args -a "$agent"
+            shift
+            ;;
+        -p|--proxy)
+            add_gb_args -p "$2"
+            shift
+            ;;
+        -o|--output-dir)
+            output_dir="$2"
+            shift
+            ;;
+        -h|--help)
+            show_usage
+            exit 0
+            ;;
+        -s|--status-codes) # status codes
+            # Split by comma, get all codes to remove, and combine back into comma separated list
+            remove_codes=`echo "$2" | list_by_prefix - | combine_lines`
+            
+            # Split by comma, get all codes to add, and combine back into comma separated list
+            add_codes=`echo "$2" | list_by_prefix + | combine_lines`
+            if [[ -z $remove_codes && -z $add_codes ]]; then
+                status_codes=`echo "$2" | sed 's/ //g'`
+            else
+                if [[ -n "$add_codes" ]]; then
+                    status_codes="$status_codes,$add_codes"
+                fi
+                
+                status_codes=`get_difference $status_codes $remove_codes`
+            fi
+            add_gb_args -s "$status_codes"
+            shift
+            ;;
+    esac;
+    shift; 
+done
+if [[ "$1" == '--' ]]; then 
+    shift 
+fi
+
+for url in $urls; do
+    run $@
+    try_remove_empty_output
+done

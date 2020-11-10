@@ -25,6 +25,9 @@ find hosts -name recon -print | while read d; do
   	else
   		echo no host found
     fi
+  else
+    cat hosts/$ip/hostname hosts/$ip/recon/hostnames.txt | sort -u > hosts/$ip/recon/hostnames.txt.new
+    mv hosts/$ip/recon/hostnames.txt.new hosts/$ip/recon/hostnames.txt
   fi
   if [ ! -f $d/host.txt ]; then
     grep $ip recon/ips/resolv-ips.txt | sort -u | tee $d/host.txt
@@ -44,6 +47,8 @@ function getHost {
   ip="$1"
    {
     cat hosts/$ip/recon/host.txt | grep pointer | awk '{print $NF}';
+    cat hosts/$ip/recon/hostnames.txt;
+    cat hosts/$ip/hostname;
     cat hosts/$ip/recon/ar-get-cert-domains.txt
   } 2>/dev/null | sed 's/^\*\.//g' | sed 's/\.$//g' | sort -u | sed 's/^\(.\+\)$/"\1"/g'
 }

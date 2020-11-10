@@ -1,5 +1,10 @@
 #! /bin/bash
 
+if [ ! -f blacklist-domains.txt || ! -s blacklist-domains.txt ]; then
+    cat -
+    exit
+fi
+
 BLACKLIST_REGEX=$(echo $(cat blacklist-domains.txt | sed 's/\./\\./g') | sed 's/ /|/g')
 
 grep -vP $BLACKLIST_REGEX
