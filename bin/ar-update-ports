@@ -2,7 +2,8 @@
 
 ls hosts/*/recon/nmap-*.xml | while read nmap; do
   ip=$(echo $nmap | cut -d/ -f2)
-  ports=$(echo $(grep -oP 'portid="[^"]*' hosts/$ip/recon/nmap-*.xml | sed 's/portid="//g') | sed 's/ /,/g')
+  ports=$(echo $(grep -oP 'portid="[^"]*' hosts/$ip/recon/nmap-*.xml | cut -d: -f2 | sed 's/portid="//g') | sed 's/ /,/g')
+  echo "$ports"
   if [ ! -z "$ports" ]; then
     if cat hosts/$ip/README.md | grep -P "^ports = \[" >/dev/null ; then
       # update existing
