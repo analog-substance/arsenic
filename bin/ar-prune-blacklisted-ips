@@ -1,5 +1,10 @@
 #! /bin/bash
 
+if [ ! -f blacklist-ips.txt ] || [ ! -s blacklist-ips.txt ]; then
+    cat -
+    exit
+fi
+
 BLACKLIST_REGEX=$(echo $(cat blacklist-ips.txt | sed 's/\./\\./g') | sed 's/ /|/g')
 
 grep -vP $BLACKLIST_REGEX
