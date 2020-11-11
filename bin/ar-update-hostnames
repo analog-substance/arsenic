@@ -1,10 +1,25 @@
 #! /bin/bash
+
+function checkForAlias {
+  while read domain; do
+    aliases=$(grep -rP "\b$(echo $domain | sed 's/\./\\./g')\b" recon/domains/resolv-domains.txt | grep -P "alias" | awk '{print $1}' | sort -u | tr 'A-Z' 'a-z' | grep -viP "\b$(echo $domain | sed 's/\./\\./g')\b" )
+    # if we have an alias, lets see if it has an alias
+    if [ ! -z "$aliases" ] ; then
+      for alias in $aliases; do
+        echo $alias
+      done | checkForAlias
+    fi
+
+    echo $domain
+  done
+}
+
 function getHostNames {
   ip="$1"
   {
     # grep -l "$ip" recon/domains/*/host.txt 2>/dev/null | xargs -n1 dirname 2>/dev/null| xargs -n1  basename 2>/dev/null
-    grep -rP "\b$(echo $ip | sed 's/\./\\./g')\b" recon/domains/resolv-domains.txt | grep -P "address" | cut -d: -f2 | awk '{print $1}'
-  } | tr 'A-Z' 'a-z' | sort -u
+    grep -rP "\b$(echo $ip | sed 's/\./\\./g')\b" recon/domains/resolv-domains.txt | grep -P "address" | awk '{print $1}'
+  } | tr 'A-Z' 'a-z' | sort -u | checkForAlias
 }
 
 find hosts -name recon -print | while read d; do

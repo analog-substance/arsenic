@@ -30,7 +30,7 @@
 ##|                                         -   Don't use status code as success from the default
 ##|                                     Note: If no status codes are prepended with + or -
 ##|                                           the provided list will override the default
-##|         
+##|
 ##|                                     Default: 200,204,301,302,307,401,403
 ##|  -k, --insecuressl                  Skip SSL certificate verification
 ##|  --wildcard                         Force continued operation when wildcard found
@@ -67,23 +67,28 @@ run(){
     output_file="gobuster.$(echo "$url" | sed "s/http\(s\)\?:\/\///" | sed 's/\//\./g').$wordlist_name.txt"
     output_path="$output_dir/$output_file"
 
-    # Check if hostname is an IP
-    if echo $hostname | grep -qP "(?:(?:2(?:[0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9])\.){3}(?:(?:2([0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9]))"; then
-        host=$hostname
+    # if host dir exists we are in the op root.
+    if [ -f hosts ]; then
 
-        # Get hostname from IP
-        hostname=$(host $host | grep "domain name pointer" | awk '{print $NF}' | sed 's/\.$//')
-    else
-        # Get IP from hostname
-        host=`host $hostname | grep "has address" | cut -d' ' -f4 | head -n 1`
-        if [[ -z "$host" ]]; then
-            echo "Error resolving $hostname"
-            return 1
+        # Check if hostname is an IP
+        if echo $hostname | grep -qP "(?:(?:2(?:[0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9])\.){3}(?:(?:2([0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9]))"; then
+            host=$hostname
+
+            # Get hostname from IP
+            hostname=$(host $host | grep "domain name pointer" | awk '{print $NF}' | sed 's/\.$//')
+        else
+            # Get IP from hostname
+            host=`host $hostname | grep "has address" | cut -d' ' -f4 | head -n 1`
+            if [[ -z "$host" ]]; then
+                echo "Error resolving $hostname"
+                return 1
+            fi
         fi
+
+        mkdir -p hosts/$host/recon
+        cd hosts/$host
     fi
 
-    mkdir -p hosts/$host/recon
-    cd hosts/$host
     if [[ -n "$hostname" ]]; then
         if [ ! -f hostname ]; then
             echo "$hostname" > hostname
@@ -93,7 +98,7 @@ run(){
         cat recon/hostnames.txt | sort -u > recon/hostnames.txt.new
         mv recon/hostnames.txt.new recon/hostnames.txt
     fi
-    
+
     gobuster dir -w $wordlist_file -u $url -o "$output_path" "${gb_args[@]}" $@
     cd - > /dev/null
 }
@@ -198,7 +203,7 @@ while [[ "$1" =~ ^- && ! "$1" == "--" ]]; do
         -s|--status-codes) # status codes
             # Split by comma, get all codes to remove, and combine back into comma separated list
             remove_codes=`echo "$2" | list_by_prefix - | combine_lines`
-            
+
             # Split by comma, get all codes to add, and combine back into comma separated list
             add_codes=`echo "$2" | list_by_prefix + | combine_lines`
             if [[ -z $remove_codes && -z $add_codes ]]; then
@@ -207,17 +212,17 @@ while [[ "$1" =~ ^- && ! "$1" == "--" ]]; do
                 if [[ -n "$add_codes" ]]; then
                     status_codes="$status_codes,$add_codes"
                 fi
-                
+
                 status_codes=`get_difference $status_codes $remove_codes`
             fi
             add_gb_args -s "$status_codes"
             shift
             ;;
     esac;
-    shift; 
+    shift;
 done
-if [[ "$1" == '--' ]]; then 
-    shift 
+if [[ "$1" == '--' ]]; then
+    shift
 fi
 
 for url in $urls; do
