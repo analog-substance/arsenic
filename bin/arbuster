@@ -94,9 +94,13 @@ run(){
             echo "$hostname" > hostname
         fi
 
-        echo "$hostname" >> recon/hostnames.txt
-        cat recon/hostnames.txt | sort -u > recon/hostnames.txt.new
-        mv recon/hostnames.txt.new recon/hostnames.txt
+
+        # Check if hostname is an IP
+        if ! echo $hostname | grep -qP "(?:(?:2(?:[0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9])\.){3}(?:(?:2([0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9]))"; then
+          echo "$hostname" >> recon/hostnames.txt
+          cat recon/hostnames.txt | sort -u > recon/hostnames.txt.new
+          mv recon/hostnames.txt.new recon/hostnames.txt
+        fi
     fi
 
     gobuster dir -w $wordlist_file -u $url -o "$output_path" "${gb_args[@]}" $@
