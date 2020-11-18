@@ -2,24 +2,33 @@
 
 ls hosts/*/recon/nmap-*.xml | while read nmap; do
   ip=$(echo $nmap | cut -d/ -f2)
-  ports=$(echo $(grep -oP 'portid="[^"]*' hosts/$ip/recon/nmap-*.xml | cut -d: -f2 | sed 's/portid="//g') | sed 's/ /,/g')
-  echo "$ports"
+  ports=$(echo $(grep -oP 'portid="[^"]*' hosts/$ip/recon/nmap-*.xml | cut -d: -f2 | sed 's/portid="//g' | sort -h | uniq) | sed 's/ /,/g')
+  new_ports="ports = [$ports]"
+
   if [ ! -z "$ports" ]; then
-    if cat hosts/$ip/README.md | grep -P "^ports = \[" >/dev/null ; then
+    existing_ports=$(cat hosts/$ip/README.md | grep -P "^ports = \[")
+    if [ ! -z "$existing_ports" ] ; then
       # update existing
-      # cat hosts/$ip/README.md | sed 's/ports = \[[0-9,]\+\]/ports = ['$ports']/' | tee hosts/$ip/README.md
-      echo skip > /dev/null
+      if [ "$existing_ports" !=  "$new_ports" ] ; then
+        echo updating $ip
+        echo existing: $existing_ports
+        echo new: $new_ports
+        cat hosts/$ip/README.md | sed 's/ports = \[[0-9,]\+\]/'"$new_ports"'/' | tee hosts/$ip/README.md
+      fi
+      # echo skip > /dev/null
     else
       if cat hosts/$ip/README.md | grep '+++' >/dev/null ; then
         # add to existing front matter
         echo "[+] Add $ports for $ip"
-        cat hosts/$ip/README.md | sed '0,/+++/! {0,/+++/ s/+++/ports = ['$ports']\n+++/}' > hosts/$ip/README.md.new
+        cat hosts/$ip/README.md | sed '0,/+++/! {0,/+++/ s/+++/'"$new_ports"'\n+++/}' > hosts/$ip/README.md.new
         mv hosts/$ip/README.md.new hosts/$ip/README.md
       else
         # no front matter found lets add it
+        echo "[+] Creating README for $ip with $ports"
+
         {
           echo "+++"
-          echo "ports = [$ports]"
+          echo "$new_ports"
           echo "+++"
           echo
           cat hosts/$ip/README.md
