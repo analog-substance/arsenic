@@ -118,7 +118,7 @@ getHosts | while read d; do
   # if [ "$ip" != "deub ip" ] ; then
   #   continue
   # fi
-  flags=$( echo $(getFlags "$ip") | sed 's|\/|/|g' | sed 's/\([\/]\)/\\\1/g' | sed 's/ /,/g' | sed 's/spaaaacee/ /g')
+  flags=$( echo $(getFlags "$ip") | sed 's|\/|/|g' | sed 's/ /,/g' | sed 's/spaaaacee/ /g')
   if [ ! -z "$flags" ]; then
     if cat hosts/$ip/README.md | grep -P "^flags = \[" > /dev/null; then
       # update existing
@@ -126,14 +126,14 @@ getHosts | while read d; do
         echo noop > /dev/null
       else
         echo "[+] Updating $flags for $ip"
-        cat hosts/$ip/README.md | sed 's/flags = \[.*\]/flags = ['"$flags"']/' > hosts/$ip/README.md.new
+        cat hosts/$ip/README.md | sed 's|flags = \[.*\]|flags = ['"$flags"']|' > hosts/$ip/README.md.new
         mv hosts/$ip/README.md.new hosts/$ip/README.md
       fi
     else
       if cat hosts/$ip/README.md | grep '+++' > /dev/null ; then
         # add to existing front matter
         echo "[+] Add $flags for $ip"
-        cat hosts/$ip/README.md | sed '0,/+++/! {0,/+++/ s/+++/flags = ['"$flags"']\n+++/}' > hosts/$ip/README.md.new
+        cat hosts/$ip/README.md | sed '0,/+++/! {0,/+++/ s|+++|flags = ['"$flags"']\n+++|}' > hosts/$ip/README.md.new
         mv hosts/$ip/README.md.new hosts/$ip/README.md
 
       else
