@@ -1,0 +1,115 @@
+#! /bin/bash
+ME=$0
+CMD=""
+ARG=""
+if [ ! -z "$1" ]; then
+  CMD="$1"
+fi
+
+if [ ! -z "$2" ]; then
+  ARG="$2"
+fi
+
+set -euo pipefail
+
+WEB_PORTS="80,443,3000,8000,8001,8080,8443"
+
+function getHosts {
+  if ! git pull > /dev/null 2>&1 ; then
+    echo "[!] pull failed" >&2
+  fi
+
+ {
+   find hosts -name 'gobuster.*.gobuster-initial.txt' -size +0 | cut -d/ -f2 | sort -u
+   find hosts -name 'aquatone-gobuster-initial.txt' | cut -d/ -f2 | sort -u
+ } | sort | uniq -c | grep "1 " | awk '{print $2}' | while read host; do
+    urls=$(cat hosts/$host/recon/gobuster.*.gobuster-initial.txt \
+    | sort -u \
+    | grep -vP "Status: (3|4|5)0" \
+    | awk '{print $1}' \
+    | wc -l)
+    if [ "$urls" != "0" ]; then
+      echo $host
+    fi
+  done | sort -R
+}
+
+function scanHost {
+  host="$1"
+  echo checking $host
+
+  if [ ! -f "hosts/$host/recon/aquatone-gobuster-initial.txt" ] ; then
+    echo preparing to aquatone $host
+
+    cd "hosts/$host"
+    cat recon/*.gobuster-initial.txt \
+    | sort -u \
+    | grep -vP "Status: (3|4|5)0" \
+    | awk '{print $1}' \
+    | tee "recon/aquatone-gobuster-initial.txt" \
+    | aquatone -ports $WEB_PORTS -out recon/aquatone-gobuster-initial &
+    pid=$!
+
+    sleep 1
+    git add .
+    git commit -m "aquatone start $host"
+    if ! git pull --rebase ; then
+      git commit -am "wtf is this..."
+      git pull --rebase
+    fi
+    git push
+    echo wait for aquatone...
+
+    cd -
+    if wait $pid; then
+      echo good
+      sleep 1
+      ar-update-flags.sh git
+      ar-update-flags.sh git
+
+      sleep 1
+      # remove UTF BOM, this fixes aquatone being rendered in hugo
+      find hosts -name '*.html' -exec sed -i '1s/^\xEF\xBB\xBF//' {} \;
+      git add .
+      if git commit -m "aquatone end $host" ; then
+        if ! git pull --rebase ; then
+          git commit -am "wtf is this"
+          git pull --rebase
+        fi
+        if ! git push ; then
+          git pull --rebase
+          git push
+        fi
+      else
+        echo nothing happened
+      fi
+    else
+      echo not sure what happened
+    fi
+  fi
+  echo host check complete
+  sleep 10
+
+  ARG=$(head -n1 <<<$($ME list))
+  if [ ! -z "$ARG" ] ; then
+    exec $ME scan "$ARG"
+  fi
+}
+
+if [ -z "$CMD" ] ; then
+  echo "aquatone-next [ list | scan [ hostname/ip ] ]"
+  exit
+fi
+
+if [ "$CMD" == "list" ]; then
+  getHosts
+  exit
+fi
+
+if [ "$CMD" == "scan" ] ; then
+  if [ -z "$ARG" ] ; then
+    ARG=$(getHosts | head -n1)
+    echo "[!] Auto selected $ARG"
+  fi
+  scanHost "$ARG"
+fi
