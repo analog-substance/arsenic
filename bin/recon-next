@@ -18,7 +18,7 @@ echo this is broken...
 sleep 5
 # i need to figure out how to resolve all aliases
 # and only scan non blacklisted things
-# i guess it is not broken, just ineffecient 
+# i guess it is not broken, just ineffecient
 function checkForAlias {
   while read domain; do
     echo $domain
@@ -81,7 +81,7 @@ function scanHost {
 
     cd "hosts/$host"
 
-    ar-recon-discover-services $(rhost) &
+    ar-recon-discover-services "$host" &
     sleep 1
     git add .
     git commit -m "nmap"
