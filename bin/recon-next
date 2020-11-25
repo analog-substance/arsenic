@@ -14,11 +14,10 @@ set -euo pipefail
 
 
 
-echo this is broken...
-sleep 5
-# i need to figure out how to resolve all aliases
-# and only scan non blacklisted things
-# i guess it is not broken, just ineffecient
+echo this is ineffecient...
+echo blacklisted things may get scanned
+sleep 2
+
 function checkForAlias {
   while read domain; do
     echo $domain
@@ -94,7 +93,6 @@ function scanHost {
     wait
     cd -
     ar-update-flags.sh git
-    ar-update-flags.sh git # sorry there is a bug requires this to happen twice
   #  ar-update-hostnames
 
     git add "hosts/$host"
