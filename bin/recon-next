@@ -12,10 +12,8 @@ fi
 # set -x
 set -euo pipefail
 
-
-
-echo this is ineffecient...
-echo blacklisted things may get scanned
+echo this is ineffecient... >&2
+echo blacklisted things may get scanned >&2
 sleep 2
 
 function checkForAlias {
