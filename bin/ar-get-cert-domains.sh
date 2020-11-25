@@ -8,6 +8,8 @@ if [ ! -z "$2" ]; then
   PORT="$2"
 fi
 
+mkdir -p hosts/$HOST/recon
+
 {
   echo \
     | openssl s_client -showcerts -connect $HOST:$PORT 2>/dev/null \
@@ -24,4 +26,4 @@ fi
       | grep -oP "CN ?=[ ]*[^ ]+" \
       | cut -d= -f2 \
       | sed 's/^[ ]*//g'
-} | sort -u
+} | sort -u | tee hosts/$HOST/recon/ssl-cert-domains-${HOST}-${PORT}.txt
