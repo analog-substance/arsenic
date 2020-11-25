@@ -2,7 +2,7 @@
 
 function checkForAlias {
   while read domain; do
-    aliases=$(grep -rP "\b$(echo $domain | sed 's/\./\\./g')\b" recon/domains/resolv-domains.txt | grep -P "alias" | awk '{print $1}' | sort -u | tr 'A-Z' 'a-z' | grep -viP "\b$(echo $domain | sed 's/\./\\./g')\b" )
+    aliases=$(grep -rP "\b$(echo $domain | sed 's/\./\\./g')\b" recon/domains/resolv-domains.txt | grep -P "alias" | awk '{print $1}' | sort -h | uniq | tr 'A-Z' 'a-z' | grep -viP "\b$(echo $domain | sed 's/\./\\./g')\b" )
     # if we have an alias, lets see if it has an alias
     if [ ! -z "$aliases" ] ; then
       for alias in $aliases; do
@@ -19,7 +19,7 @@ function getHostNames {
   {
     # grep -l "$ip" recon/domains/*/host.txt 2>/dev/null | xargs -n1 dirname 2>/dev/null| xargs -n1  basename 2>/dev/null
     grep -rP "\b$(echo $ip | sed 's/\./\\./g')\b" recon/domains/resolv-domains.txt | grep -P "address" | awk '{print $1}'
-  } | tr 'A-Z' 'a-z' | sort -u | checkForAlias
+  } | tr 'A-Z' 'a-z' | sort -h | uniq | checkForAlias
 }
 
 find hosts -name recon -print | while read d; do
@@ -42,12 +42,11 @@ find hosts -name recon -print | while read d; do
   		echo no host found
     fi
   else
-    cat hosts/$ip/hostname hosts/$ip/recon/hostnames.txt | sort -u > hosts/$ip/recon/hostnames.txt.new
+    cat hosts/$ip/hostname hosts/$ip/recon/hostnames.txt | sort -h | uniq > hosts/$ip/recon/hostnames.txt.new
     mv hosts/$ip/recon/hostnames.txt.new hosts/$ip/recon/hostnames.txt
   fi
   if [ ! -f $d/host.txt ]; then
-    grep -rP "\b$(echo $ip | sed 's/\./\\./g')\b" recon/ips/resolv-ips.txt | sort -u | tee $d/host.txt
-    # host $ip | sort | tee $d/host.txt;
+    grep -rP "\b$(echo $ip | sed 's/\./\\./g')\b" recon/ips/resolv-ips.txt | sort -h | uniq | tee $d/host.txt
   fi;
   echo -n .
 done
@@ -60,7 +59,7 @@ ls hosts/*/recon/host.txt | while read d; do
   fi
 done
 
-function getHost {
+function getHostnames {
   ip="$1"
    {
     cat hosts/$ip/recon/host.txt | grep pointer | awk '{print $NF}';
@@ -68,18 +67,29 @@ function getHost {
     cat hosts/$ip/hostname;
     cat hosts/$ip/recon/ar-get-cert-domains.txt
     cat hosts/$ip/recon/hostnames.txt
-  } 2>/dev/null | sed 's/^\*\.//g' | sed 's/\.$//g' | tr 'A-Z' 'a-z' | sort -u | sed 's/^\(.\+\)$/"\1"/g'
+  } 2>/dev/null | sed 's/^\*\.//g' | sed 's/\.$//g' | tr 'A-Z' 'a-z' | sort -h | uniq | sed 's/^\(.\+\)$/"\1"/g'
+}
+
+function getRootDomains {
+  ip="$1"
+   {
+    cat hosts/$ip/recon/host.txt | grep pointer | awk '{print $NF}';
+    cat hosts/$ip/recon/hostnames.txt;
+    cat hosts/$ip/hostname;
+    cat hosts/$ip/recon/ar-get-cert-domains.txt
+    cat hosts/$ip/recon/hostnames.txt
+  } 2>/dev/null | grep -vP "([0-9]{1,3}\.){3}[0-9]{1,3}" | sed 's/^\*\.//g' | sed 's/\.$//g' | tr 'A-Z' 'a-z' | awk -F. '{print $(NF-1) "." $NF}' | sort -h | uniq | sed 's/^\(.\+\)$/"\1"/g'
 }
 
 find hosts -name recon -print | while read d; do
   ip=$(echo $d | cut -d/ -f2);
-  # if [ "$ip" != "192.101.105.56" ] ; then
-  #   continue
-  # fi
-  hostnames=$( echo $(getHost "$ip") | sed 's/ /,/g')
+  hostnames=$( echo $(getHostnames "$ip") | sed 's/ /,/g')
+  root_domains=$( echo $(getRootDomains "$ip") | sed 's/ /,/g')
   if [ ! -z "$hostnames" ]; then
-    echo "hostnames = [$hostnames]"
     echo $ip
+    echo "hostnames = [$hostnames]"
+    echo "root_domains = [$root_domains]"
+
     if cat hosts/$ip/README.md | grep -P "^hostnames = \["; then
       # update existing
       cat hosts/$ip/README.md | sed 's/hostnames = \[.\+\]/hostnames = ['$hostnames']/' > hosts/$ip/README.md.new
@@ -99,6 +109,21 @@ find hosts -name recon -print | while read d; do
           cat hosts/$ip/README.md
         } > hosts/$ip/README.md.new
         mv hosts/$ip/README.md.new hosts/$ip/README.md
+      fi
+    fi
+
+    if cat hosts/$ip/README.md | grep -P "^root_domains = \["; then
+      # update existing
+      cat hosts/$ip/README.md | sed 's/root_domains = \[.\+\]/root_domains = ['$root_domains']/' > hosts/$ip/README.md.new
+      mv hosts/$ip/README.md.new hosts/$ip/README.md
+    else
+      if cat hosts/$ip/README.md | grep '+++' ; then
+        # add to existing front matter
+        cat hosts/$ip/README.md | sed '0,/+++/! {0,/+++/ s/+++/root_domains = ['$root_domains']\n+++/}'  > hosts/$ip/README.md.new
+        mv hosts/$ip/README.md.new hosts/$ip/README.md
+      else
+        # no front matter?! where did it go we should have just added it if it didn't exist...
+        echo "how did we get here? seriously! wtf!?"
       fi
     fi
   fi
