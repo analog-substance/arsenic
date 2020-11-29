@@ -1,0 +1,128 @@
+#! /bin/bash
+
+CMD=""
+ARG=""
+if [ ! -z "$1" ]; then
+  CMD="$1"
+fi
+
+if [ ! -z "$2" ]; then
+  ARG="$2"
+fi
+# set -x
+set -euo pipefail
+
+echo this is ineffecient... >&2
+echo blacklisted things may get scanned >&2
+sleep 2
+
+function checkForAlias {
+  while read domain; do
+    echo $domain
+    set +e
+    aliases=$(grep -rP "\b$(echo $domain | sed 's/\./\\./g')\b" recon/domains/resolv-domains.txt \
+    | grep -P "alias" \
+    | awk '{print $1}' \
+    | sort -u \
+    | tr 'A-Z' 'a-z' \
+    | grep -viP "\b$(echo $domain | sed 's/\./\\./g')\b" )
+    # if we have an alias, lets see if it has an alias
+    set -e
+    if [ ! -z "$aliases" ] ; then
+      for alias in $aliases; do
+        echo  $alias
+      done | checkForAlias
+    fi
+  done
+}
+
+function getHosts {
+  if ! git pull > /dev/null 2>&1 ; then
+    echo "[!] pull failed" >&2
+  fi
+
+  {
+    cat scope-ips-active.txt
+    find hosts -name nmap-punched-quick.nmap  | cut -d/ -f2
+    ls -d hosts/* | cut -d/ -f2
+
+  } | ar-prune-blacklisted-ips | sort | uniq -c | grep "1 " | awk '{print $2}' | while read ip; do
+    # domains=$(echo $(
+    grep -rP "\b$(echo $ip | sed 's/\./\\./g')\b" recon/domains/resolv-domains.txt \
+    | grep -P "address" \
+    | awk '{print $1}' \
+    | tr 'A-Z' 'a-z' \
+    | sort -u \
+    | checkForAlias #))
+    echo
+    # echo $domains
+    # echo -n "is it good? "
+    # echo $domains | ar-prune-blacklisted-domains
+  done
+}
+
+function scanHost {
+  host="$1"
+  echo checking $host
+
+  if ! compgen -G "hosts/$host/recon/nmap-punched*" > /dev/null 2>&1; then
+    echo setting up host
+    mkdir -p "hosts/$host/recon"
+    if [ ! -f "hosts/$host/recon/.keep" ]; then
+      touch "hosts/$host/recon/.keep"
+      git add "hosts/$host/recon/.keep"
+      git commit -m "new host: $host"
+      git pull --rebase
+      git push
+    fi
+
+    cd "hosts/$host"
+
+    ar-recon-discover-services "$host" &
+    sleep 1
+    git add .
+    git commit -m "nmap"
+    if ! git pull --rebase ; then
+      git commit -am "wtf is this..."
+      git pull --rebase
+    fi
+    git push
+    echo wait for nmap...
+    wait
+    cd -
+    ar-update-flags.sh git
+  #  ar-update-hostnames
+
+    git add "hosts/$host"
+    if git commit -m "recon host: $host" ; then
+      git pull --rebase
+      git push
+    else
+      echo "nothing happened"
+    fi
+  fi
+  echo host check complete
+
+  ARG=$($0 list | head -n1)
+  if [ ! -z "$ARG" ] ; then
+    exec $0 scan "$ARG"
+  fi
+}
+
+if [ -z "$CMD" ] ; then
+  echo "recon-next [ list | scan [ hostname/ip ] ]"
+  exit
+fi
+
+if [ "$CMD" == "list" ]; then
+  getHosts
+  exit
+fi
+
+if [ "$CMD" == "scan" ] ; then
+  if [ -z "$ARG" ] ; then
+    ARG=$(getHosts | head -n1)
+    echo "[!] Auto selected $ARG"
+  fi
+  scanHost "$ARG"
+fi

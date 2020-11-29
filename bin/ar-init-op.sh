@@ -29,46 +29,69 @@ _ "Creating op: $OP_NAME"
 mkdir -p "$OP_PATH"
 cd "$OP_PATH"
 
-mkdir -p apps bin report/{findings,sections,static} hosts recon/domains
-touch {apps,bin,recon}/.keep report/static/.keep
+if [ ! -d ".hugo" ]; then
 
-mkdir -p hosts/127.0.0.1/recon
-touch hosts/127.0.0.1/README.md
+  mkdir -p apps bin report/{findings,sections,static} hosts recon/domains
+  touch {apps,bin,recon}/.keep report/static/.keep
 
-_ "Setup hugo"
-git clone https://github.com/defektive/arsenic-hugo.git
+  mkdir -p hosts/127.0.0.1/recon
+  touch hosts/127.0.0.1/README.md
 
-rm -rf arsenic-hugo/.git
-mv arsenic-hugo/example .hugo
-mkdir .hugo/themes
-mv arsenic-hugo .hugo/themes/arsenic
+  _ "Setup hugo"
+  git clone https://github.com/defektive/arsenic-hugo.git
 
-mv .hugo/README.md report/sections/
-ln -s report/sections/README.md
+  rm -rf arsenic-hugo/.git
+  mv arsenic-hugo/example .hugo
+  mkdir .hugo/themes
+  mv arsenic-hugo .hugo/themes/arsenic
 
-cd .hugo
-mv config.toml ../
-ln -s ../config.toml
-mv sample-finding ../report/findings/first-finding
+  mv .hugo/README.md report/sections/
+  ln -s report/sections/README.md
 
-cd content
-ln -srf ../../recon
-ln -srf ../../hosts
-ls -d ../../report/* | xargs -n 1 ln -srf
+  cd .hugo
+  mv config.toml ../
+  ln -s ../config.toml
+  mv sample-finding ../report/findings/first-finding
 
-_ "Hugo Setup complete"
+  cd content
+  ln -srf ../../recon
+  ln -srf ../../hosts
+  ls -d ../../report/* | xargs -n 1 ln -srf
 
-cd ../../
+  _ "Hugo Setup complete"
 
-if [ ! -f Makefile ]; then
-  {
-    echo -e "report::\n\tcd .hugo; \\"
-    echo -e "\thugo server"
-  } >> Makefile
+  cd ../../
+
+  if [ ! -f Makefile ]; then
+    {
+      echo -e "report::\n\tcd .hugo; \\"
+      echo -e "\thugo server"
+    } >> Makefile
+  fi
 fi
+
+echo
+ls -d $ARSENIC_OPT_PATH/*/scripts/ar-init-op.sh 2>/dev/null
 
 
 ls -d $ARSENIC_OPT_PATH/*/scripts/ar-init-op.sh 2>/dev/null | while read hook; do
   echo "[+] running $hook"
   bash "$hook"
 done
+
+echo "[+] Hooks completed"
+
+if [ -d .git ]; then
+  echo "[+] echo git found"
+  if [ "$(git status --porcelain | wc -l)" -gt 0 ]; then
+    echo "[!] git changes detected"
+    git status
+  fi
+
+  echo
+  echo "[+] git clone $(cat .git/config | grep op.git | awk '{print $3}')"
+fi
+
+
+
+echo "[+] ar init complete"

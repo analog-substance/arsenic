@@ -7,8 +7,10 @@ function run {
   ar-get-cert-domains.sh $1 $2 || echo "fail"
 }
 
-nmap -p443,8443 -iL  scope-ips-public-ipv4.txt -oA recon/nmap-https-check-all-ips --open
-cat recon/nmap-https-check-all-ips.gnmap|grep Ports: | awk '{print $2,$5}' | cut -d/ -f1 | while read l; do
+nmap -p443,8443 -iL  scope-ips-active-ipv4.txt -oA recon/nmap-https-check-all-ipv4 --open
+nmap -p443,8443 -iL  scope-ips-active-ipv6.txt -oA recon/nmap-https-check-all-ipv6 --open
+
+cat recon/nmap-https-check-all-ip*.gnmap|grep Ports: | awk '{print $2,$5}' | cut -d/ -f1 | while read l; do
   host=$(echo $l | awk '{print $1}');
   port=$(echo $l | awk '{print $2}');
   run $host $port | sed 's/^/'$host:$port' /g'

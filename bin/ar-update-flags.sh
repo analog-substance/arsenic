@@ -18,11 +18,11 @@ function getFlags {
         cat  "hosts/$ip/recon/nmap-punched.nmap" | grep -v "may be unreliable because we could not find at least 1 open and 1 closed port" | grep open | awk '{$1=$2=$3=""; print $0}' | grep -P '[^\s]+' | sed 's/^\s\+/SVC::/g' | sort -u
       fi
     else
-      if [ -f "hosts/$ip/recon/${ip}_services.xml" ]; then
+      if [ -f "hosts/$ip/recon/nmap-${ip}_services.xml" ]; then
 
-        if cat "hosts/$ip/recon/${ip}_services.xml" | grep 'state="open"' > /dev/null 2>&1 ; then
+        if cat "hosts/$ip/recon/nmap-${ip}_services.xml" | grep 'state="open"' > /dev/null 2>&1 ; then
           echo 'PORTS'
-          cat "hosts/$ip/recon/${ip}_services.xml" | grep 'state="open"' | grep -oP '<service .+$' | sed 's/<\/\?[^ >]*>\? \?//g' |  sed 's/name="\([^"]\+\)" \(product="\([^"]\+\)"\)\?\(.*\)/\1\n\3/g' | grep "." |  sed 's/^/SVC::/g'
+          cat "hosts/$ip/recon/nmap-${ip}_services.xml" | grep 'state="open"' | grep -oP '<service .+$' | sed 's/<\/\?[^ >]*>\? \?//g' |  sed 's/name="\([^"]\+\)" \(product="\([^"]\+\)"\)\?\(.*\)/\1\n\3/g' | grep "." |  sed 's/^/SVC::/g'
         else
           echo 'NOPORTS'
           NOPORTS=1
@@ -118,7 +118,7 @@ getHosts | while read d; do
   # if [ "$ip" != "deub ip" ] ; then
   #   continue
   # fi
-  flags=$( echo $(getFlags "$ip") | sed 's|\/|/|g' | sed 's/\([\/]\)/\\\1/g' | sed 's/ /,/g' | sed 's/spaaaacee/ /g')
+  flags=$( echo $(getFlags "$ip") | sed 's|\/|/|g' | sed 's/ /,/g' | sed 's/spaaaacee/ /g')
   if [ ! -z "$flags" ]; then
     if cat hosts/$ip/README.md | grep -P "^flags = \[" > /dev/null; then
       # update existing
@@ -126,14 +126,14 @@ getHosts | while read d; do
         echo noop > /dev/null
       else
         echo "[+] Updating $flags for $ip"
-        cat hosts/$ip/README.md | sed 's/flags = \[.*\]/flags = ['"$flags"']/' > hosts/$ip/README.md.new
+        cat hosts/$ip/README.md | sed 's|flags = \[.*\]|flags = ['"$flags"']|' > hosts/$ip/README.md.new
         mv hosts/$ip/README.md.new hosts/$ip/README.md
       fi
     else
       if cat hosts/$ip/README.md | grep '+++' > /dev/null ; then
         # add to existing front matter
         echo "[+] Add $flags for $ip"
-        cat hosts/$ip/README.md | sed '0,/+++/! {0,/+++/ s/+++/flags = ['"$flags"']\n+++/}' > hosts/$ip/README.md.new
+        cat hosts/$ip/README.md | sed '0,/+++/! {0,/+++/ s|+++|flags = ['"$flags"']\n+++|}' > hosts/$ip/README.md.new
         mv hosts/$ip/README.md.new hosts/$ip/README.md
 
       else

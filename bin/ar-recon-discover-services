@@ -1,7 +1,7 @@
 #! /bin/bash
 
 quick_scan() {
-    nmap --open -T5 -n -Pn -p- $1
+    nmap --open -T5 -n -Pn -p- $1 -oA recon/nmap-punched-quick
 }
 
 accurate_punch(){
@@ -20,7 +20,7 @@ accurate_punch(){
 try_punch(){
   base_dir="hosts/$ip"
   mkdir -p $base_dir/loot/passwords $base_dir/recon
-  if [ ! -f "$base_dir/recon/nmap-punched.gnmap" ] ; then
+  if [ ! -f "$base_dir/recon/nmap-punched-quick.gnmap" ] ; then
     cd $base_dir
     accurate_punch $ip
     cd - 2>/dev/null
