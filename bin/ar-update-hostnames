@@ -14,21 +14,26 @@ function checkForAlias {
   done
 }
 
-function getHostNames {
+function getDomainsForIP {
   ip="$1"
   {
     # grep -l "$ip" recon/domains/*/host.txt 2>/dev/null | xargs -n1 dirname 2>/dev/null| xargs -n1  basename 2>/dev/null
     grep -rP "\b$(echo $ip | sed 's/\./\\./g')\b" recon/domains/resolv-domains.txt | grep -P "address" | awk '{print $1}'
-  } | tr 'A-Z' 'a-z' | sort -h | uniq | checkForAlias
+    cat hosts/$ip/recon/host.txt | grep pointer | awk '{print $NF}';
+    cat hosts/$ip/recon/hostnames.txt;
+    cat hosts/$ip/hostname;
+    cat hosts/$ip/recon/ar-get-cert-domains.txt
+    cat hosts/$ip/recon/hostnames.txt
+    } 2>/dev/null | sed 's/^\*\.//g' | sed 's/\.$//g' | tr 'A-Z' 'a-z' | sort -h | uniq | checkForAlias
 }
 
 find hosts -name recon -print | while read d; do
   ip=$(echo $d | cut -d/ -f2);
-  echo $d
+
   if [ ! -f hosts/$ip/recon/hostnames.txt ]; then
-	  echo attempting to find $ip in domains/recons/resolve
-	  getHostNames $ip | tee  hosts/$ip/recon/hostnames.txt
-    echo -n .
+	  getDomainsForIP $ip | tee hosts/$ip/recon/hostnames.txt | while read hostname; do
+      echo "[+] $ip $hostname"
+    done
   fi
 
   if [ ! -f hosts/$ip/hostname ]; then
@@ -48,7 +53,6 @@ find hosts -name recon -print | while read d; do
   if [ ! -f $d/host.txt ]; then
     grep -rP "\b$(echo $ip | sed 's/\./\\./g')\b" recon/ips/resolv-ips.txt | sort -h | uniq | tee $d/host.txt
   fi;
-  echo -n .
 done
 
 ls hosts/*/recon/host.txt | while read d; do
