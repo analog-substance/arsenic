@@ -59,16 +59,16 @@ function scanHost {
       else
         # gobuster dir -e -k --random-agent -d -u $url -w ../../recon/gobuster-wordlist.txt -o "recon/gobuster-wordlist-$hostname-$port.txt" &
         set +o pipefail
-set +e
+        set +e
         arbuster -k -e -a Firefox -u $url -w $wordlist_file &
         pid=$!
-	sleep 1
+        sleep 1
         git add .
         git commit -m "start gobuster $url"
-        if ! git pull --rebase ; then 
-		git commit -am "wtf is this"
-		git pull --rebase
-	fi
+        if ! git pull --rebase ; then
+          git commit -am "wtf is this"
+          git pull --rebase
+      	fi
 
         git push
 
@@ -81,26 +81,29 @@ set +e
 
           git add .
           git commit -m "gobuster end $url"
-        if ! git pull --rebase ; then 
-		git commit -am "wtf is this"
-		git pull --rebase
-	fi
+        if ! git pull --rebase ; then
+          git commit -am "wtf is this"
+          git pull --rebase
+        fi
           git push
         else
           echo probably need to tweak gobuster flags
         fi
-set -e
+        set -e
         set -o pipefail
       fi
     fi
     cd - > /dev/null
   fi
 
-  ARGS=$(head -n1 <<<$($ME list))
-  if [ ! -z "$ARGS" ] ; then
-    ARG_HOST=$(echo "$ARGS" | awk '{print $1}')
-    ARG_URL=$(echo "$ARGS" | awk '{print $2}')
-    exec $ME scan $ARG_HOST $ARG_URL
+
+  if [ $MANUAL -eq 0 ]; then
+    ARGS=$(head -n1 <<<$($ME list))
+    if [ ! -z "$ARGS" ] ; then
+      ARG_HOST=$(echo "$ARGS" | awk '{print $1}')
+      ARG_URL=$(echo "$ARGS" | awk '{print $2}')
+      exec $ME scan $ARG_HOST $ARG_URL
+    fi
   fi
 }
 
@@ -153,7 +156,9 @@ if [ "$CMD" == "list" ]; then
 fi
 
 if [ "$CMD" == "scan" ] ; then
+  MANUAL=1
   if [ -z "$ARG_HOST" ] ; then
+    MANUAL=0
     echo no args found, autodetecting
     ARGS=$(head -n1 <<<$($ME list))
     ARG_HOST=$(echo "$ARGS" | awk '{print $1}')
