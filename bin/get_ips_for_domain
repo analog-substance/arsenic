@@ -3,5 +3,5 @@
 CURL_DOMAIN=$1
 GREP_DOMAIN=`echo $CURL_DOMAIN |sed 's/\([a-z0-9\.-]\+\.\)\?\(\([a-z0-9\-]\+\)\.\([a-z]\+\)\)/\2/'`
 echo $CURL_DOMAIN $GREP_DOMAIN
-curl -s $CURL_DOMAIN | grep -oP '([^\"/=]+)'"$GREP_DOMAIN" | sort -u | xargs -n 1 host | grep "has address" | awk '{print $4,$1}'
+curl -s $CURL_DOMAIN | grep -oP '([^\"/=]+)'"$GREP_DOMAIN" | sort -u | uniq | xargs -n 1 host | grep "has address" | awk '{print $4,$1}'
 

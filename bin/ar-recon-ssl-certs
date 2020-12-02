@@ -18,7 +18,7 @@ done \
   | sed 's/\*\.//g' \
   | grep "\." \
   | ar-prune-blacklisted-domains \
-  | sort -u > recon/ssl-cert-domains.txt
-cat recon/ssl-cert-domains.txt | grep -v " fail" | awk '{print $NF}' | sort -u | tee scope-domains-ssl-certs.txt
+  | sort -u | uniq > recon/ssl-cert-domains.txt
+cat recon/ssl-cert-domains.txt | grep -v " fail" | awk '{print $NF}' | sort -u | uniq | tee scope-domains-ssl-certs.txt
 
 grep " fail" recon/ssl-cert-domains.txt

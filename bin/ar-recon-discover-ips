@@ -6,5 +6,5 @@ nmap -6 -iL scope-ips-public-ipv6.txt -oA recon/nmap-host-discovery-ipv6 -sn
 echo -e "\e[0m"
 
 echo "[+] Listing Active IPs"
-cat recon/nmap-host-discovery-ipv4.gnmap | grep Host: | awk '{print $2}' | sort -u | tee scope-ips-active-ipv4.txt
-cat recon/nmap-host-discovery-ipv6.gnmap | grep Host: | awk '{print $2}' | sort -u | tee scope-ips-active-ipv6.txt
+cat recon/nmap-host-discovery-ipv4.gnmap | grep Host: | awk '{print $2}' | sort -u | uniq | tee scope-ips-active-ipv4.txt
+cat recon/nmap-host-discovery-ipv6.gnmap | grep Host: | awk '{print $2}' | sort -u | uniq | tee scope-ips-active-ipv6.txt
