@@ -20,6 +20,7 @@ function getDomainsForIP {
     # grep -l "$ip" recon/domains/*/host.txt 2>/dev/null | xargs -n1 dirname 2>/dev/null| xargs -n1  basename 2>/dev/null
     grep -rP "\b$(echo $ip | sed 's/\./\\./g')\b" recon/domains/resolv-domains.txt | grep -P "address" | awk '{print $1}'
     cat hosts/$ip/recon/host.txt | grep pointer | awk '{print $NF}';
+    cat hosts/$ip/recon/other-hostnames.txt;
     cat hosts/$ip/recon/hostnames.txt;
     cat hosts/$ip/hostname;
     cat hosts/$ip/recon/ar-get-cert-domains.txt
@@ -68,6 +69,7 @@ function getHostnames {
    {
     cat hosts/$ip/recon/host.txt | grep pointer | awk '{print $NF}';
     cat hosts/$ip/recon/hostnames.txt;
+    cat hosts/$ip/recon/other-hostnames.txt;
     cat hosts/$ip/hostname;
     cat hosts/$ip/recon/ar-get-cert-domains.txt
     cat hosts/$ip/recon/hostnames.txt
@@ -79,6 +81,7 @@ function getRootDomains {
    {
     cat hosts/$ip/recon/host.txt | grep pointer | awk '{print $NF}';
     cat hosts/$ip/recon/hostnames.txt;
+    cat hosts/$ip/recon/other-hostnames.txt;
     cat hosts/$ip/hostname;
     cat hosts/$ip/recon/ar-get-cert-domains.txt
     cat hosts/$ip/recon/hostnames.txt
