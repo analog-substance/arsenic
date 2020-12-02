@@ -42,7 +42,7 @@ function getHosts {
   fi
 
   {
-    cat scope-ips-active.txt
+    cat scope-active.txt
     find hosts -name nmap-punched-quick.nmap  | cut -d/ -f2
     ls -d hosts/* | cut -d/ -f2
 
