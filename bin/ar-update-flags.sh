@@ -1,7 +1,7 @@
 #! /bin/bash
 
 function getFlags {
-  ip="$1"
+  host="$1"
   {
 
     if [ ! -d "hosts/${host}/recon/" ]; then
