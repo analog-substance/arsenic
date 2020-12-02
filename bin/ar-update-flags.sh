@@ -4,25 +4,24 @@ function getFlags {
   ip="$1"
   {
 
-    if [ ! -d "hosts/$ip/recon/" ]; then
-      mkdir -p "hosts/$ip/recon/"
+    if [ ! -d "hosts/${host}/recon/" ]; then
+      mkdir -p "hosts/${host}/recon/"
     fi
 
     NOPORTS=0
-    if [ -f "hosts/$ip/recon/nmap-punched.nmap" ] ; then
-      if grep "Error #487" "hosts/$ip/recon/nmap-punched.nmap" 1>/dev/null ; then
+    if [ -f "hosts/${host}/recon/nmap-punched.nmap" ] ; then
+      if grep "Error #487" "hosts/${host}/recon/nmap-punched.nmap" 1>/dev/null ; then
         echo 'NOPORTS'
         NOPORTS=1
       else
         echo 'PORTS'
-        cat  "hosts/$ip/recon/nmap-punched.nmap" | grep -v "may be unreliable because we could not find at least 1 open and 1 closed port" | grep open | awk '{$1=$2=$3=""; print $0}' | grep -P '[^\s]+' | sed 's/^\s\+/SVC::/g' | sort -h | uniq
+        cat  "hosts/${host}/recon/nmap-punched.nmap" | grep -v "may be unreliable because we could not find at least 1 open and 1 closed port" | grep open | awk '{$1=$2=$3=""; print $0}' | grep -P '[^\s]+' | sed 's/^\s\+/SVC::/g' | sort -h | uniq
       fi
     else
-      if [ -f "hosts/$ip/recon/nmap-${ip}_services.xml" ]; then
-
-        if cat "hosts/$ip/recon/nmap-${ip}_services.xml" | grep 'state="open"' > /dev/null 2>&1 ; then
+      if compgen -G "hosts/${host}/recon/nmap-*_services.xml" 2>/dev/null; then
+        if cat "hosts/${host}/recon/nmap-"*"_services.xml" | grep 'state="open"' > /dev/null 2>&1 ; then
           echo 'PORTS'
-          cat "hosts/$ip/recon/nmap-${ip}_services.xml" | grep 'state="open"' | grep -oP '<service .+$' | sed 's/<\/\?[^ >]*>\? \?//g' |  sed 's/name="\([^"]\+\)" \(product="\([^"]\+\)"\)\?\(.*\)/\1\n\3/g' | grep "." |  sed 's/^/SVC::/g'
+          cat "hosts/${host}/recon/nmap-"*"_services.xml" | grep 'state="open"' | grep -oP '<service .+$' | sed 's/<\/\?[^ >]*>\? \?//g' |  sed 's/name="\([^"]\+\)" \(product="\([^"]\+\)"\)\?\(.*\)/\1\n\3/g' | grep "." |  sed 's/^/SVC::/g'
         else
           echo 'NOPORTS'
           NOPORTS=1
@@ -32,8 +31,8 @@ function getFlags {
         echo 'no-nmap'
       fi
     fi
-    if compgen -G "hosts/$ip/recon/"wappalyzer* 2>&1 > /dev/null ; then
-      ls "hosts/$ip/recon/"wappalyzer* | while read wappfile; do
+    if compgen -G "hosts/${host}/recon/"wappalyzer* 2>&1 > /dev/null ; then
+      ls "hosts/${host}/recon/"wappalyzer* | while read wappfile; do
         cat  "$wappfile" \
         | jq -r ' .applications[] | .categories[] |[ "WAPP-CAT", .[] ] | join("::")'
         cat  "$wappfile" \
@@ -41,16 +40,16 @@ function getFlags {
       done
     fi
 
-    if [ -f "hosts/$ip/README.md" ] ; then
-      if cat "hosts/$ip/README.md" | grep -i "response = \"no\"" 2>&1 >/dev/null; then
+    if [ -f "hosts/${host}/README.md" ] ; then
+      if cat "hosts/${host}/README.md" | grep -i "response = \"no\"" 2>&1 >/dev/null; then
         echo 'unresponsive'
       fi
 
-      if cat "hosts/$ip/README.md" | grep -i "response = \"yes\"" 2>&1 >/dev/null; then
+      if cat "hosts/${host}/README.md" | grep -i "response = \"yes\"" 2>&1 >/dev/null; then
         echo 'responsive'
       fi
 
-      if cat "hosts/$ip/README.md" | grep -i "reviewer = \"" 2>&1 >/dev/null; then
+      if cat "hosts/${host}/README.md" | grep -i "reviewer = \"" 2>&1 >/dev/null; then
         echo 'reviewed'
       else
         if [ $NOPORTS -eq 0 ]; then
@@ -61,26 +60,26 @@ function getFlags {
       fi
 
       # Get existing flags
-      cat hosts/$ip/README.md \
+      cat hosts/${host}/README.md \
       | grep flags \
       | cut -d= -f2 \
       | sed 's/\(\[\|\]\)*//g' | sed 's/,/\n/g' | sed 's/"//g' | sed 's/^\s\+//g' | grep -vP "reviewed|responsive|WAPP::|WAPP-CAT::|NET::|SVC::|no-nmap|PORTS|(dir|go)buster|aquatone"
     fi
 
-    if [ ! -f "hosts/$ip/recon/whois.txt" ] ; then
-      whois "$ip" > "hosts/$ip/recon/whois.txt"
+    if [ ! -f "hosts/${host}/recon/whois.txt" ] ; then
+      whois "${host}" > "hosts/${host}/recon/whois.txt"
     fi
-    grep "NetName" "hosts/$ip/recon/whois.txt" | awk '{print $NF}'|sed 's/\(PRIVATE-ADDRESS\)/\1\n\1/' |sed 's/^/NET::/g'
+    grep "NetName" "hosts/${host}/recon/whois.txt" | awk '{print $NF}'|sed 's/\(PRIVATE-ADDRESS\)/\1\n\1/' |sed 's/^/NET::/g'
 
-    if compgen -G "hosts/$ip/recon/dirbuster"* 2>&1 > /dev/null ; then
+    if compgen -G "hosts/${host}/recon/dirbuster"* 2>&1 > /dev/null ; then
       echo dirbuster
     fi
 
-    if compgen -G "hosts/$ip/recon/gobuster"* 2>&1 > /dev/null ; then
+    if compgen -G "hosts/${host}/recon/gobuster"* 2>&1 > /dev/null ; then
       echo gobuster
     fi
 
-    if compgen -G "hosts/$ip/recon/aquatone"* 2>&1 > /dev/null  ; then
+    if compgen -G "hosts/${host}/recon/aquatone"* 2>&1 > /dev/null  ; then
       echo aquatone
     fi
 
@@ -93,8 +92,8 @@ function getFlags {
 function getHosts {
   if [ $GITMODE -eq 1 ]; then
     git status | grep -P "hosts/[^/]" | awk '{print $NF}' | cut -d/ -f2 | sed 's|^\(.*\)$|hosts/\1/recon/|g' | sort -h | uniq
-  elif [ ! -z "$HOST" ]; then
-    echo $HOST
+  elif [ ! -z "${host}" ]; then
+    echo ${host}
   else
     find hosts -maxdepth 1 -type d  -print | tail -n +2
   fi
@@ -115,38 +114,38 @@ fi
 
 getHosts | while read d; do
   ip=$(echo $d | cut -d/ -f2);
-  # if [ "$ip" != "deub ip" ] ; then
+  # if [ "${host}" != "deub ip" ] ; then
   #   continue
   # fi
-  flags=$( echo $(getFlags "$ip") | sed 's|\/|/|g' | sed 's/ /,/g' | sed 's/spaaaacee/ /g')
+  flags=$( echo $(getFlags "${host}") | sed 's|\/|/|g' | sed 's/ /,/g' | sed 's/spaaaacee/ /g')
   if [ ! -z "$flags" ]; then
-    if cat hosts/$ip/README.md | grep -P "^flags = \[" > /dev/null; then
+    if cat hosts/${host}/README.md | grep -P "^flags = \[" > /dev/null; then
       # update existing
-      if grep -P "\[$(echo $flags | sed 's/\([()]\)/\\\1/g')\]" hosts/$ip/README.md > /dev/null; then
+      if grep -P "\[$(echo $flags | sed 's/\([()]\)/\\\1/g')\]" hosts/${host}/README.md > /dev/null; then
         echo noop > /dev/null
       else
-        echo "[+] Updating $flags for $ip"
-        cat hosts/$ip/README.md | sed 's|flags = \[.*\]|flags = ['"$flags"']|' > hosts/$ip/README.md.new
-        mv hosts/$ip/README.md.new hosts/$ip/README.md
+        echo "[+] Updating $flags for ${host}"
+        cat hosts/${host}/README.md | sed 's|flags = \[.*\]|flags = ['"$flags"']|' > hosts/${host}/README.md.new
+        mv hosts/${host}/README.md.new hosts/${host}/README.md
       fi
     else
-      if cat hosts/$ip/README.md | grep '+++' > /dev/null ; then
+      if cat hosts/${host}/README.md | grep '+++' > /dev/null ; then
         # add to existing front matter
-        echo "[+] Add $flags for $ip"
-        cat hosts/$ip/README.md | sed '0,/+++/! {0,/+++/ s|+++|flags = ['"$flags"']\n+++|}' > hosts/$ip/README.md.new
-        mv hosts/$ip/README.md.new hosts/$ip/README.md
+        echo "[+] Add $flags for ${host}"
+        cat hosts/${host}/README.md | sed '0,/+++/! {0,/+++/ s|+++|flags = ['"$flags"']\n+++|}' > hosts/${host}/README.md.new
+        mv hosts/${host}/README.md.new hosts/${host}/README.md
 
       else
         # no front matter found lets add it
-        echo "[+] Creating $flags for $ip"
+        echo "[+] Creating $flags for ${host}"
         {
           echo "+++"
           echo "flags = [$flags]"
           echo "+++"
           echo
-          cat hosts/$ip/README.md
-        } > hosts/$ip/README.md.new
-        mv hosts/$ip/README.md.new hosts/$ip/README.md
+          cat hosts/${host}/README.md
+        } > hosts/${host}/README.md.new
+        mv hosts/${host}/README.md.new hosts/${host}/README.md
       fi
     fi
   fi
