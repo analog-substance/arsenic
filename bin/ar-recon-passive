@@ -70,7 +70,7 @@ function getRootDomains {
   | removeInvalidThings \
   | awk -F. '{print $(NF-1) "." $NF}' \
   | grep -vP "$NON_ROOT_DOMAIN_REGEX" \
-  | sort -u | uniq \
+  | sort -h | uniq \
   | tee scope-root-domains.txt
 }
 
@@ -78,6 +78,7 @@ function getAllDomains {
   # create a combined scope file
   cat scope-domains-* \
     | removeInvalidThings \
+    | sort -h | uniq
     | tee scope-domains-combined.txt
 }
 
@@ -94,7 +95,7 @@ function removeInvalidThings {
   | grep -vP "$REMOVE_DOMAIN_REGEX" \
   | grep -P '^[a-z0-9_\-\.]+$' \
   | ar-prune-blacklisted-domains \
-  | sort -u | uniq
+  | sort -h | uniq
 }
 
 # Recon root domains
@@ -108,7 +109,7 @@ cat recon/domains/*/ar-crtsh-slrp.txt \
   | tr 'A-Z' 'a-z' \
   | sed 's/^\*\.//g' \
   | ar-prune-blacklisted-domains \
-  | sort -u | uniq \
+  | sort -h | uniq \
   | grep -vP "$REMOVE_DOMAIN_REGEX" > scope-domains-ar-crtsh-slrp.txt
 
 # create combined scope domains file
@@ -130,22 +131,22 @@ fi
 # create scope ips from domains
 grep -riP "has (IPv6 )?address" recon/domains/  \
   | awk '{print $NF}' \
-  | sort -u | uniq \
+  | sort -h | uniq \
   | grep -vP "$REMOVE_IP_REGEX" \
   | ar-prune-blacklisted-ips  \
   | tee scope-ips-client-domains.txt
 
 ## maybe this should be in the IPs?
-cat scope-ips-* | ar-prune-blacklisted-ips | sort -u | uniq > scope-ips-combined.txt
+cat scope-ips-* | ar-prune-blacklisted-ips | sort -h | uniq > scope-ips-combined.txt
 
 # Create IP Scope files for public and private addresses
-cat scope-ips-combined.txt | grep -vP "^$PRIVATE_IP_REGEX\$" | grep -v ":" | sort -u | uniq > scope-ips-public-ipv4.txt
+cat scope-ips-combined.txt | grep -vP "^$PRIVATE_IP_REGEX\$" | grep -v ":" | sort -h | uniq > scope-ips-public-ipv4.txt
 
 
 # there has to be a better way. we dont want the scrip to exit if there are no matches
 set +e
-cat scope-ips-combined.txt | grep -vP "^$PRIVATE_IP_REGEX\$" | grep ":" | sort -u | uniq > scope-ips-public-ipv6.txt
-cat scope-ips-combined.txt | grep -P "^$PRIVATE_IP_REGEX\$" | sort -u | uniq > scope-ips-private-ipv4.txt
+cat scope-ips-combined.txt | grep -vP "^$PRIVATE_IP_REGEX\$" | grep ":" | sort -h | uniq > scope-ips-public-ipv6.txt
+cat scope-ips-combined.txt | grep -P "^$PRIVATE_IP_REGEX\$" | sort -h | uniq > scope-ips-private-ipv4.txt
 set -e
 
 if which fast-resolv > /dev/null; then
@@ -160,7 +161,7 @@ fi
 
 cat recon/ips/resolv-ips.txt
 
-grep -P "(is an alias|has (IPv6 )?address)" recon/domains/resolv-domains.txt | awk '{print $1}' | sort -u | uniq > scope-domains-discovered-pointed.txt
+grep -P "(is an alias|has (IPv6 )?address)" recon/domains/resolv-domains.txt | awk '{print $1}' | sort -h | uniq > scope-domains-discovered-pointed.txt
 
 echo Combined Domains: $(cat scope-domains-combined.txt | wc -l)
 echo Pointed Domains: $(cat scope-domains-discovered-pointed.txt | wc -l)

@@ -51,7 +51,7 @@ show_usage() {
 }
 get_as_sorted_list() {
     # replace commas with new line and sort
-    echo "$1" | sed 's/,/\n/g' | sort -u | uniq
+    echo "$1" | sed 's/,/\n/g' | sort -h | uniq
 }
 get_difference() {
     comm -23 <(get_as_sorted_list $1) <(get_as_sorted_list $2) | combine_lines
@@ -98,7 +98,7 @@ run(){
         # Check if hostname is an IP
         if ! echo $hostname | grep -qP "(?:(?:2(?:[0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9])\.){3}(?:(?:2([0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9]))"; then
           echo "$hostname" >> recon/hostnames.txt
-          cat recon/hostnames.txt | sort -u | uniq > recon/hostnames.txt.new
+          cat recon/hostnames.txt | sort -h | uniq > recon/hostnames.txt.new
           mv recon/hostnames.txt.new recon/hostnames.txt
         fi
     fi
@@ -162,7 +162,7 @@ while [[ "$1" =~ ^- && ! "$1" == "--" ]]; do
             if [[ -z "$urls" ]]; then
                 urls="$url"
             else
-                urls=`echo -e "$2\n$urls" | sort -u | uniq`
+                urls=`echo -e "$2\n$urls" | sort -h | uniq`
             fi
             shift
             ;;
@@ -171,7 +171,7 @@ while [[ "$1" =~ ^- && ! "$1" == "--" ]]; do
             if [[ -z "$urls" ]]; then
                 urls="$contents"
             else
-                urls=`echo -e "$contents\n$urls" | sort -u | uniq`
+                urls=`echo -e "$contents\n$urls" | sort -h | uniq`
             fi
             shift
             ;;

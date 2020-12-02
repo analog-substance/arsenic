@@ -162,7 +162,7 @@ print "[*] ENUMERATING PROCESSES AND APPLICATIONS...\n"
 if "debian" in sysInfo["KERNEL"]["results"][0] or "ubuntu" in sysInfo["KERNEL"]["results"][0]:
     getPkgs = "dpkg -l | awk '{$1=$4=\"\"; print $0}'" # debian
 else:
-    getPkgs = "rpm -qa | sort -u | uniq" # RH/other
+    getPkgs = "rpm -qa | sort -h | uniq" # RH/other
 
 getAppProc = {"PROCS":{"cmd":"ps aux | awk '{print $1,$2,$9,$10,$11}'", "msg":"Current processes", "results":results},
               "PKGS":{"cmd":getPkgs, "msg":"Installed Packages", "results":results}

@@ -23,7 +23,7 @@ function checkForAlias {
     aliases=$(grep -rP "\b$(echo $domain | sed 's/\./\\./g')\b" recon/domains/resolv-domains.txt \
     | grep -P "alias" \
     | awk '{print $1}' \
-    | sort -u | uniq \
+    | sort -h | uniq \
     | tr 'A-Z' 'a-z' \
     | grep -viP "\b$(echo $domain | sed 's/\./\\./g')\b" )
     # if we have an alias, lets see if it has an alias
@@ -52,7 +52,7 @@ function getHosts {
     | grep -P "address" \
     | awk '{print $1}' \
     | tr 'A-Z' 'a-z' \
-    | sort -u | uniq \
+    | sort -h | uniq \
     | checkForAlias #))
     echo
     # echo $domains

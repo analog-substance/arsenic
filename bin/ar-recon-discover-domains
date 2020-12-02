@@ -37,18 +37,18 @@ function domain_recon {
     esac
 }
 
-cat scope-domains-* | sort -u | uniq | while read domain; do
+cat scope-domains-* | sort -h | uniq | while read domain; do
   domain_recon "$domain"
 done
 
-cat recon/domains/*/host.txt | grep address | awk '{print $NF}' | sort -u | uniq | tee scope-ips-client-domains.txt
-cat recon/domains/*/ar-crtsh-slrp.txt | tr 'A-Z' 'a-z' | sort -u | uniq | grep -vP "$REMOVE_DOMAIN_REGEX" | tee scope-domains-ar-crtsh-slrp.txt
-cat scope-domains* | sort -u | uniq | while read domain; do
+cat recon/domains/*/host.txt | grep address | awk '{print $NF}' | sort -h | uniq | tee scope-ips-client-domains.txt
+cat recon/domains/*/ar-crtsh-slrp.txt | tr 'A-Z' 'a-z' | sort -h | uniq | grep -vP "$REMOVE_DOMAIN_REGEX" | tee scope-domains-ar-crtsh-slrp.txt
+cat scope-domains* | sort -h | uniq | while read domain; do
   domain_recon "$domain"
 done
 
-cat recon/domains/*/host.txt | grep address | awk '{print $NF}' | sort -u | uniq | grep -vP "^($(echo $(cat scope-ips-client-domains.txt) | sed 's/ /|/g'))$" | grep -vP "1\.1\.1\.1|1\.0\.0\.1" |  tee scope-ips-discovered-domains.txt
-cat scope-ips-* | sort -u | uniq > recon/all-ips.txt
+cat recon/domains/*/host.txt | grep address | awk '{print $NF}' | sort -h | uniq | grep -vP "^($(echo $(cat scope-ips-client-domains.txt) | sed 's/ /|/g'))$" | grep -vP "1\.1\.1\.1|1\.0\.0\.1" |  tee scope-ips-discovered-domains.txt
+cat scope-ips-* | sort -h | uniq > recon/all-ips.txt
 
 nmap -p443,8443 -iL recon/all-ips.txt -oA recon/nmap-https-check-all-ips --open
 
@@ -59,17 +59,17 @@ cat recon/nmap-https-check-all-ips.gnmap|grep Ports: | awk '{print $2,$5}' | cut
   ar-get-cert-domains.sh $host $port > "hosts/$host/recon/ar-get-cert-domains.txt"
 done
 
-cat hosts/*/recon/ar-get-cert-domains.txt | tr 'A-Z' 'a-z' | sed 's/\*\.//g' | sort -u | uniq | tee scope-domains-from-certs.txt
-cat scope-domains* | sort -u | uniq | grep -vP "^([0-9]{1,3}\.){3}([0-9]{1,3})" \
+cat hosts/*/recon/ar-get-cert-domains.txt | tr 'A-Z' 'a-z' | sed 's/\*\.//g' | sort -h | uniq | tee scope-domains-from-certs.txt
+cat scope-domains* | sort -h | uniq | grep -vP "^([0-9]{1,3}\.){3}([0-9]{1,3})" \
 | grep -vP "^($(echo $(cat scope-domains-client-provided.txt) | sed 's/ /|/g'))$" \
 | grep -vP "$REMOVE_DOMAIN_REGEX" \
 | tee scope-domains-discovered.txt
 
-cat scope-domains* | sort -u | uniq | while read domain; do
+cat scope-domains* | sort -h | uniq | while read domain; do
   domain_recon "$domain"
 done
 
-cat recon/domains/*/host.txt | grep address | awk '{print $NF}' | sort -u | uniq | grep -vP "^($(echo $(cat scope-ips-client-domains.txt) | sed 's/ /|/g'))$" | grep -vP "1\.1\.1\.1|1\.0\.0\.1" |  tee scope-ips-discovered-domains.txt
+cat recon/domains/*/host.txt | grep address | awk '{print $NF}' | sort -h | uniq | grep -vP "^($(echo $(cat scope-ips-client-domains.txt) | sed 's/ /|/g'))$" | grep -vP "1\.1\.1\.1|1\.0\.0\.1" |  tee scope-ips-discovered-domains.txt
 
 cat scope-domains-discovered.txt | while read d; do
   if [ -f recon/domains/$d-host.txt ]; then
@@ -79,7 +79,7 @@ done \
 | grep -P "(is an alias|has (IPv6 )?address)" \
 | awk '{print $1}' \
 | grep -vP "$REMOVE_DOMAIN_REGEX" \
-| sort -u | uniq > scope-domains-discovered-valid.txt
+| sort -h | uniq > scope-domains-discovered-valid.txt
 
 
 cat scope-domains-discovered-valid.txt | while read d; do

@@ -5,7 +5,7 @@
 PORTS="80|443|3000|8000|8001|8080|8443"
 
 function getAquatonedHosts {
-  echo $(find hosts -name aquatone -type d | awk -F/ '{print $2}' | sort -u | uniq)|sed 's/ /|/g' | sed 's/\./\\./g'
+  echo $(find hosts -name aquatone -type d | awk -F/ '{print $2}' | sort -h | uniq)|sed 's/ /|/g' | sed 's/\./\\./g'
 }
 
 function getAquatonableHosts {
@@ -18,14 +18,14 @@ function getAquatonableHosts {
   # grab all hosts with open $PORTS we're interested in
   grep -l -rP "$PORTS" hosts/*/recon/nmap-* \
   | awk -F/ '{print $2}' \
-  | sort -u | uniq \
+  | sort -h | uniq \
   | grep $grep_options "$aquatoned"
 }
 
 function getHostPorts {
   # for each $host lets get a list of ports
   grep -hroP "$PORTS" hosts/$1/recon/nmap-* \
-  | sort -u | uniq
+  | sort -h | uniq
 }
 
 getAquatonableHosts | while read host; do
@@ -43,10 +43,10 @@ getAquatonableHosts | while read host; do
     # lets grab valid hostnames and create URLs for aquatone
 
     cat hosts/$hosts/hostname hosts/$host/recon/hostnames.txt 2> /dev/null \
-    | sort -u | uniq \
+    | sort -h | uniq \
     | sed 's|^.*$|'$proto'\0':$port'|'
 
-  done | sort -u | uniq | aquatone -ports "$(echo $PORTS | sed 's/|/,/g')" -out hosts/$host/recon/aquatone
+  done | sort -h | uniq | aquatone -ports "$(echo $PORTS | sed 's/|/,/g')" -out hosts/$host/recon/aquatone
 done
 
 

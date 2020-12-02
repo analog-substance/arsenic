@@ -15,7 +15,7 @@ function getFlags {
         NOPORTS=1
       else
         echo 'PORTS'
-        cat  "hosts/$ip/recon/nmap-punched.nmap" | grep -v "may be unreliable because we could not find at least 1 open and 1 closed port" | grep open | awk '{$1=$2=$3=""; print $0}' | grep -P '[^\s]+' | sed 's/^\s\+/SVC::/g' | sort -u | uniq
+        cat  "hosts/$ip/recon/nmap-punched.nmap" | grep -v "may be unreliable because we could not find at least 1 open and 1 closed port" | grep open | awk '{$1=$2=$3=""; print $0}' | grep -P '[^\s]+' | sed 's/^\s\+/SVC::/g' | sort -h | uniq
       fi
     else
       if [ -f "hosts/$ip/recon/nmap-${ip}_services.xml" ]; then
@@ -87,12 +87,12 @@ function getFlags {
     if [ ! -z "$NEW_FLAG" ]; then
       echo $NEW_FLAG
     fi
-  } | sort -u | uniq | sed 's/ /spaaaacee/g' | sed 's/^\(.\+\)$/"\1"/g'
+  } | sort -h | uniq | sed 's/ /spaaaacee/g' | sed 's/^\(.\+\)$/"\1"/g'
 }
 
 function getHosts {
   if [ $GITMODE -eq 1 ]; then
-    git status | grep -P "hosts/[^/]" | awk '{print $NF}' | cut -d/ -f2 | sed 's|^\(.*\)$|hosts/\1/recon/|g' | sort -u | uniq
+    git status | grep -P "hosts/[^/]" | awk '{print $NF}' | cut -d/ -f2 | sed 's|^\(.*\)$|hosts/\1/recon/|g' | sort -h | uniq
   elif [ ! -z "$HOST" ]; then
     echo $HOST
   else

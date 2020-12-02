@@ -26,4 +26,4 @@ mkdir -p hosts/$HOST/recon
       | grep -oP "CN ?=[ ]*[^ ]+" \
       | cut -d= -f2 \
       | sed 's/^[ ]*//g'
-} | sort -u | uniq | tee hosts/$HOST/recon/ssl-cert-domains-${HOST}-${PORT}.txt
+} | sort -h | uniq | tee hosts/$HOST/recon/ssl-cert-domains-${HOST}-${PORT}.txt
