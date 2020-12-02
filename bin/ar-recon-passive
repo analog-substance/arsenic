@@ -78,7 +78,6 @@ function getAllDomains {
   # create a combined scope file
   cat scope-domains-* \
     | removeInvalidThings \
-    | sort -h | uniq
     | tee scope-domains-combined.txt
 }
 
