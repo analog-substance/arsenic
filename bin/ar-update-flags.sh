@@ -18,7 +18,7 @@ function getFlags {
         cat  "hosts/${host}/recon/nmap-punched.nmap" | grep -v "may be unreliable because we could not find at least 1 open and 1 closed port" | grep open | awk '{$1=$2=$3=""; print $0}' | grep -P '[^\s]+' | sed 's/^\s\+/SVC::/g' | sort -h | uniq
       fi
     else
-      if compgen -G "hosts/${host}/recon/nmap-*_services.xml" 2>/dev/null; then
+      if compgen -G "hosts/${host}/recon/nmap-*_services.xml" > /dev/null 2>&1 ; then
         if cat "hosts/${host}/recon/nmap-"*"_services.xml" | grep 'state="open"' > /dev/null 2>&1 ; then
           echo 'PORTS'
           cat "hosts/${host}/recon/nmap-"*"_services.xml" | grep 'state="open"' | grep -oP '<service .+$' | sed 's/<\/\?[^ >]*>\? \?//g' |  sed 's/name="\([^"]\+\)" \(product="\([^"]\+\)"\)\?\(.*\)/\1\n\3/g' | grep "." |  sed 's/^/SVC::/g'
