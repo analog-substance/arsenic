@@ -113,7 +113,7 @@ fi
 
 
 getHosts | while read d; do
-  ip=$(echo $d | cut -d/ -f2);
+  host=$(echo $d | cut -d/ -f2);
   # if [ "${host}" != "deub ip" ] ; then
   #   continue
   # fi
