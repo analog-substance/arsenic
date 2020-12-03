@@ -138,7 +138,7 @@ function getHostUrls {
       done
     fi
     cd - > /dev/null
-  done | sort -h | uniq
+  done | grep -vP "//((sso\.|scm\.)azurewebsites\.net|(sso\.|scm\.)azure-mobile\.net|s3\.amazonaws\.com)$" sort -h | uniq
 }
 
 wordlist_file=$(realpath "recon/gobuster-initial.txt")
@@ -160,7 +160,7 @@ if [ "$CMD" == "scan" ] ; then
   if [ -z "$ARG_HOST" ] ; then
     MANUAL=0
     echo no args found, autodetecting
-    ARGS=$(head -n1 <<<$($ME list))
+    ARGS=$(head -n1 <<<$($ME list | sort -R))
     ARG_HOST=$(echo "$ARGS" | awk '{print $1}')
     ARG_URL=$(echo "$ARGS" | awk '{print $2}')
     echo "[!] Auto selected $ARG_HOST $ARG_URL"
