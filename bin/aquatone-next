@@ -89,7 +89,9 @@ function scanHost {
     else
       echo not sure what happened. but i couldnt commit
     fi
+    cd -
   fi
+
   echo host check complete
   sleep 10
 
