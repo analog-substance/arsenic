@@ -30,7 +30,7 @@ function checkForAlias {
     set -e
     if [ ! -z "$aliases" ] ; then
       for alias in $aliases; do
-        echo  $alias
+        echo $alias
       done | checkForAlias
     fi
   done
@@ -44,7 +44,6 @@ function getHosts {
   {
     find hosts -name nmap-punched-quick.nmap  | cut -d/ -f2
     ls -d hosts/* | cut -d/ -f2
-
   } | ar-prune-blacklisted-ips | sort | uniq -c | grep "1 " | awk '{print $2}' | while read ip; do
     # domains=$(echo $(
     grep -rP "\b$(echo $ip | sed 's/\./\\./g')\b" recon/domains/resolv-domains.txt \
@@ -53,11 +52,10 @@ function getHosts {
     | tr 'A-Z' 'a-z' \
     | sort -h | uniq \
     | checkForAlias #))
-    echo
     # echo $domains
     # echo -n "is it good? "
     # echo $domains | ar-prune-blacklisted-domains
-  done
+  done | sort -h | uniq | sort -R
 }
 
 function scanHost {
