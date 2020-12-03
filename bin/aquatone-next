@@ -69,9 +69,10 @@ function scanHost {
     cat "recon/aquatone-gobuster-initial.txt" | aquatone -ports $WEB_PORTS -out recon/aquatone-gobuster-initial
     ar-update-flags.sh git
     # remove UTF BOM, this fixes aquatone being rendered in hugo
-    find hosts -name '*.html' -exec sed -i '1s/^\xEF\xBB\xBF//' {} \;
+    find . -name '*.html' -exec sed -i '1s/^\xEF\xBB\xBF//' {} \;
 
     git add .
+    cd -
     if git commit -m "aquatone end $host" ; then
       if ! git pull --rebase ; then
         echo something went wrong help
@@ -89,7 +90,6 @@ function scanHost {
     else
       echo not sure what happened. but i couldnt commit
     fi
-    cd -
   fi
 
   echo host check complete
