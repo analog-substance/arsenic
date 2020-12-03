@@ -25,7 +25,7 @@ function getHosts {
  } | sort | uniq -c | grep "1 " | awk '{print $2}' | while read host; do
     urls=$(cat hosts/$host/recon/gobuster.*.gobuster-initial.txt \
     | sort -h | uniq \
-    | grep -vP "Status: (3|4|5)0" \
+    | grep -vP "Status: 2" \
     | awk '{print $1}' \
     | wc -l)
     if [ "$urls" != "0" ]; then
@@ -44,47 +44,48 @@ function scanHost {
     cd "hosts/$host"
     cat recon/*.gobuster-initial.txt \
     | sort -h | uniq \
-    | grep -vP "Status: (3|4|5)0" \
+    | grep -vP "Status: 2" \
     | awk '{print $1}' \
-    | tee "recon/aquatone-gobuster-initial.txt" \
-    | aquatone -ports $WEB_PORTS -out recon/aquatone-gobuster-initial &
-    pid=$!
+    | tee "recon/aquatone-gobuster-initial.txt"
 
-    sleep 1
     git add .
     git commit -m "aquatone start $host"
     if ! git pull --rebase ; then
-      git commit -am "wtf is this..."
-      git pull --rebase
+      echo something went wrong help
+      exit
     fi
-    git push
-    echo wait for aquatone...
+    if ! git push ; then
+      git pull --rebase
 
-    cd -
-    if wait $pid; then
-      echo good
-      sleep 1
-      ar-update-flags.sh git
-      ar-update-flags.sh git
+      if ! git push ; then
+        echo something went wrong help
+        exit
+      fi
 
-      sleep 1
-      # remove UTF BOM, this fixes aquatone being rendered in hugo
-      find hosts -name '*.html' -exec sed -i '1s/^\xEF\xBB\xBF//' {} \;
-      git add .
-      if git commit -m "aquatone end $host" ; then
-        if ! git pull --rebase ; then
-          git commit -am "wtf is this"
-          git pull --rebase
-        fi
+    fi
+
+    aquatone -ports $WEB_PORTS -out recon/aquatone-gobuster-initial
+    ar-update-flags.sh git
+    # remove UTF BOM, this fixes aquatone being rendered in hugo
+    find hosts -name '*.html' -exec sed -i '1s/^\xEF\xBB\xBF//' {} \;
+
+    git add .
+    if git commit -m "aquatone end $host" ; then
+      if ! git pull --rebase ; then
+        echo something went wrong help
+        echo I was trying to pull before pushing up the aaquatone results
+        exit
+      fi
+      if ! git push ; then
+        git pull --rebase
+
         if ! git push ; then
-          git pull --rebase
-          git push
+          echo something went wrong help
+          exit
         fi
-      else
-        echo nothing happened
       fi
     else
-      echo not sure what happened
+      echo not sure what happened. but i couldnt commit
     fi
   fi
   echo host check complete
