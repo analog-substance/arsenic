@@ -115,36 +115,29 @@ function scanHost {
         echo "$url"
       else
         # gobuster dir -e -k --random-agent -d -u $url -w ../../recon/gobuster-wordlist.txt -o "recon/gobuster-wordlist-$hostname-$port.txt" &
-        set +o pipefail
-        set +e
-        arbuster -k -e -a Firefox -u $url -w $wordlist_file &
-        pid=$!
-        sleep 1
+
+        touch "recon/$output_file"
+        ar-update-flags.sh git
         git add .
         git commit -m "start gobuster $url"
-        if ! git pull --rebase ; then
-          git commit -am "wtf is this"
-          git pull --rebase
-      	fi
 
+        if ! git pull --rebase ; then
+          echo not sure what happened... help
+          exit
+        fi
         git push
 
-        if wait $pid; then
-          echo good
-          cd -
-          ar-update-flags.sh git
-          cd -
+        set +o pipefail
+        set +e
+        arbuster -k -e -a Firefox -u $url -w $wordlist_file
+        git add .
+        git commit -m "gobuster end $url"
 
-          git add .
-          git commit -m "gobuster end $url"
         if ! git pull --rebase ; then
-          git commit -am "wtf is this"
-          git pull --rebase
+          echo not sure what happened... help
+          exit
         fi
-          git push
-        else
-          echo probably need to tweak gobuster flags
-        fi
+        git push
         set -e
         set -o pipefail
       fi
