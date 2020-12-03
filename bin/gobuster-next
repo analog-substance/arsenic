@@ -138,7 +138,7 @@ function getHostUrls {
       done
     fi
     cd - > /dev/null
-  done | grep -vP "//((sso\.|scm\.)azurewebsites\.net|(sso\.|scm\.)azure-mobile\.net|s3\.amazonaws\.com)$" sort -h | uniq
+  done | grep -vP "//((sso\.|scm\.)azurewebsites\.net|(sso\.|scm\.)azure-mobile\.net|s3\.amazonaws\.com)$" | sort -h | uniq
 }
 
 wordlist_file=$(realpath "recon/gobuster-initial.txt")
