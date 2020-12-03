@@ -102,7 +102,7 @@ function scanHost {
     if [ ! -z "$ARGS" ] ; then
       ARG_HOST=$(echo "$ARGS" | awk '{print $1}')
       ARG_URL=$(echo "$ARGS" | awk '{print $2}')
-      exec $ME scan $ARG_HOST $ARG_URL
+      exec $ME scan
     fi
   fi
 }
@@ -138,7 +138,7 @@ function getHostUrls {
       done
     fi
     cd - > /dev/null
-  done | sort -R
+  done | sort -h | uniq
 }
 
 wordlist_file=$(realpath "recon/gobuster-initial.txt")
