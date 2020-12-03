@@ -32,7 +32,7 @@ function getHosts {
     if [ "$urls" != "0" ]; then
       echo $host
     fi
-  done | sort -R
+  done | sort -h | uniq
 }
 
 function scanHost {
@@ -113,7 +113,7 @@ fi
 
 if [ "$CMD" == "scan" ] ; then
   if [ -z "$ARG" ] ; then
-    ARG=$(getHosts | head -n1)
+    ARG=$(head -n1 <<<$(getHosts | sort -R))
     echo "[!] Auto selected $ARG"
   fi
   scanHost "$ARG"
