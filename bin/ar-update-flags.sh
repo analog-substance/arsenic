@@ -9,13 +9,12 @@ function getFlags {
     fi
 
     NOPORTS=0
-    if [ -f "hosts/${host}/recon/nmap-punched.nmap" ] ; then
-      if grep "Error #487" "hosts/${host}/recon/nmap-punched.nmap" 1>/dev/null ; then
-        echo 'NOPORTS'
-        NOPORTS=1
-      else
+    if compgen -G "hosts/${host}/recon/*.nmap" > /dev/null 2>&1  ; then
+      if cat  "hosts/${host}/recon/"*".nmap" | grep -vP "nmap \-\-open|may be unreliable because we could not find at least 1 open and 1 closed port" | grep open 1>/dev/null 2>&1 ; then
         echo 'PORTS'
-        cat  "hosts/${host}/recon/nmap-punched.nmap" | grep -v "may be unreliable because we could not find at least 1 open and 1 closed port" | grep open | awk '{$1=$2=$3=""; print $0}' | grep -P '[^\s]+' | sed 's/^\s\+/SVC::/g' | sort -h | uniq
+      else
+        NOPORTS=1
+        echo 'NOPORTS'
       fi
     else
       if compgen -G "hosts/${host}/recon/nmap-*_services.xml" > /dev/null 2>&1 ; then
