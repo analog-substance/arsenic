@@ -27,6 +27,7 @@ function getHosts {
     | sort -h | uniq \
     | grep -P "Status: 2" \
     | awk '{print $1}' \
+    | grep -viP "\.(png|jpe?g|ico|css|gif|js)$" \
     | wc -l)
     if [ "$urls" != "0" ]; then
       echo $host
@@ -46,6 +47,7 @@ function scanHost {
     | sort -h | uniq \
     | grep -P "Status: 2" \
     | awk '{print $1}' \
+    | grep -viP "\.(png|jpe?g|ico|css|gif|js)$" \
     | tee "recon/aquatone-gobuster-initial.txt"
 
     git add .
