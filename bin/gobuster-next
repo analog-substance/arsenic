@@ -120,25 +120,35 @@ function getHostUrls {
     if grep -P "$WEB_PORTS" recon/nmap-* > /dev/null 2>&1; then
       grep -hroP "$WEB_PORTS" recon/nmap-* | sort -h | uniq | while read port; do
         getHostnames | while read hostname; do
+          SHOULD_ECHO=1
           proto="http://"
           if echo $port | grep 443 > /dev/null 2>&1; then
              proto="https://"
           fi
           if [ "$port" == "80" ] || [ "$port" == "443" ] ; then
             url="${proto}${hostname}"
+            if [ "$port" == "80" ] ; then
+              if grep -P "\b443\b" recon/nmap* >/dev/null 2>&1 ; then
+                # this is port 80, but 443 is listening. lets use that instead
+                SHOULD_ECHO=0
+              fi
+            fi
           else
             url="${proto}${hostname}:$port"
           fi
-          output_file="gobuster.$(echo "$url" | sed "s/http\(s\)\?:\/\///" | sed 's/\//\./g').$wordlist_name.txt"
 
-          if [ ! -f "recon/$output_file" ] ; then
-            echo $host $url
+          if [ $SHOULD_ECHO -eq 1 ]; then
+            output_file="gobuster.$(echo "$url" | sed "s/http\(s\)\?:\/\///" | sed 's/\//\./g').$wordlist_name.txt"
+
+            if [ ! -f "recon/$output_file" ] ; then
+              echo $host $url
+            fi
           fi
         done
       done
     fi
     cd - > /dev/null
-  done | grep -vP "//((sso\.|scm\.)azurewebsites\.net|(sso\.|scm\.)azure-mobile\.net|s3\.amazonaws\.com)$" | sort -h | uniq
+  done | grep -vP "(//((sso\.|scm\.)?azurewebsites\.net|(sso\.|scm\.)?azure\-mobile\.net|s3\.amazonaws\.com)(:[0-9]+)?$)|((\.secureserver\.net|\.microsoftonline\.com)(:[0-9]+)?$)" | sort -h | uniq
 }
 
 wordlist_file=$(realpath "recon/gobuster-initial.txt")
