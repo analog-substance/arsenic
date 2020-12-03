@@ -25,7 +25,7 @@ function getHosts {
  } | sort | uniq -c | grep "1 " | awk '{print $2}' | while read host; do
     urls=$(cat hosts/$host/recon/gobuster.*.gobuster-initial.txt \
     | sort -h | uniq \
-    | grep -vP "Status: 2" \
+    | grep -P "Status: 2" \
     | awk '{print $1}' \
     | wc -l)
     if [ "$urls" != "0" ]; then
@@ -44,7 +44,7 @@ function scanHost {
     cd "hosts/$host"
     cat recon/*.gobuster-initial.txt \
     | sort -h | uniq \
-    | grep -vP "Status: 2" \
+    | grep -P "Status: 2" \
     | awk '{print $1}' \
     | tee "recon/aquatone-gobuster-initial.txt"
 
