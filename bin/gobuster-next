@@ -72,7 +72,7 @@ function newGetHostUrls {
         fi
       done
     fi
-  done # | sort -h | uniq
+  done | sort -h | uniq
 }
 
 
