@@ -26,7 +26,8 @@ function newGetHostUrls {
   cat hosts/*/recon/hostnames.txt \
   | sort -u \
   | ar-prune-blacklisted-domains \
-  |  grep -vP "(//((sso\.|scm\.)?azurewebsites\.net|(sso\.|scm\.)?azure\-mobile\.net|s3\.amazonaws\.com)$)|((\.secureserver\.net|\.microsoftonline\.com|windows\.net|amazonaws\.com|hscoscdn)$)"  \
+  | grep -vP "(//((sso\.|scm\.)?azurewebsites\.net|(sso\.|scm\.)?azure\-mobile\.net|s3\.amazonaws\.com)$)|((\.secureserver\.net|\.microsoftonline\.com|windows\.net|amazonaws\.com|hscoscdn)$)"  \
+  | grep -vP ":[0-9]+:[0-9]+" \
   | while read hostname; do
     ip=$(grep -rP "^$(echo $hostname | sed 's/\./\./g')\b" recon/domains/resolv-domains.txt \
     | grep "address" \
@@ -131,7 +132,6 @@ function scanHost {
         if wait $pid; then
           echo good
           cd -
-          ar-update-flags.sh git
           ar-update-flags.sh git
           cd -
 
