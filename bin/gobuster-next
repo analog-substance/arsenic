@@ -154,7 +154,7 @@ function scanHost {
 
 
   if [ $MANUAL -eq 0 ]; then
-    ARGS=$(head -n1 <<<$($ME list))
+    ARGS=$(head -n1 <<<$($ME list | grep -v "no host found"))
     if [ ! -z "$ARGS" ] ; then
       ARG_HOST=$(echo "$ARGS" | awk '{print $1}')
       ARG_URL=$(echo "$ARGS" | awk '{print $2}')
@@ -226,7 +226,7 @@ if [ "$CMD" == "scan" ] ; then
   if [ -z "$ARG_HOST" ] ; then
     MANUAL=0
     echo no args found, autodetecting
-    ARGS=$(head -n1 <<<$($ME list | sort -R))
+    ARGS=$(head -n1 <<<$($ME list | grep -v "no host found" | sort -R))
     ARG_HOST=$(echo "$ARGS" | awk '{print $1}')
     ARG_URL=$(echo "$ARGS" | awk '{print $2}')
     echo "[!] Auto selected $ARG_HOST $ARG_URL"
