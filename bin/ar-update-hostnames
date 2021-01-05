@@ -25,7 +25,7 @@ function getDomainsForIP {
     cat hosts/$ip/hostname;
     cat hosts/$ip/recon/ar-get-cert-domains.txt
     cat hosts/$ip/recon/hostnames.txt
-    } 2>/dev/null | sed 's/^\*\.//g' | sed 's/\.$//g' | tr 'A-Z' 'a-z' | sort -h | uniq | checkForAlias
+  } 2>/dev/null | sed 's/^\*\.//g' | sed 's/:[0-9]*//g' | sed 's/\.$//g' | tr 'A-Z' 'a-z' | sort -h | uniq | checkForAlias
 }
 
 find hosts -name recon -print | while read d; do
@@ -48,7 +48,10 @@ find hosts -name recon -print | while read d; do
   		echo no host found
     fi
   else
-    cat hosts/$ip/hostname hosts/$ip/recon/hostnames.txt | sort -h | uniq > hosts/$ip/recon/hostnames.txt.new
+    cat hosts/$ip/hostname hosts/$ip/recon/hostnames.txt \
+    | sed 's/^\*\.//g' | sed 's/:[0-9]*//g' | sed 's/\.$//g' | tr 'A-Z' 'a-z' | sort -h \
+    | uniq  > hosts/$ip/recon/hostnames.txt.new
+
     mv hosts/$ip/recon/hostnames.txt.new hosts/$ip/recon/hostnames.txt
   fi
   if [ ! -f $d/host.txt ]; then

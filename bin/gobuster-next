@@ -19,7 +19,8 @@ fi
 #set -euo pipefail
 set -eu
 # set -x
-WEB_PORTS="80|443|3000|8000|8001|8080|8443"
+WEB_PORTS="(80|443|3000|8000|8001|8080|8443)"
+WEB_PORT_REGEX="portid=\"$WEB_PORTS\"|tcp/$WEB_PORTS"
 
 
 function newGetHostUrls {
@@ -45,8 +46,8 @@ function newGetHostUrls {
     fi
 
 
-    if grep -P "$WEB_PORTS" hosts/$host/recon/nmap-* > /dev/null 2>&1; then
-      grep -hroP "$WEB_PORTS" hosts/$host/recon/nmap-* | sort -h | uniq | while read port; do
+    if grep -P "$WEB_PORT_REGEX" hosts/$host/recon/nmap-* > /dev/null 2>&1; then
+      grep -P "$WEB_PORT_REGEX" hosts/$host/recon/nmap-* | grep -hoP "$WEB_PORTS" | sort -h | uniq | while read port; do
         SHOULD_ECHO=1
         proto="http://"
         if echo $port | grep 443 > /dev/null 2>&1; then

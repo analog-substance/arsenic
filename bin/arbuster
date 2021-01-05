@@ -31,7 +31,7 @@
 ##|                                             -   Don't blacklist status code from the default
 ##|                                         Note: If no status codes are prepended with + or -
 ##|                                               the provided list will override the default
-##| 
+##|
 ##|                                         Default: 404
 ##|  -k, --no-tls-validation                Skip SSL certificate verification
 ##|  --wildcard                             Force continued operation when wildcard found
@@ -107,7 +107,7 @@ run(){
         # Check if hostname is an IP
         if ! echo $hostname | grep -qP "(?:(?:2(?:[0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9])\.){3}(?:(?:2([0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9]))"; then
           echo "$hostname" >> recon/hostnames.txt
-          cat recon/hostnames.txt | sort -h | uniq > recon/hostnames.txt.new
+          cat recon/hostnames.txt | sed 's/^\*\.//g' | sed 's/:[0-9]*//g' | sed 's/\.$//g' | tr 'A-Z' 'a-z' | sort -h |  uniq > recon/hostnames.txt.new
           mv recon/hostnames.txt.new recon/hostnames.txt
         fi
     fi
