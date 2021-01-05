@@ -129,7 +129,14 @@ function scanHost {
 
         set +o pipefail
         set +e
-        arbuster -k -e -a Firefox -u $url -w $wordlist_file
+
+        # If the host points to an S3 bucket, we don't want to gobuster it
+        if curl -sIL $host | grep -q "https://aws.amazon.com/s3/"; then
+          echo "s3" > $output_file
+        else
+          arbuster -k -e -a Firefox -u $url -w $wordlist_file
+        fi
+
         git add .
         git commit -m "gobuster end $url"
 
