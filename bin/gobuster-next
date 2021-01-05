@@ -24,27 +24,17 @@ WEB_PORT_REGEX="portid=\"$WEB_PORTS\"|tcp/$WEB_PORTS"
 
 
 function newGetHostUrls {
-  cat hosts/*/recon/hostnames.txt \
+  cat hosts/*/recon/*hostnames.txt \
   | sort -u \
   | ar-prune-blacklisted-domains \
   | grep -vP "(//((sso\.|scm\.)?azurewebsites\.net|(sso\.|scm\.)?azure\-mobile\.net|s3\.amazonaws\.com)$)|((\.secureserver\.net|\.microsoftonline\.com|windows\.net|amazonaws\.com|hscoscdn)$)"  \
-  | grep -vP ":[0-9]+:[0-9]+" \
   | while read hostname; do
-    ip=$(grep -rP "^$(echo $hostname | sed 's/\./\./g')\b" recon/domains/resolv-domains.txt \
-    | grep "address" \
-    | head -n1 \
-    | awk '{print $NF}')
 
-    if [ -n "$ip" ]; then
-      host=$(grep -rP "^$(echo $ip | sed 's/\./\./g')$" hosts/*/recon/other-ips.txt | head -n1 | cut -d/ -f2)
-    else
-      host=$(grep -rP "^$(echo $hostname | sed 's/\./\./g')\b" hosts/*/recon/*hostnames.txt | head -n1 | cut -d/ -f2)
-    fi
+    host=$(grep -rP "^$(echo $hostname | sed 's/\./\./g')$" hosts/*/recon/*hostnames.txt | head -n1 | cut -d/ -f2)
 
     if [ -z "$host" ]; then
-      echo "no host found ip($ip) and hostname($hostname)"
+      echo "no host found for hostname: $hostname"
     fi
-
 
     if grep -P "$WEB_PORT_REGEX" hosts/$host/recon/nmap-* > /dev/null 2>&1; then
       grep -P "$WEB_PORT_REGEX" hosts/$host/recon/nmap-* | grep -hoP "$WEB_PORTS" | sort -h | uniq | while read port; do
