@@ -128,7 +128,7 @@ show_errored_urls() {
     fi
 }
 graceful_exit() {
-    cleanup
+    #cleanup
     show_errored_urls
 
     echo
@@ -255,7 +255,7 @@ fi
 
 for url in $urls; do
     run $@
-    cleanup
+    #cleanup
 done
 
 show_errored_urls
