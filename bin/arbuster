@@ -1,40 +1,42 @@
 #!/bin/bash
 
 ######################################################################
-##|A gobuster helper script
+##|A gobuster v3.1.0 helper script
 ##|Usage:
 ##| arbuster [options]
 ##|
 ##|Options:
-##|  -h, --help                         Help for arbuster
-##|  -e, --expanded                     Expanded mode, print full URLs
-##|  -r, --followredirect               Follow redirects
-##|  -t, --token string                 Access token to be put in the Authorization header
-##|                                         Authorization: Bearer <token>
-##|  --auth string                      Authorization header value
-##|                                         Authorization: <value>
-##|  -w, --wordlist string              Path to the wordlist
-##|  -u, --url string                   The target URL. Can be used multiple times to specify more target URLs
-##|  -uf, --url-file string             The path to a file containing the target URLs
-##|  -a, --useragent [preset, custom]   The user agent string to use. Use supplied presets or a custom string
-##|                                     Presets
-##|                                         Firefox = Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101 Firefox/68.0
-##|                                         Chrome = Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36
-##|                                         Safari = Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_2) AppleWebKit/601.3.9 (KHTML, like Gecko) Version/9.0.2 Safari/601.3.9
-##|  -p, --proxy string                 Proxy to use for requests [[http(s)|socks(4|5)]://host:port]
-##|  -o, --output-dir string            Host specific output directory to write results to
-##|                                     Default: recon
-##|  -s, --status-codes string          Comma delimited list of success status codes
-##|                                     Format: [+|-]code[,code]
-##|                                         +   Use status code as success in addition to the default
-##|                                         -   Don't use status code as success from the default
-##|                                     Note: If no status codes are prepended with + or -
-##|                                           the provided list will override the default
-##|
-##|                                     Default: 200,204,301,302,307,401,403
-##|  -k, --insecuressl                  Skip SSL certificate verification
-##|  --wildcard                         Force continued operation when wildcard found
-##|  --                                 Pass the rest of the arguments to gobuster
+##|  -h, --help                             Help for arbuster
+##|  -e, --expanded                         Expanded mode, print full URLs
+##|  -r, --follow-redirect                  Follow redirects
+##|  -x, --extensions string                File extension(s) to search for
+##|  -t, --token string                     Access token to be put in the Authorization header
+##|                                             Authorization: Bearer <token>
+##|  --auth string                          Authorization header value
+##|                                             Authorization: <value>
+##|  -w, --wordlist string                  Path to the wordlist
+##|  -u, --url string                       The target URL. Can be used multiple times to specify more target URLs
+##|  -uf, --url-file string                 The path to a file containing the target URLs
+##|  -a, --useragent [preset, custom]       The user agent string to use. Use supplied presets or a custom string
+##|                                         Presets
+##|                                             Firefox = Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101 Firefox/68.0
+##|                                             Chrome = Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36
+##|                                             Safari = Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_2) AppleWebKit/601.3.9 (KHTML, like Gecko) Version/9.0.2 Safari/601.3.9
+##|  --proxy string                         Proxy to use for requests [[http(s)|socks(4|5)]://host:port]
+##|  -o, --output-dir string                Host specific output directory to write results to
+##|                                         Default: recon
+##|  -b, --status-codes-blacklist string    Comma delimited list of blacklisted status codes
+##|                                         Format: [+|-]code[,code]
+##|                                             +   Blacklist status code in addition to the default
+##|                                             -   Don't blacklist status code from the default
+##|                                         Note: If no status codes are prepended with + or -
+##|                                               the provided list will override the default
+##| 
+##|                                         Default: 404
+##|  -k, --no-tls-validation                Skip SSL certificate verification
+##|  --wildcard                             Force continued operation when wildcard found
+##|  --exclude-length ints                  Exclude the following content length (completely ignores the status). Supply multiple times to exclude multiple sizes.
+##|  --                                     Pass the rest of the arguments to gobuster
 ######################################################################
 
 gb_args=()
@@ -45,6 +47,13 @@ add_gb_args() {
         gb_args_count=$(($gb_args_count + 1))
         shift
     done
+}
+
+errored_urls=()
+errored_urls_count=0
+add_errored_url() {
+    errored_urls[$errored_urls_count]="$1"
+    errored_urls_count=$(($errored_urls_count + 1))
 }
 show_usage() {
     cat $0 | grep -a "^##[\|]" | sed "s/##[|]//g"
@@ -104,16 +113,23 @@ run(){
     fi
 
     gobuster dir -w $wordlist_file -u $url -o "$output_path" "${gb_args[@]}" $@
+    if [ $? -gt 0 ]; then
+        add_errored_url "$url"
+    fi
     cd - > /dev/null
 }
-try_remove_empty_output() {
-    path="hosts/$host/$output_path"
-    if [[ -n "$output_path" && -e "$path" && ! -s "$path" ]]; then
-        rm "$path"
+cleanup() {
+    find ./ -regex ".*gobuster.*" -size 0 -exec rm "{}" ";"
+}
+show_errored_urls() {
+    if [ $errored_urls_count -gt 0 ]; then
+        echo "[!] Errored URLs:"
+        echo "${errored_urls[@]}" | sed 's/\s/\n/g'
     fi
 }
 graceful_exit() {
-    try_remove_empty_output
+    cleanup
+    show_errored_urls
 
     echo
     echo "Exiting"
@@ -128,16 +144,20 @@ if [[ $# -eq 0 ]]; then
 fi
 
 output_dir="recon"
-status_codes="200,204,301,302,307,401,403"
+status_codes="404"
 while [[ "$1" =~ ^- && ! "$1" == "--" ]]; do
     case $1 in
         -e|--expanded)
             add_gb_args $1
             ;;
-        -r|--followredirect)
+        -r|--follow-redirect)
             add_gb_args $1
             ;;
-        -k|--insecuressl)
+        -x|--extensions)
+            add_gb_args $1 "$2"
+            shift
+            ;;
+        -k|--no-tls-validation)
             add_gb_args $1
             ;;
         --wildcard)
@@ -192,8 +212,12 @@ while [[ "$1" =~ ^- && ! "$1" == "--" ]]; do
             add_gb_args -a "$agent"
             shift
             ;;
-        -p|--proxy)
-            add_gb_args -p "$2"
+        --proxy)
+            add_gb_args --proxy "$2"
+            shift
+            ;;
+        --exclude-length)
+            add_gb_args --exclude-length "$2"
             shift
             ;;
         -o|--output-dir)
@@ -204,7 +228,7 @@ while [[ "$1" =~ ^- && ! "$1" == "--" ]]; do
             show_usage
             exit 0
             ;;
-        -s|--status-codes) # status codes
+        -b|--status-codes-blacklist) # blacklisted status codes
             # Split by comma, get all codes to remove, and combine back into comma separated list
             remove_codes=`echo "$2" | list_by_prefix - | combine_lines`
 
@@ -219,7 +243,7 @@ while [[ "$1" =~ ^- && ! "$1" == "--" ]]; do
 
                 status_codes=`get_difference $status_codes $remove_codes`
             fi
-            add_gb_args -s "$status_codes"
+            add_gb_args -b "$status_codes"
             shift
             ;;
     esac;
@@ -231,5 +255,7 @@ fi
 
 for url in $urls; do
     run $@
-    try_remove_empty_output
+    cleanup
 done
+
+show_errored_urls
