@@ -36,32 +36,37 @@ function newGetHostUrls {
       echo "no host found for hostname: $hostname"
     fi
 
-    if grep -P "$WEB_PORT_REGEX" hosts/$host/recon/nmap-* > /dev/null 2>&1; then
-      grep -P "$WEB_PORT_REGEX" hosts/$host/recon/nmap-* | grep -hoP "$WEB_PORTS" | sort -h | uniq | while read port; do
-        SHOULD_ECHO=1
-        proto="http://"
-        if echo $port | grep 443 > /dev/null 2>&1; then
-           proto="https://"
-        fi
-        if [ "$port" == "80" ] || [ "$port" == "443" ] ; then
-          url="${proto}${hostname}"
-          if [ "$port" == "80" ] ; then
-            if grep -P "\b443\b" recon/nmap* >/dev/null 2>&1 ; then
-              # this is port 80, but 443 is listening. lets use that instead
-              SHOULD_ECHO=0
+
+    draft=$(grep draft "hosts/$host/README.md" || echo "nope")
+    if [ "$draft" == "nope" ]; then
+
+      if grep -P "$WEB_PORT_REGEX" hosts/$host/recon/nmap-* > /dev/null 2>&1; then
+        grep -P "$WEB_PORT_REGEX" hosts/$host/recon/nmap-* | grep -hoP "$WEB_PORTS" | sort -h | uniq | while read port; do
+          SHOULD_ECHO=1
+          proto="http://"
+          if echo $port | grep 443 > /dev/null 2>&1; then
+             proto="https://"
+          fi
+          if [ "$port" == "80" ] || [ "$port" == "443" ] ; then
+            url="${proto}${hostname}"
+            if [ "$port" == "80" ] ; then
+              if grep -P "\b443\b" recon/nmap* >/dev/null 2>&1 ; then
+                # this is port 80, but 443 is listening. lets use that instead
+                SHOULD_ECHO=0
+              fi
+            fi
+          else
+            url="${proto}${hostname}:$port"
+          fi
+
+          if [ $SHOULD_ECHO -eq 1 ]; then
+            output_file="gobuster.$(echo "$url" | sed "s/http\(s\)\?:\/\///" | sed 's/\//\./g').$wordlist_name.txt"
+            if [ ! -f "hosts/$host/recon/$output_file" ] ; then
+              echo $host $url
             fi
           fi
-        else
-          url="${proto}${hostname}:$port"
-        fi
-
-        if [ $SHOULD_ECHO -eq 1 ]; then
-          output_file="gobuster.$(echo "$url" | sed "s/http\(s\)\?:\/\///" | sed 's/\//\./g').$wordlist_name.txt"
-          if [ ! -f "hosts/$host/recon/$output_file" ] ; then
-            echo $host $url
-          fi
-        fi
-      done
+        done
+      fi
     fi
   done | sort -h | uniq
 }
