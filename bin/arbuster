@@ -73,7 +73,7 @@ list_by_prefix() {
 }
 run(){
     hostname=`echo $url | sed "s/http\(s\)\?:\/\///" | cut -d/ -f1`
-    output_file="gobuster.$(echo "$url" | sed "s/http\(s\)\?:\/\///" | sed 's/\//\./g').$wordlist_name.txt"
+    output_file="gobuster.$(echo "$url" | sed "s/:\/\//./" | sed 's/\//\./g').$wordlist_name.txt"
     output_path="$output_dir/$output_file"
 
     # if host dir exists we are in the op root.
@@ -112,10 +112,16 @@ run(){
         fi
     fi
 
-    gobuster dir -w $wordlist_file -u $url -o "$output_path" "${gb_args[@]}" $@
+    # tee to output_path instead of using gobusters output. this way the gobuster header gets saved and error message
+    # -z to prevent progress updates, since we are redirecting stderr to stdout
+    # redirect stderr to stdout so we can see what went wrong during the run
+    # since we have lots of extra info in the file, we'll have to grep instead of cat the file
+    # grep -P "^https?:" $output_path
+    gobuster dir -z -w $wordlist_file -u $url "${gb_args[@]}" $@ 2>&1 | tee $output_path
     if [ $? -gt 0 ]; then
         add_errored_url "$url"
     fi
+    cleanup
     cd - > /dev/null
 }
 cleanup() {
@@ -128,7 +134,6 @@ show_errored_urls() {
     fi
 }
 graceful_exit() {
-    #cleanup
     show_errored_urls
 
     echo
@@ -255,7 +260,6 @@ fi
 
 for url in $urls; do
     run $@
-    #cleanup
 done
 
 show_errored_urls
