@@ -40,7 +40,7 @@ function getHosts {
     if [ "$urls" != "0" ]; then
       echo $host
     fi
-    cd - 2>/dev/null
+    cd - > /dev/null
   done | sort -h | uniq
 }
 
@@ -77,7 +77,8 @@ function scanHost {
     find . -name '*.html' -exec sed -i '1s/^\xEF\xBB\xBF//' {} \;
 
     git add .
-    cd -
+    cd - > /dev/null
+
     if git commit -m "aquatone end $host" ; then
       if ! git pull --rebase ; then
         echo something went wrong help
