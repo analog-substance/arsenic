@@ -24,10 +24,10 @@ function getHosts {
    find hosts -name 'aquatone-gobuster-initial.txt' | cut -d/ -f2 | sort -h | uniq
  } | sort | uniq -c | grep "1 " | awk '{print $2}' | while read host; do
     urls=$(cat hosts/$host/recon/gobuster.*.txt \
-    | grep -P "Status: 2" || true \
+    | { grep -P "Status: 2" || true } \
     | sort -h | uniq \
     | awk '{print $1}' \
-    | grep -viP "\.(png|jpe?g|ico|css|gif|js)$" || true \
+    | { grep -viP "\.(png|jpe?g|ico|css|gif|js)$" || true } \
     | wc -l)
     if [ "$urls" != "0" ]; then
       echo $host
@@ -44,10 +44,10 @@ function scanHost {
 
     cd "hosts/$host"
     cat recon/*.gobuster-initial.txt \
-    | grep -P "Status: 2" || true \
+    | { grep -P "Status: 2" || true }\
     | sort -h | uniq \
     | awk '{print $1}' \
-    | grep -viP "\.(png|jpe?g|ico|css|gif|js)$" || true \
+    | { grep -viP "\.(png|jpe?g|ico|css|gif|js)$" || true } \
     | tee "recon/aquatone-gobuster-initial.txt"
 
     git add .
