@@ -1,0 +1,93 @@
+#!/bin/bash
+
+######################################################################
+##|An amass enum helper script
+##|Usage:
+##| ar-amass [options]
+##|
+##|Options:
+##|  -h, --help                             Help for ar-amass
+##|  -d, --domain string                    The target domain. Can be used multiple times to specify more target domains
+##|  -df, --domain-file string              The path to a file containing the target domains
+##|  --                                     Pass the rest of the arguments to gobuster
+######################################################################
+
+amass_args=()
+amass_args_count=0
+add_amass_args() {
+    while [[ $# -gt 0 ]]; do
+        amass_args[$amass_args_count]="$1"
+        amass_args_count=$(($amass_args_count + 1))
+        shift
+    done
+}
+
+show_usage() {
+    cat $0 | grep -a "^##[\|]" | sed "s/##[|]//g"
+}
+run(){
+    root_domain=$(echo "$domain" | awk -F. '{print $(NF-1) "." $NF}')
+    output_dir="recon/domains/$root_domain"
+    mkdir -p $output_dir
+
+    output_file="amass.$domain.txt"
+    output_path="$output_dir/$output_file"
+
+    amass enum -d $domain -src -o $output_path
+    cleanup "$root_domain"
+}
+cleanup() {
+    find recon/domains/$1 -name "*amass*" -size 0 -exec rm "{}" ";"
+}
+graceful_exit() {
+    echo
+    echo "Exiting"
+    exit 0
+}
+
+trap graceful_exit SIGINT
+
+if [[ $# -eq 0 ]]; then
+    show_usage
+    exit 0
+fi
+
+while [[ "$1" =~ ^- && ! "$1" == "--" ]]; do
+    case $1 in
+        -d|--domain)
+            domain="$2"
+            if [[ -z "$domains" ]]; then
+                domains="$domain"
+            else
+                domains=`echo -e "$2\n$domains" | sort -h | uniq`
+            fi
+            shift
+            ;;
+        -df|--domain-file)
+            contents=`cat "$2" | grep -v "^#"`
+            if [[ -z "$domains" ]]; then
+                domains="$contents"
+            else
+                domains=`echo -e "$contents\n$domains" | sort -h | uniq`
+            fi
+            shift
+            ;;
+        -h|--help)
+            show_usage
+            exit 0
+            ;;
+    esac;
+    shift;
+done
+if [[ "$1" == '--' ]]; then
+    shift
+fi
+
+if [[ -z "$domains" ]]; then
+    echo "[!] At least one domain must be specified"
+    exit
+fi
+
+for domain in $domains; do
+    run $@
+done

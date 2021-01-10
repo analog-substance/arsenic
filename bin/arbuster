@@ -6,25 +6,18 @@
 ##| arbuster [options]
 ##|
 ##|Options:
-##|  -h, --help                             Help for arbuster
-##|  -e, --expanded                         Expanded mode, print full URLs
-##|  -r, --follow-redirect                  Follow redirects
-##|  -x, --extensions string                File extension(s) to search for
-##|  -t, --token string                     Access token to be put in the Authorization header
-##|                                             Authorization: Bearer <token>
 ##|  --auth string                          Authorization header value
 ##|                                             Authorization: <value>
-##|  -w, --wordlist string                  Path to the wordlist
-##|  -u, --url string                       The target URL. Can be used multiple times to specify more target URLs
-##|  -uf, --url-file string                 The path to a file containing the target URLs
-##|  -a, --useragent [preset, custom]       The user agent string to use. Use supplied presets or a custom string
-##|                                         Presets
-##|                                             Firefox = Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101 Firefox/68.0
-##|                                             Chrome = Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36
-##|                                             Safari = Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_2) AppleWebKit/601.3.9 (KHTML, like Gecko) Version/9.0.2 Safari/601.3.9
-##|  --proxy string                         Proxy to use for requests [[http(s)|socks(4|5)]://host:port]
+##|  --exclude-length ints                  Exclude the following content length (completely ignores the status). Supply multiple times to exclude multiple sizes.
+##|  -e, --expanded                         Expanded mode, print full URLs
+##|  -x, --extensions string                File extension(s) to search for
+##|  -r, --follow-redirect                  Follow redirects
+##|  -h, --help                             Help for arbuster
+##|  -m, --method                           Use the following HTTP method (default "GET")
+##|  -k, --no-tls-validation                Skip SSL certificate verification
 ##|  -o, --output-dir string                Host specific output directory to write results to
 ##|                                         Default: recon
+##|  --proxy string                         Proxy to use for requests [[http(s)|socks(4|5)]://host:port]
 ##|  -b, --status-codes-blacklist string    Comma delimited list of blacklisted status codes
 ##|                                         Format: [+|-]code[,code]
 ##|                                             +   Blacklist status code in addition to the default
@@ -33,9 +26,17 @@
 ##|                                               the provided list will override the default
 ##|
 ##|                                         Default: 404
-##|  -k, --no-tls-validation                Skip SSL certificate verification
+##|  -t, --token string                     Access token to be put in the Authorization header
+##|                                             Authorization: Bearer <token>
+##|  -u, --url string                       The target URL. Can be used multiple times to specify more target URLs
+##|  -uf, --url-file string                 The path to a file containing the target URLs
+##|  -a, --useragent [preset, custom]       The user agent string to use. Use supplied presets or a custom string
+##|                                         Presets
+##|                                             Firefox = Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101 Firefox/68.0
+##|                                             Chrome = Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36
+##|                                             Safari = Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_2) AppleWebKit/601.3.9 (KHTML, like Gecko) Version/9.0.2 Safari/601.3.9
 ##|  --wildcard                             Force continued operation when wildcard found
-##|  --exclude-length ints                  Exclude the following content length (completely ignores the status). Supply multiple times to exclude multiple sizes.
+##|  -w, --wordlist string                  Path to the wordlist
 ##|  --                                     Pass the rest of the arguments to gobuster
 ######################################################################
 
@@ -78,31 +79,23 @@ run(){
 
     # if host dir exists we are in the op root.
     if [ -d hosts ]; then
-
-        # Check if hostname is an IP
-        if echo $hostname | grep -qP "(?:(?:2(?:[0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9])\.){3}(?:(?:2([0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9]))"; then
-            host=$hostname
-
-            # Get hostname from IP
-            hostname=$(host $host | grep "domain name pointer" | awk '{print $NF}' | sed 's/\.$//')
+        if [ -d hosts/$hostname ]; then
+            pushd hosts/$hostname > /dev/null 2>&1
         else
-            # Get IP from hostname
-            host=`host $hostname | grep "has address" | cut -d' ' -f4 | head -n 1`
-            if [[ -z "$host" ]]; then
-                echo "Error resolving $hostname"
-                return 1
+            host=$(grep -l "$hostname" hosts/*/recon/*hostnames.txt | awk -F '/' '{print $2}' | sort -u)
+            if [[ -n "$host" ]]; then
+                pushd hosts/$host > /dev/null 2>&1
+            else
+                mkdir -p hosts/$hostname/recon
+                pushd hosts/$hostname > /dev/null 2>&1
             fi
         fi
-
-        mkdir -p hosts/$host/recon
-        cd hosts/$host
     fi
 
     if [[ -n "$hostname" ]]; then
         if [ ! -f hostname ]; then
             echo "$hostname" > hostname
         fi
-
 
         # Check if hostname is an IP
         if ! echo $hostname | grep -qP "(?:(?:2(?:[0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9])\.){3}(?:(?:2([0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9]))"; then
@@ -122,10 +115,10 @@ run(){
         add_errored_url "$url"
     fi
     cleanup
-    cd - > /dev/null
+    popd > /dev/null 2>&1
 }
 cleanup() {
-    find ./ -regex ".*gobuster.*" -size 0 -exec rm "{}" ";"
+    find ./ -name "*gobuster*" -type f -size 0 -exec rm "{}" ";"
 }
 show_errored_urls() {
     if [ $errored_urls_count -gt 0 ]; then

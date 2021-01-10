@@ -1,0 +1,113 @@
+#!/bin/bash
+
+######################################################################
+##|A gobuster v3.1.0 DNS helper script
+##|Usage:
+##| arbuster-dns [options]
+##|
+##|Options:
+##|  -h, --help                             Help for arbuster-dns
+##|  -w, --wordlist string                  Path to the wordlist
+##|  -d, --domain string                    The target domain. Can be used multiple times to specify more target domains
+##|  -df, --domain-file string              The path to a file containing the target domains
+##|  --wildcard                             Force continued operation when wildcard found
+##|  --                                     Pass the rest of the arguments to gobuster
+######################################################################
+
+gb_args=()
+gb_args_count=0
+add_gb_args() {
+    while [[ $# -gt 0 ]]; do
+        gb_args[$gb_args_count]="$1"
+        gb_args_count=$(($gb_args_count + 1))
+        shift
+    done
+}
+
+show_usage() {
+    cat $0 | grep -a "^##[\|]" | sed "s/##[|]//g"
+}
+run(){
+    root_domain=$(echo "$domain" | awk -F. '{print $(NF-1) "." $NF}')
+    output_dir="recon/domains/$root_domain"
+    mkdir -p $output_dir
+
+    output_file="gobuster.$domain.$wordlist_name.txt"
+    output_path="$output_dir/$output_file"
+
+    # tee to output_path instead of using gobusters output. this way the gobuster header gets saved and error message
+    # -z to prevent progress updates, since we are redirecting stderr to stdout
+    # redirect stderr to stdout so we can see what went wrong during the run
+    # since we have lots of extra info in the file, we'll have to grep instead of cat the file
+    gobuster dns -z -w $wordlist_file -d $domain "${gb_args[@]}" $@ 2>&1 | tee $output_path
+    cleanup "$root_domain"
+}
+cleanup() {
+    find recon/domains/$1 -regex ".*gobuster.*" -size 0 -exec rm "{}" ";"
+}
+graceful_exit() {
+    echo
+    echo "Exiting"
+    exit 0
+}
+
+trap graceful_exit SIGINT
+
+if [[ $# -eq 0 ]]; then
+    show_usage
+    exit 0
+fi
+
+while [[ "$1" =~ ^- && ! "$1" == "--" ]]; do
+    case $1 in
+        --wildcard)
+            add_gb_args $1
+            ;;
+        -w|--wordlist)
+            wordlist_file=$(realpath "$2")
+            wordlist_name=`basename $wordlist_file`
+            wordlist_name="${wordlist_name%.*}"
+            shift
+            ;;
+        -d|--domain)
+            domain="$2"
+            if [[ -z "$domains" ]]; then
+                domains="$domain"
+            else
+                domains=`echo -e "$2\n$domains" | sort -h | uniq`
+            fi
+            shift
+            ;;
+        -df|--domain-file)
+            contents=`cat "$2" | grep -v "^#"`
+            if [[ -z "$domains" ]]; then
+                domains="$contents"
+            else
+                domains=`echo -e "$contents\n$domains" | sort -h | uniq`
+            fi
+            shift
+            ;;
+        -h|--help)
+            show_usage
+            exit 0
+            ;;
+    esac;
+    shift;
+done
+if [[ "$1" == '--' ]]; then
+    shift
+fi
+
+if [[ -z "$wordlist_file" ]]; then
+    echo "[!] Wordlist must be specified"
+    exit
+fi
+
+if [[ -z "$domains" ]]; then
+    echo "[!] At least one domain must be specified"
+    exit
+fi
+
+for domain in $domains; do
+    run $@
+done

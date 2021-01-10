@@ -111,6 +111,21 @@ cat recon/domains/*/ar-crtsh-slrp.txt \
   | sort -h | uniq \
   | grep -vP "$REMOVE_DOMAIN_REGEX" > scope-domains-ar-crtsh-slrp.txt
 
+cat recon/domains/*/amass*.txt 2> /dev/null \
+  | awk '{print $NF}' \
+  | tr 'A-Z' 'a-z' \
+  | ar-prune-blacklisted-domains \
+  | sort -h | uniq \
+  | grep -vP "$REMOVE_DOMAIN_REGEX" > scope-domains-ar-amass.txt
+
+cat recon/domains/*/gobuster*.txt 2> /dev/null \
+  | grep "Found: " \
+  | awk '{print $NF}' \
+  | tr 'A-Z' 'a-z' \
+  | ar-prune-blacklisted-domains \
+  | sort -h | uniq \
+  | grep -vP "$REMOVE_DOMAIN_REGEX" > scope-domains-arbuster-dns.txt
+
 # create combined scope domains file
 getAllDomains >&2
 
