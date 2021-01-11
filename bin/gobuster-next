@@ -50,7 +50,7 @@ function newGetHostUrls {
           if [ "$port" == "80" ] || [ "$port" == "443" ] ; then
             url="${proto}${hostname}"
             if [ "$port" == "80" ] ; then
-              if grep -P "\b443\b" recon/nmap* >/dev/null 2>&1 ; then
+              if grep -P "\b443\b" hosts/$host/recon/nmap-* >/dev/null 2>&1 ; then
                 # this is port 80, but 443 is listening. lets use that instead
                 SHOULD_ECHO=0
               fi
