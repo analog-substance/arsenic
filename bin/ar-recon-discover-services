@@ -1,7 +1,7 @@
 #! /bin/bash
 
 quick_scan() {
-    nmap --open -T3 -n -Pn -p- $1 -oA recon/nmap-punched-quick
+    nmap --open -T3 -n -p- $1 -oA recon/nmap-punched-quick
 }
 
 accurate_punch(){
@@ -14,7 +14,7 @@ accurate_punch(){
 
   echo "[+] Version scanning $ports"
 
-  nmap -oA recon/nmap-punched -n -Pn -A -p$ports $1
+  nmap -oA recon/nmap-punched -n -A -p$ports $1
 }
 
 try_punch(){

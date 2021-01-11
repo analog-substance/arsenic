@@ -30,7 +30,7 @@ function newGetHostUrls {
   | grep -vP "(//((sso\.|scm\.)?azurewebsites\.net|(sso\.|scm\.)?azure\-mobile\.net|s3\.amazonaws\.com)$)|((\.secureserver\.net|\.microsoftonline\.com|windows\.net|amazonaws\.com|hscoscdn)$)"  \
   | while read hostname; do
 
-    host=$(grep -rP "^$(echo $hostname | sed 's/\./\./g')$" hosts/*/recon/*hostnames.txt | head -n1 | cut -d/ -f2)
+    host=$(grep -rP "^$(echo $hostname | sed 's/\./\\./g')$" hosts/*/recon/*hostnames.txt | head -n1 | cut -d/ -f2)
 
     if [ -z "$host" ]; then
       echo "no host found for hostname: $hostname"
