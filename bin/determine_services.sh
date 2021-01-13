@@ -24,7 +24,7 @@ mkdir -p recon/detect_services/services
 # determine what ips have the same domains
 # isolate by service
 
-cat recon/domains/resolv-domains.txt | grep "address" | sort -h | ar-prune-blacklisted-domains | while read line; do
+cat recon/domains/resolv-domains.txt | grep "address" | sort -h | uniq | while read line; do
   tick "Reviewing resolved domains"
 
   domain=$(echo "$line" | awk '{print $1}')
