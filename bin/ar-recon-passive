@@ -5,7 +5,7 @@ if [ ! -z "$1" ]; then
   FR_THREADS="$1"
 fi
 
-set -euo pipefail
+set -uo pipefail
 mkdir -p recon/domains recon/ips/ hosts
 declare -a root_domain_commands=("whois" "ar-crtsh-slrp")
 declare -a domain_commands=("host")
@@ -158,10 +158,10 @@ cat scope-ips-combined.txt | grep -vP "^$PRIVATE_IP_REGEX\$" | grep -v ":" | sor
 
 
 # there has to be a better way. we dont want the scrip to exit if there are no matches
-set +e
+# set +e
 cat scope-ips-combined.txt | grep -vP "^$PRIVATE_IP_REGEX\$" | grep ":" | sort -h | uniq > scope-ips-public-ipv6.txt
 cat scope-ips-combined.txt | grep -P "^$PRIVATE_IP_REGEX\$" | sort -h | uniq > scope-ips-private-ipv4.txt
-set -e
+# set -e
 
 if which fast-resolv > /dev/null; then
   fast-resolv -c $FR_THREADS -d scope-ips-public*.txt | tee recon/ips/resolv-ips.txt
