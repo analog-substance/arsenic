@@ -66,7 +66,7 @@ function getRootDomains {
   # remove problematic domains
   # print last 2 octets in the domain
   # remove things like co.uk, com.uk
-  cat scope-domains-* \
+  cat scope-domains* \
   | removeInvalidThings \
   | awk -F. '{print $(NF-1) "." $NF}' \
   | grep -vP "$NON_ROOT_DOMAIN_REGEX" \
@@ -76,8 +76,10 @@ function getRootDomains {
 
 function getAllDomains {
   # create a combined scope file
-  cat scope-domains-* \
+    cat scope-domains* \
     | removeInvalidThings \
+    | cat - scope-domains.txt \
+    | sort -h |  uniq \
     | tee scope-domains-combined.txt
 }
 
@@ -151,7 +153,7 @@ grep -riP "has (IPv6 )?address" recon/domains/  \
   | tee scope-ips-client-domains.txt
 
 ## maybe this should be in the IPs?
-cat scope-ips-* | ar-prune-blacklisted-ips | sort -h | uniq > scope-ips-combined.txt
+cat scope-ips* | ar-prune-blacklisted-ips | cat scope-ips.txt | sort -h | uniq > scope-ips-combined.txt
 
 # Create IP Scope files for public and private addresses
 cat scope-ips-combined.txt | grep -vP "^$PRIVATE_IP_REGEX\$" | grep -v ":" | sort -h | uniq > scope-ips-public-ipv4.txt

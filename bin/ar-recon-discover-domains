@@ -37,7 +37,7 @@ function domain_recon {
     esac
 }
 
-cat scope-domains-* | sort -h | uniq | while read domain; do
+cat scope-domains* | sort -h | uniq | while read domain; do
   domain_recon "$domain"
 done
 
@@ -48,7 +48,7 @@ cat scope-domains* | sort -h | uniq | while read domain; do
 done
 
 cat recon/domains/*/host.txt | grep address | awk '{print $NF}' | sort -h | uniq | grep -vP "^($(echo $(cat scope-ips-client-domains.txt) | sed 's/ /|/g'))$" | grep -vP "1\.1\.1\.1|1\.0\.0\.1" |  tee scope-ips-discovered-domains.txt
-cat scope-ips-* | sort -h | uniq > recon/all-ips.txt
+cat scope-ips* | sort -h | uniq > recon/all-ips.txt
 
 nmap -p443,8443 -iL recon/all-ips.txt -oA recon/nmap-https-check-all-ips --open
 
