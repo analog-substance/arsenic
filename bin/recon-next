@@ -56,7 +56,6 @@ function scanHost {
     wait
     cd -
     ar-update-flags.sh git
-  #  ar-update-hostnames
 
     git add "hosts/$host"
     if git commit -m "recon host: $host" ; then
@@ -68,7 +67,7 @@ function scanHost {
   fi
   echo host check complete
 
-  ARG=$($0 list | head -n1)
+  ARG=$(head -n1 <<<$(getHosts | sort -R))
   if [ ! -z "$ARG" ] ; then
     exec $0 scan "$ARG"
   fi
@@ -86,7 +85,7 @@ fi
 
 if [ "$CMD" == "scan" ] ; then
   if [ -z "$ARG" ] ; then
-    ARG=$(getHosts | head -n1)
+    ARG=$(head -n1 <<<$(getHosts | sort -R))
     echo "[!] Auto selected $ARG"
   fi
   scanHost "$ARG"
