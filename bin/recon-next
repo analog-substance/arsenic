@@ -21,9 +21,9 @@ function getHosts {
   fi
 
   {
-    find hosts -name nmap-punched-quick.nmap  | cut -d/ -f2
+    find hosts -name 'nmap-*'  | cut -d/ -f2
     ls -d hosts/* | cut -d/ -f2
-  } | ar-prune-blacklisted-ips | sort -h | uniq -c | grep "1 " | awk '{print $2}' |  sort -R
+  } | ar-prune-blacklisted-ips | sort -h | uniq -c | grep -P "^\s+1 " | awk '{print $2}' | sort -R
 }
 
 function scanHost {

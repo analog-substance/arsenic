@@ -107,7 +107,8 @@ mv "$first_cf_file.new" "$first_cf_file"
 echo
 _ "Domain review complete"
 
-ls recon/detect_services/resolv-ip* | sort -h | while read ip_file; do
+PRIVATE_IP_REGEX="\b(127\.[0-9]{1,3}\.|10\.[0-9]{1,3}\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[01])\.)[0-9]{1,3}\.[0-9]{1,3}\b"
+ls recon/detect_services/resolv-ip* | sort -h | uniq | grep -vP "$PRIVATE_IP_REGEX" | while read ip_file; do
   cat "$ip_file" | while read domain; do
     tick "Reviewing resolved IPs"
 
