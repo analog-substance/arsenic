@@ -10,7 +10,7 @@ function getFlags {
 
     NOPORTS=0
     if compgen -G "hosts/${host}/recon/*.nmap" > /dev/null 2>&1  ; then
-      ports=$(cat "hosts/${host}/recon/"*".nmap" | grep -vP "nmap \-\-open|may be unreliable because we could not find at least 1 open and 1 closed port" | grep open)
+      ports=$(cat "hosts/${host}/recon/"*".nmap" | grep -P "(tcp|udp)\s+open")
       if [[ -n "$ports" ]]; then
         echo 'PORTS'
         echo "$ports" | awk '{$1=$2=$3=""; print $0}' | grep -P '[^\s]+' | sed 's/^\s\+/SVC::/g' | sort -h | uniq
