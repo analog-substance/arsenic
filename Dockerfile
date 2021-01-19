@@ -10,14 +10,14 @@ ENV GOROOT="/usr/local/go"
 ENV GOPATH="/root/go"
 ENV PATH="/root/go/bin:/usr/local/go/bin:${PATH}"
 
-
 RUN apt-get update && \
 apt-get install -y build-essential jq curl wget rubygems gcc dnsutils netcat net-tools vim python python3 python3-pip python3-dev libssl-dev libffi-dev git make python-pip curl nmap sed grep figlet libunbound-dev whois tar
 
 RUN cd /var/opt/ && \
 git clone https://github.com/michenriksen/aquatone && \
 git clone https://github.com/defektive/arsenic && \
-git clone https://github.com/defektive/hugo
+git clone https://github.com/defektive/hugo && \
+git clone https://github.com/OJ/gobuster.git
 
 RUN cd /tmp && \
 wget https://dl.google.com/go/go1.15.6.linux-amd64.tar.gz && \
