@@ -1,8 +1,7 @@
 #! /bin/bash
 
-ls hosts/*/recon/nmap-*.xml | while read nmap; do
-  ip=$(echo $nmap | cut -d/ -f2)
-  ports=$(echo $(grep -oP 'portid="[^"]*' hosts/$ip/recon/nmap-*.xml | cut -d: -f2 | sed 's/portid="//g' | sort -h | uniq) | sed 's/ /,/g')
+ls hosts/*/recon/nmap-*.xml | awk -F '/' '{print $2}' | sort -u | while read ip; do
+  ports=$(echo $(grep -v '<portused' hosts/$ip/recon/nmap-*.xml | grep -oP 'portid="[^"]*' | cut -d: -f2 | sed 's/portid="//g' | sort -h | uniq) | sed 's/ /,/g')
   new_ports="ports = [$ports]"
 
   if [ ! -z "$ports" ]; then
@@ -13,7 +12,8 @@ ls hosts/*/recon/nmap-*.xml | while read nmap; do
         echo updating $ip
         echo existing: $existing_ports
         echo new: $new_ports
-        cat hosts/$ip/README.md | sed 's/ports = \[[0-9,]\+\]/'"$new_ports"'/' | tee hosts/$ip/README.md
+        cat hosts/$ip/README.md | sed 's/ports = \[[0-9,]\+\]/'"$new_ports"'/' | tee hosts/$ip/README.md.new
+        mv hosts/$ip/README.md.new hosts/$ip/README.md
       fi
       # echo skip > /dev/null
     else
