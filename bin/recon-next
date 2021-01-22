@@ -33,9 +33,9 @@ function scanHost {
   if ! compgen -G "hosts/$host/recon/nmap-punched*" > /dev/null 2>&1; then
     echo setting up host
     mkdir -p "hosts/$host/recon"
-    if [ ! -f "hosts/$host/recon/.keep" ]; then
-      touch "hosts/$host/recon/.keep"
-      git add "hosts/$host/recon/.keep"
+    if [ ! -f "hosts/$host/recon/nmap-punched-quick.xml" ]; then
+      touch "hosts/$host/recon/nmap-punched-quick.xml"
+      git add "hosts/$host/recon/"
       git commit -m "new host: $host"
       git pull --rebase
       git push
@@ -55,11 +55,13 @@ function scanHost {
     echo wait for nmap...
     wait
     cd -
+    git stash
+    git pull --rebase
+    git stash pop
     ar-update-flags.sh git
 
     git add "hosts/$host"
     if git commit -m "recon host: $host" ; then
-      git pull --rebase
       git push
     else
       echo "nothing happened"

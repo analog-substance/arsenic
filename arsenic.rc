@@ -16,12 +16,15 @@ if [ "$ARSENIC_INIT" != 1 ]; then
   export PATH="$(echo $(ls -d $ARSENIC_OPT_PATH/*/bin) | sed 's/ /:/g'):$PATH"
 
 
+
+
   # iterate of *.arsenicrc files and source them
-  ls -d $ARSENIC_OPT_PATH/*/*.arsenicrc | while read rcfile; do
+  setopt +o nomatch
+  ls -d $ARSENIC_OPT_PATH/*/*.arsenicrc 2>/dev/null | while read rcfile; do
     echo "[+] Loading $rcfile"
     source "$rcfile"
   done
-
+  setopt -o nomatch
 
   if [ -e $HOME/.oprc ]; then
     source $HOME/.oprc
