@@ -44,6 +44,7 @@ This is where hosts information is stored. Host directories will typically be na
 The recon directory in the operation root will contain all the recon for the operation as a whole. when doing host specific recon it should be in the host's recon directory.
 
 ### report/
+
 Every operation should have findings! This is where to store that information.
 
 ## Getting Started
