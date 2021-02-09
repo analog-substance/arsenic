@@ -175,7 +175,14 @@ else
   mv sorted recon/ips/resolv-ips.txt
 fi
 
-cat recon/ips/resolv-ips.txt
+# create scope domains from ips
+grep -riP "domain name pointer" recon/ips/  \
+  | awk '{print $NF}' \
+  | sed 's/\.$//' \
+  | sort -h | uniq \
+  | grep -vP "$REMOVE_DOMAIN_REGEX" \
+  | ar-prune-blacklisted-domains  \
+  | tee scope-domains-client-ips.txt
 
 grep -P "(is an alias|has (IPv6 )?address)" recon/domains/resolv-domains.txt | awk '{print $1}' | sort -h | uniq > scope-domains-discovered-pointed.txt
 
