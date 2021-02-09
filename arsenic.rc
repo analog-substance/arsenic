@@ -15,9 +15,6 @@ if [ "$ARSENIC_INIT" != 1 ]; then
   ARSENIC_OPT_PATH=$(dirname $ARSENIC_PATH)
   export PATH="$(echo $(ls -d $ARSENIC_OPT_PATH/*/bin) | sed 's/ /:/g'):$PATH"
 
-
-
-
   # iterate of *.arsenicrc files and source them
   setopt +o nomatch
   ls -d $ARSENIC_OPT_PATH/*/*.arsenicrc 2>/dev/null | while read rcfile; do
@@ -30,5 +27,5 @@ if [ "$ARSENIC_INIT" != 1 ]; then
     source $HOME/.oprc
   fi
 
-  export RPROMPT='☠️'
+  export RPROMPT='☠️ '"$RPROMPT"
 fi

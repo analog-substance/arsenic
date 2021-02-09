@@ -67,10 +67,15 @@ function getFlags {
       | sed 's/\(\[\|\]\)*//g' | sed 's/,/\n/g' | sed 's/"//g' | sed 's/^\s\+//g' | grep -vP "reviewed|responsive|WAPP::|WAPP-CAT::|NET::|SVC::|no-nmap|PORTS|(dir|go)buster|aquatone"
     fi
 
-    if [ ! -f "hosts/${host}/recon/whois.txt" ] ; then
-      whois "${host}" > "hosts/${host}/recon/whois.txt"
+    if [ -f "hosts/${host}/recon/other-ips.txt" ] ; then
+      cat "hosts/${host}/recon/other-ips.txt" | while read ip_addr ; do
+        if [ ! -f "hosts/${host}/recon/whois-$ip_addr.txt" ] ; then
+          whois "$ip_addr" >  "hosts/${host}/recon/whois-$ip_addr.txt";
+        fi
+      done
     fi
-    grep "NetName" "hosts/${host}/recon/whois.txt" | awk '{print $NF}'|sed 's/\(PRIVATE-ADDRESS\)/\1\n\1/' |sed 's/^/NET::/g'
+
+    grep "NetName" "hosts/${host}/recon/whois"*.txt | awk '{print $NF}'|sed 's/\(PRIVATE-ADDRESS\)/\1\n\1/' |sed 's/^/NET::/g'
 
     if compgen -G "hosts/${host}/recon/dirbuster"* 2>&1 > /dev/null ; then
       echo dirbuster
