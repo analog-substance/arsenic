@@ -18,7 +18,7 @@ import (
 var cfgFile string
 
 var rootCmd = &cobra.Command{
-	Use:   "as",
+	Use:   "asgo",
 	Short: "Arsenic - Pentest Conventions",
 	Long: `Arsenic - Pentest Conventions
 
@@ -40,7 +40,7 @@ func init() {
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.as.yaml)")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.asgo.yaml)")
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
@@ -64,7 +64,7 @@ func initConfig() {
 	defaultScriptDirs := []string{}
 	defaultScriptDirs = append(defaultScriptDirs, "/opt/arsenic/scripts/")
 	defaultScriptDirs = append(defaultScriptDirs, fmt.Sprintf("%s/opt/arsenic/scripts/", home))
-	defaultScriptDirs = append(defaultScriptDirs, fmt.Sprintf("%s/as/scripts/", cwd))
+	defaultScriptDirs = append(defaultScriptDirs, fmt.Sprintf("%s/asgo/scripts/", cwd))
 
 	viper.SetDefault("scriptDirs", defaultScriptDirs)
 
@@ -75,7 +75,7 @@ func initConfig() {
 
 		// Search config in home directory with name ".as" (without extension).
 		viper.AddConfigPath(home)
-		viper.SetConfigName(".as")
+		viper.SetConfigName(".asgo")
 	}
 
 	viper.AutomaticEnv() // read in environment variables that match
@@ -112,7 +112,7 @@ func getScripts(phase string) []string {
 }
 
 func execScript(scriptPath string) int {
-	cmd := exec.Command("/bin/bash", scriptPath)
+	cmd := exec.Command(scriptPath)
 
 	stderr, _ := cmd.StderrPipe()
 	stdout, _ := cmd.StdoutPipe()
