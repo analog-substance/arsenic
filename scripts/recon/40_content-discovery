@@ -1,0 +1,192 @@
+#! /bin/bash
+CHECK_ONLY=""
+CMD=""
+ARG_HOST=""
+ARG_URL=""
+ME=$0
+if [ ! -z "$1" ]; then
+  CMD="$1"
+fi
+
+if [ ! -z "$2" ]; then
+  ARG_HOST="$2"
+fi
+
+if [ ! -z "$3" ]; then
+  ARG_URL="$3"
+fi
+
+if [ -z "$CMD" ] ; then
+  CMD="scan"
+fi
+
+
+#set -euo pipefail
+set -eu
+# set -x
+WEB_PORTS="(80|443|3000|8000|8001|8080|8443)"
+WEB_PORT_REGEX="portid=\"$WEB_PORTS\"|tcp/$WEB_PORTS"
+
+
+function newGetHostUrls {
+  cat hosts/*/recon/*hostnames.txt \
+  | sort -u \
+  | ar-prune-blacklisted-domains \
+  | grep -vP "(//((sso\.|scm\.)?azurewebsites\.net|(sso\.|scm\.)?azure\-mobile\.net|s3\.amazonaws\.com)$)|((\.secureserver\.net|\.microsoftonline\.com|windows\.net|amazonaws\.com|hscoscdn)$)"  \
+  | while read hostname; do
+
+    host=$(grep -rP "^$(echo $hostname | sed 's/\./\\./g')$" hosts/*/recon/*hostnames.txt | head -n1 | cut -d/ -f2)
+
+    if [ -z "$host" ]; then
+      echo "no host found for hostname: $hostname"
+    fi
+
+
+    draft=$(grep draft "hosts/$host/README.md" || echo "nope")
+    if [ "$draft" == "nope" ]; then
+
+      if grep -P "$WEB_PORT_REGEX" hosts/$host/recon/nmap-* > /dev/null 2>&1; then
+        grep -P "$WEB_PORT_REGEX" hosts/$host/recon/nmap-* | grep -hoP "$WEB_PORTS" | sort -h | uniq | while read port; do
+          SHOULD_ECHO=1
+          proto="http://"
+          if echo $port | grep 443 > /dev/null 2>&1; then
+             proto="https://"
+          fi
+          if [ "$port" == "80" ] || [ "$port" == "443" ] ; then
+            url="${proto}${hostname}"
+            if [ "$port" == "80" ] ; then
+              if grep -P "\b443\b" hosts/$host/recon/nmap-* >/dev/null 2>&1 ; then
+                # this is port 80, but 443 is listening. lets use that instead
+                SHOULD_ECHO=0
+              fi
+            fi
+          else
+            url="${proto}${hostname}:$port"
+          fi
+
+          if [ $SHOULD_ECHO -eq 1 ]; then
+            output_file="gobuster.$(echo "$url" | sed "s/:\/\//./" | sed 's/\//\./g').$wordlist_name.txt"
+            if [ ! -f "hosts/$host/recon/$output_file" ] ; then
+              echo $host $url
+            fi
+          fi
+        done
+      fi
+    fi
+  done | sort -h | uniq
+}
+
+
+function getHostnames {
+  SKIP_IP=0
+  if ! grep -rP "\.amazonaws\.com|\.windows\.net" . > /dev/null 2>&1 ; then
+    SKIP_IP=1
+  fi
+
+  if [ ! -z $SKIP_IP ] ; then
+    rhost
+  fi
+
+  for file in hostname recon/hostnames.txt; do
+    if [ -f "$file" ]; then
+      cat "$file"
+    fi
+  done | sort -h | uniq |  while read domain; do
+    if ! echo $domain | grep -P "\.amazonaws\.com|\.windows\.net$" > /dev/null; then
+      echo $domain
+    fi
+  done
+}
+
+function scanHost {
+  host="$1"
+  url="$2"
+  echo "[+] Checking $host $url"
+
+
+  draft=$(grep draft "hosts/$host/README.md" || echo "nope")
+  if [ "$draft" == "nope" ]; then
+    cd "hosts/$host"
+    output_file="gobuster.$(echo "$url" | sed "s/:\/\//./" | sed 's/\//\./g').$wordlist_name.txt"
+
+    # git pull
+    if [ ! -f "recon/$output_file" ] ; then
+      echo "[+] Scanning $host $url"
+      if [ ! -z $CHECK_ONLY ]; then
+        echo "$url"
+      else
+        # gobuster dir -e -k --random-agent -d -u $url -w ../../recon/gobuster-wordlist.txt -o "recon/gobuster-wordlist-$hostname-$port.txt" &
+
+        # If the host points to an S3 bucket, we don't want to gobuster it
+        if curl -sIL $host | grep -q "https://aws.amazon.com/s3/"; then
+          echo "s3" > $output_file
+        else
+          echo lock > "recon/$output_file"
+          ar-update-flags.sh git
+          git add .
+          git commit -m "start gobuster $url"
+
+          if ! git pull --rebase ; then
+            echo not sure what happened... help
+            exit
+          fi
+          git push
+
+          set +o pipefail
+          set +e
+
+          arbuster -k -e -a Firefox -u $url -w $wordlist_file
+        fi
+
+        git add .
+        git commit -m "gobuster end $url"
+
+        if ! git pull --rebase ; then
+          echo not sure what happened... help
+          exit
+        fi
+        git push
+        set -e
+        set -o pipefail
+      fi
+    fi
+    cd - > /dev/null
+  fi
+
+
+  if [ $MANUAL -eq 0 ]; then
+    ARGS=$(head -n1 <<<$($ME list | grep -v "no host found"))
+    if [ ! -z "$ARGS" ] ; then
+      ARG_HOST=$(echo "$ARGS" | awk '{print $1}')
+      ARG_URL=$(echo "$ARGS" | awk '{print $2}')
+      exec $ME scan
+    fi
+  fi
+}
+
+wordlist_file=$(realpath "recon/gobuster-initial.txt")
+wordlist_name=`basename $wordlist_file`
+wordlist_name="${wordlist_name%.*}"
+
+if [ -z "$CMD" ] ; then
+  echo "gobuster-next [ list | scan  [ hostname/ip url ]  ]"
+  exit
+fi
+
+if [ "$CMD" == "list" ]; then
+  newGetHostUrls
+  exit
+fi
+
+if [ "$CMD" == "scan" ] ; then
+  MANUAL=1
+  if [ -z "$ARG_HOST" ] ; then
+    MANUAL=0
+    echo no args found, autodetecting
+    ARGS=$(head -n1 <<<$($ME list | grep -v "no host found" | sort -R))
+    ARG_HOST=$(echo "$ARGS" | awk '{print $1}')
+    ARG_URL=$(echo "$ARGS" | awk '{print $2}')
+    echo "[!] Auto selected $ARG_HOST $ARG_URL"
+  fi
+  scanHost $ARG_HOST $ARG_URL
+fi
