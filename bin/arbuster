@@ -73,8 +73,10 @@ list_by_prefix() {
     sed 's/,/\n/g' | grep $1 | cut -d$1 -f2
 }
 run(){
-    hostname=`echo $url | sed "s/http\(s\)\?:\/\///" | cut -d/ -f1`
-    output_file="gobuster.$(echo "$url" | sed "s/:\/\//./" | sed 's/\//\./g').$wordlist_name.txt"
+    # Get hostname from URL
+    # Remove URL scheme (http:// or https://) and remove port (:port)
+    hostname=$(echo "$url" | sed 's|http\(s\)\?://||;s/:[0-9]\+//' | awk -F '/' '{print $1}')
+    output_file="gobuster.$(echo "$url" | sed 's|://|.|;s|/$||;s|/|.|g').$wordlist_name.txt"
     output_path="$output_dir/$output_file"
 
     # if host dir exists we are in the op root.
