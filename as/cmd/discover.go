@@ -13,7 +13,7 @@ var discoverCmd = &cobra.Command{
 
 Scripts should determine what hosts it needs to run against.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("discover called")
+		executePhaseScripts("discovery")
 	},
 }
 
