@@ -8,13 +8,10 @@ import (
 
 var analyzeCmd = &cobra.Command{
 	Use:   "analyze",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Short: "Analyse discovery data and create",
+	Long: `Analyse discovery data and create hosts.
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+This will create a single host for hostnames that resolve to the same IPs`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("analyze called")
 	},
@@ -22,5 +19,4 @@ to quickly create a Cobra application.`,
 
 func init() {
 	rootCmd.AddCommand(analyzeCmd)
-
 }
