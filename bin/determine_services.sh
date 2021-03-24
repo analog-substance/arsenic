@@ -181,3 +181,13 @@ ls -d recon/detect_services/services/* | cut -d/ -f4 | while read service ; do
 
   fi
 done
+
+cat scope-ips* | while read ip; do
+  grep "$(echo $ip | sed 's/\./\\./g')" recon/detect_services/*.txt > /dev/null || echo $ip
+done | while read ip; do
+  _ "Creating new service $ip"
+
+  mkdir -p "hosts/$ip/recon"
+  touch "hosts/$ip/README.md"
+  touch "hosts/$ip/00_metadata.md"
+done

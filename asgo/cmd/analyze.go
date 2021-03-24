@@ -13,7 +13,8 @@ var analyzeCmd = &cobra.Command{
 
 This will create a single host for hostnames that resolve to the same IPs`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("analyze called")
+		fmt.Println("plz 2 refactor me, cause i am calling a slow shell script... k thx, bye!")
+		execScript("determine_services.sh")
 	},
 }
 
