@@ -1,6 +1,14 @@
 #! /bin/bash
+FR_THREADS=100
 
+if [ ! -z "$1" ]; then
+  FR_THREADS="$1"
+fi
 set -euo pipefail
 
-
-echo do it
+RECON_FILE="recon/domains/resolv-domains.txt"
+if [ ! -f "$RECON_FILE" ] ; then
+  fast-resolv -c $FR_THREADS -d scope-domains-combined.txt | tee "$RECON_FILE"
+  cat "$RECON_FILE" | sort > sorted
+  mv sorted "$RECON_FILE"
+fi

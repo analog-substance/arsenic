@@ -3,4 +3,4 @@
 set -euo pipefail
 
 
-echo do it
+echo DO DNS ENUMERATION

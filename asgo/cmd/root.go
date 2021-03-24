@@ -67,6 +67,7 @@ func initConfig() {
 	defaultScriptDirs = append(defaultScriptDirs, fmt.Sprintf("%s/asgo/scripts/", cwd))
 
 	viper.SetDefault("scriptDirs", defaultScriptDirs)
+	viper.SetDefault("secListsPath", "/opt/SecLists")
 
 	if cfgFile != "" {
 		// Use config file from the flag.
@@ -155,14 +156,12 @@ func executePhaseScripts (phase string) {
 	scripts := getScripts(phase)
 	for len(scripts) > 0 {
 		currentScript := scripts[0]
+		fmt.Printf("Running %s\n", currentScript)
 		if execScript(currentScript) == 0 {
 			scripts = scripts[1:]
 		} else {
-			fmt.Printf("Script failed, gonna retry: %s", currentScript)
+			fmt.Printf("Script failed, gonna retry: %s\n", currentScript)
 			time.Sleep(10 * time.Second)
 		}
-	}
-	for _, reconScript := range getScripts(phase) {
-		fmt.Printf("Running %s\n", reconScript)
 	}
 }

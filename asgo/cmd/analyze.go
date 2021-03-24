@@ -8,8 +8,8 @@ import (
 
 var analyzeCmd = &cobra.Command{
 	Use:   "analyze",
-	Short: "Analyse discovery data and create",
-	Long: `Analyse discovery data and create hosts.
+	Short: "Analyze discovery data and create",
+	Long: `Analyze discovery data and create hosts.
 
 This will create a single host for hostnames that resolve to the same IPs`,
 	Run: func(cmd *cobra.Command, args []string) {
