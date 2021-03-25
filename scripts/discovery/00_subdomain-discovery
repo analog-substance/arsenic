@@ -1,5 +1,9 @@
 #! /bin/bash
 
+function _ {
+  echo "[+] $@"
+}
+
 mkdir -p recon/domains recon/discovery recon/ips
 
 declare -a root_domain_commands=("whois")
@@ -24,7 +28,7 @@ function getRootDomains {
   | awk -F. '{print $(NF-1) "." $NF}' \
   | grep -vP "$NON_ROOT_DOMAIN_REGEX" \
   | sort -h | uniq \
-  | tee scope-domains-root.txt
+  | tee scope-domains-generated-root.txt
 }
 
 function getAllDomains {
@@ -33,7 +37,7 @@ function getAllDomains {
     | removeInvalidThings \
     | cat - scope-domains.txt \
     | sort -h |  uniq \
-    | tee scope-domains-combined.txt
+    | tee scope-domains-generated-combined.txt
 }
 
 function removeInvalidThings {
@@ -97,52 +101,57 @@ function ensureInScope {
   grep -P "^$(echo $(cat scope-domains.txt | sed 's/\./\\./g;s/^/(.+\\.)?/g') | sed 's/ /|/g')$"
 }
 
+_ "Get root domains"
 getRootDomains > /dev/null
 
 RECON_FILE="recon/discovery/amass-enum-active.txt"
 if [ ! -f "$RECON_FILE" ] ; then
-  amass enum -src -active -d $(echo $(cat scope-domains-root.txt | sort -u) | sed 's/ /,/g') \
-  | tee "$RECON_FILE"
+  _ "amass enum active"
+
+  root_domains=$(echo $(getRootDomains) | sed 's/ /,/g')
+  if [ "$root_domains" != "" ]; then
+    amass enum -src -active -d "$root_domains" \
+    | tee "$RECON_FILE"
+  fi
 fi
 
-cat "$RECON_FILE" \
-| awk '{print $2}' \
-| ensureInScope \
-| sort -h \
-| uniq \
-| tee scope-domains-amass-enum-active.txt
+if [ -f "$RECON_FILE" ] ; then
+  _ "saving scope from amass enum active"
+  cat "$RECON_FILE" \
+  | awk '{print $2}' \
+  | ensureInScope \
+  | sort -h \
+  | uniq \
+  | tee scope-domains-generated-amass-enum-active.txt
+fi
 
-
-# RECON_FILE="recon/discovery/amass-intel-whois.txt"
-# if [ ! -f "$RECON_FILE" ] ; then
-#   amass intel -d $(echo $(cat scope-domains* | sort -u) | sed 's/ /,/g') -whois \
-#   | tee "$RECON_FILE"
-# fi
-#
-# cat "$RECON_FILE" \
-# | ensureInScope \
-# | sort -h \
-# | uniq \
-# | tee scope-domains-amass-intel-whois.txt
-
-
-RECON_FILE="recon/discovery/amass-intel-active.txt"
+RECON_FILE="recon/discovery/amass-intel-whois.txt"
 if [ ! -f "$RECON_FILE" ] ; then
-  amass intel -d $(echo $(cat scope-domains-root.txt | sort -u) | sed 's/ /,/g') -active \
-  | tee "$RECON_FILE"
+  _ "amass intel whois"
+  root_domains=$(echo $(getRootDomains) | sed 's/ /,/g')
+  if [ "$root_domains" != "" ]; then
+    amass intel -d "$root_domains" -whois \
+    | tee "$RECON_FILE"
+  fi
 fi
 
-cat "$RECON_FILE" \
-| ensureInScope \
-| sort -h \
-| uniq \
-| tee scope-domains-amass-intel-active.txt
+if [ -f "$RECON_FILE" ] ; then
+  _ "saving scope from amass intel whois"
+  cat "$RECON_FILE" \
+  | ensureInScope \
+  | sort -h \
+  | uniq \
+  | tee scope-domains-generated-amass-intel-whois.txt
+fi
 
+_ "Combine all discovered domains"
 getAllDomains > /dev/null
 
 # Recon root domains
+_ "Recon on root domains"
 getRootDomains | while read domain; do
   root_domain_recon "$domain"
 done
 
+_ "Combine all discovered domains"
 getAllDomains

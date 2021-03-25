@@ -1,0 +1,20 @@
+#! /bin/bash
+FR_THREADS=100
+
+if [ ! -z "$1" ]; then
+  FR_THREADS="$1"
+fi
+
+set -uo pipefail
+
+function _ {
+  echo "[+] $@"
+}
+
+RECON_FILE="recon/ips/resolv-ips.txt"
+if [ ! -f "$RECON_FILE" ] ; then
+  echo '[+] Resoving IP Addresses'
+  fast-resolv -c $FR_THREADS -d scope-ips-generated-public*.txt | tee "$RECON_FILE"
+  cat "$RECON_FILE" | sort > sorted
+  mv sorted "$RECON_FILE"
+fi

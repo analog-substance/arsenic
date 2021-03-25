@@ -54,7 +54,7 @@ Helper scripts for running engagements.
 ```bash
 source path/to/arsenic.rc
 cd op_dir
-echo 192.168.0.1/24 > scope-ips-initial.txt
+echo 192.168.0.1/24 > scope-ips-generated-initial.txt
 arsenic
 ```
 
