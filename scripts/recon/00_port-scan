@@ -76,8 +76,10 @@ function scanHost {
     cd "hosts/$host"
 
     as-recon-discover-services "$host"
-    
+
     gitCommit "hosts/$host" "recon host: $host"
+
+    cd -
 
   fi
   echo host check complete

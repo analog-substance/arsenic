@@ -109,7 +109,7 @@ function scanHost {
 }
 
 if [ -z "$CMD" ] ; then
-  echo "aquatone-next [ list | scan [ hostname/ip ] ]"
+  echo "$0 [ list | scan [ hostname/ip ] ]"
   exit
 fi
 

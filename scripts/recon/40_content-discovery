@@ -197,7 +197,7 @@ wordlist_name=`basename $wordlist_file`
 wordlist_name="${wordlist_name%.*}"
 
 if [ -z "$CMD" ] ; then
-  echo "gobuster-next [ list | scan  [ hostname/ip url ]  ]"
+  echo "$0 [ list | scan  [ hostname/ip url ]  ]"
   exit
 fi
 

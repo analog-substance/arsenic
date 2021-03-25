@@ -27,7 +27,6 @@ if [ "$WORDLIST_TYPE" == "content-discovery" ]; then
       cat "$ARSENIC_PATH/$content_discovery_file"
     fi
   } | sort -u | while read path; do
-    echo "$secListsPath/$path"
     cat "$secListsPath/$path"
   done\
   | sed 's|^/*||g' \
