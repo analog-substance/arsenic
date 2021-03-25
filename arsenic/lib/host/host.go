@@ -1,34 +1,33 @@
 package host
 
 import (
-	"bufio"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
-  "sort"
-	"encoding/json"
 	"os"
-	"regexp"
-	"strconv"
 	"path/filepath"
+	"regexp"
+	"sort"
+	"strconv"
 	// "strings"
+	"github.com/defektive/arsenic/arsenic/lib/util"
 	"golang.org/x/net/publicsuffix"
 )
 
-
 type Metadata struct {
-	Name string
-  Hostnames []string
-  RootDomains []string
-  IPAddresses []string
-  Flags []string
-  UserFlags []string
-  TCPPorts []int
-  UDPPorts []int
-  ReviewedBy string
+	Name        string
+	Hostnames   []string
+	RootDomains []string
+	IPAddresses []string
+	Flags       []string
+	UserFlags   []string
+	TCPPorts    []int
+	UDPPorts    []int
+	ReviewedBy  string
 }
 
 type Host struct {
-	dir string
+	dir      string
 	metadata Metadata
 	// hostnames []string
 	// ipAddresses []string
@@ -38,13 +37,13 @@ func InitHost(dir string) Host {
 	return Host{dir, defaultMetadata()}
 }
 
-func (host Host) SaveMetadata () {
+func (host Host) SaveMetadata() {
 	var metadata Metadata
 	changed := false
 	if _, err := os.Stat(host.metadataFile()); !os.IsNotExist(err) {
 		jsonFile, err := os.Open(host.metadataFile())
 		if err != nil {
-				fmt.Println(err)
+			fmt.Println(err)
 		}
 		defer jsonFile.Close()
 
@@ -63,7 +62,6 @@ func (host Host) SaveMetadata () {
 	// we have are base metadata loaded
 	// lets update it
 
-
 	hostnames := host.Hostnames()
 	if metadata.Name == "unknown" || len(metadata.Name) == 0 {
 		metadata.Name = hostnames[0]
@@ -74,7 +72,7 @@ func (host Host) SaveMetadata () {
 	udpPorts := host.udpPorts()
 
 	reviewStatus := "Reviewed"
-	if len(tcpPorts) + len(udpPorts) > 0 {
+	if len(tcpPorts)+len(udpPorts) > 0 {
 		flags = append(flags, "OpenPorts")
 		if metadata.ReviewedBy == "" {
 			reviewStatus = "Unreviewed"
@@ -88,7 +86,6 @@ func (host Host) SaveMetadata () {
 	metadata.TCPPorts = host.tcpPorts()
 	metadata.UDPPorts = host.udpPorts()
 	metadata.Flags = flags
-
 
 	out, err := json.MarshalIndent(metadata, "", "  ")
 	if err != nil {
@@ -111,7 +108,7 @@ func (host Host) SaveMetadata () {
 
 func (host Host) Hostnames() []string {
 	hostnamesFile := fmt.Sprintf("%s/%s", host.dir, "/recon/hostnames.txt")
-	hostnames, err := readLines(hostnamesFile)
+	hostnames, err := util.ReadLines(hostnamesFile)
 
 	if err != nil {
 		return []string{}
@@ -120,37 +117,22 @@ func (host Host) Hostnames() []string {
 }
 
 func (host Host) IPAddresses() []string {
-		IPAddressesFile := fmt.Sprintf("%s/%s", host.dir, "/recon/ip-addresses.txt")
-		IPAddresses, err := readLines(IPAddressesFile)
+	IPAddressesFile := fmt.Sprintf("%s/%s", host.dir, "/recon/ip-addresses.txt")
+	IPAddresses, err := util.ReadLines(IPAddressesFile)
 
-		if err != nil {
-			return []string{}
-		}
-		return IPAddresses
+	if err != nil {
+		return []string{}
+	}
+	return IPAddresses
 }
 
-func readLines(path string) ([]string, error) {
-  file, err := os.Open(path)
-  if err != nil {
-    return nil, err
-  }
-  defer file.Close()
-
-  var lines []string
-  scanner := bufio.NewScanner(file)
-  for scanner.Scan() {
-    lines = append(lines, scanner.Text())
-  }
-  return lines, scanner.Err()
-}
-
-func UpdateFlags () {
+func UpdateFlags() {
 	for _, host := range All() {
 		host.SaveMetadata()
 	}
 }
 
-func All () []Host {
+func All() []Host {
 	allHosts := []Host{}
 	for _, hostDir := range getHostDirs() {
 		host := InitHost(hostDir)
@@ -176,21 +158,11 @@ func getHostDirs() []string {
 	return filePaths
 }
 
-func (host Host) metadataFile () string {
+func (host Host) metadataFile() string {
 	return fmt.Sprintf("%s/%s", host.dir, "00_metadata.md")
 }
 
-func (host Host) tcpPorts () []int {
-	re := regexp.MustCompile(`([0-9]+)(/tcp\s+open)`)
-	return ports(re, fmt.Sprintf("%s/recon/%s", host.dir, "nmap-punched-tcp.nmap"))
-}
-
-func (host Host) udpPorts () []int {
-	re := regexp.MustCompile(`([0-9]+)(/udp\s+open)`)
-	return ports(re, fmt.Sprintf("%s/recon/%s", host.dir, "nmap-punched-udp.nmap"))
-}
-
-func (host Host) flags () []string {
+func (host Host) flags() []string {
 	flags := []string{}
 
 	globbed, _ := filepath.Glob(fmt.Sprintf("%s/recon/%s", host.dir, "nmap-punched.*"))
@@ -216,10 +188,17 @@ func (host Host) flags () []string {
 	return flags
 }
 
+func (host Host) tcpPorts() []int {
+	re := regexp.MustCompile(`([0-9]+)(/tcp\s+open)`)
+	return ports(re, fmt.Sprintf("%s/recon/%s", host.dir, "nmap-punched-tcp.nmap"))
+}
 
+func (host Host) udpPorts() []int {
+	re := regexp.MustCompile(`([0-9]+)(/udp\s+open)`)
+	return ports(re, fmt.Sprintf("%s/recon/%s", host.dir, "nmap-punched-udp.nmap"))
+}
 
-
-func ports (re *regexp.Regexp, nmapFilePath string) []int {
+func ports(re *regexp.Regexp, nmapFilePath string) []int {
 	pre := regexp.MustCompile(`[0-9]+`)
 	content, err := ioutil.ReadFile(nmapFilePath)
 	if err != nil {
@@ -235,21 +214,20 @@ func ports (re *regexp.Regexp, nmapFilePath string) []int {
 	return ports
 }
 
-
 func defaultMetadata() Metadata {
 	return Metadata{
-		Name: "unknown",
-		Hostnames: []string{},
+		Name:        "unknown",
+		Hostnames:   []string{},
 		IPAddresses: []string{},
-		Flags: []string{},
-		UserFlags: []string{},
-		TCPPorts: []int{},
-		UDPPorts: []int{},
-		ReviewedBy: "",
+		Flags:       []string{},
+		UserFlags:   []string{},
+		TCPPorts:    []int{},
+		UDPPorts:    []int{},
+		ReviewedBy:  "",
 	}
 }
 
-func getRootDomains (domains []string) []string {
+func getRootDomains(domains []string) []string {
 	rootDomainMap := map[string]int{}
 	rootDomains := []string{}
 	for _, domain := range domains {

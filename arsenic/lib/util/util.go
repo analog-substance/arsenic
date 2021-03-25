@@ -1,45 +1,46 @@
 package util
 
-
 import (
 	"bufio"
 	"fmt"
 	"github.com/spf13/viper"
-	"io/ioutil"
+	// "io/ioutil"
 	"log"
 	"os"
 	"os/exec"
-	"syscall"
 	"sort"
+	"syscall"
 	"time"
 )
 
 func GetScripts(phase string) []string {
-	scriptFile := make(map[string]string)
-	for _, scriptDir := range(viper.GetStringSlice("scriptDirs")) {
-		potentialScriptDir := fmt.Sprintf("%s/%s", scriptDir, phase)
-		if _, err := os.Stat(potentialScriptDir); !os.IsNotExist(err) {
-			files, err := ioutil.ReadDir(potentialScriptDir)
+	scriptMap := make(map[string]string)
+	for _, varDir := range viper.GetStringSlice("varDirs") {
+		potentialVarFile := fmt.Sprintf("%s/%s/default.txt", varDir, phase)
+
+		if _, err := os.Stat(potentialVarFile); !os.IsNotExist(err) {
+			scriptsLines, err := ReadLines(potentialVarFile)
 			if err != nil {
 				fmt.Println(err)
 			}
 
-			for _, file := range files {
-				scriptFile[file.Name()] = fmt.Sprintf("%s/%s", potentialScriptDir, file.Name())
+			sort.Strings(scriptsLines)
+
+			for _, scriptLine := range scriptsLines {
+				scriptOrder := scriptLine[:2]
+				scriptName := scriptLine[3:]
+				scriptMap[scriptOrder] = scriptName
 			}
 		}
 	}
 
-	filePaths := []string{}
-	for _, file := range scriptFile {
-		filePaths = append(filePaths, file)
+	scripts := []string{}
+	for _, script := range scriptMap {
+		scripts = append(scripts, script)
 	}
 
-	sort.Strings(filePaths)
-	return filePaths
+	return scripts
 }
-
-
 
 func ExecScript(scriptPath string, args []string) int {
 	cmd := exec.Command(scriptPath, args...)
@@ -81,7 +82,7 @@ func ExecScript(scriptPath string, args []string) int {
 	return exitStatus
 }
 
-func ExecutePhaseScripts (phase string) {
+func ExecutePhaseScripts(phase string) {
 	scripts := GetScripts(phase)
 	for len(scripts) > 0 {
 		currentScript := scripts[0]
@@ -94,4 +95,19 @@ func ExecutePhaseScripts (phase string) {
 			time.Sleep(10 * time.Second)
 		}
 	}
+}
+
+func ReadLines(path string) ([]string, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	var lines []string
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		lines = append(lines, scanner.Text())
+	}
+	return lines, scanner.Err()
 }

@@ -1,8 +1,8 @@
 package cmd
 
 import (
-	"github.com/spf13/cobra"
 	"github.com/defektive/arsenic/arsenic/lib/util"
+	"github.com/spf13/cobra"
 )
 
 var discoverCmd = &cobra.Command{

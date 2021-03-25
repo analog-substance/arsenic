@@ -1,0 +1,5 @@
+00 as-subdomain-discovery
+20 as-subdomain-enumeration
+30 as-domains-from-ssl-certs
+40 as-dns-resolution
+60 as-ip-recon

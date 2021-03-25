@@ -52,15 +52,15 @@ func initConfig() {
 
 	cwd, err := os.Getwd()
 	if err != nil {
-	    log.Println(err)
+		log.Println(err)
 	}
 
-	defaultScriptDirs := []string{}
-	defaultScriptDirs = append(defaultScriptDirs, "/opt/arsenic/scripts/")
-	defaultScriptDirs = append(defaultScriptDirs, fmt.Sprintf("%s/opt/arsenic/scripts/", home))
-	defaultScriptDirs = append(defaultScriptDirs, fmt.Sprintf("%s/arsenic/scripts/", cwd))
+	defaultVarDirs := []string{}
+	defaultVarDirs = append(defaultVarDirs, "/opt/arsenic/var/")
+	defaultVarDirs = append(defaultVarDirs, fmt.Sprintf("%s/opt/arsenic/var/", home))
+	defaultVarDirs = append(defaultVarDirs, fmt.Sprintf("%s/as/var/", cwd))
 
-	viper.SetDefault("scriptDirs", defaultScriptDirs)
+	viper.SetDefault("varDirs", defaultVarDirs)
 	viper.SetDefault("secListsPath", "/opt/SecLists")
 
 	if cfgFile != "" {

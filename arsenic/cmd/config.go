@@ -3,10 +3,10 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/defektive/arsenic/arsenic/lib/util"
 	"github.com/pelletier/go-toml"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/defektive/arsenic/arsenic/lib/util"
 )
 
 // configCmd represents the config command
@@ -32,7 +32,6 @@ Helpful to see what scripts would be executed.`,
 		fmt.Println("Configuration")
 		s := t.String()
 		fmt.Printf(s)
-
 
 		fmt.Println("Discovery files to be run")
 		for _, scriptFile := range util.GetScripts("discovery") {
