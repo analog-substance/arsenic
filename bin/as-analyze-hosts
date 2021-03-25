@@ -97,13 +97,15 @@ done
 
 
 first_cf_domain=$(cat recon/analyze-hosts/cloudfront-domains.txt | head -n1)
-first_cf_domain_ip=$(cat "recon/analyze-hosts/resolv-domain-$first_cf_domain.txt" | head -n1)
-first_cf_file="recon/analyze-hosts/resolv-ip-$first_cf_domain_ip.txt"
-{
-  cat recon/analyze-hosts/cloudfront-domains.txt
-  cat $first_cf_file
-} | sort -h | uniq > "$first_cf_file.new"
-mv "$first_cf_file.new" "$first_cf_file"
+if [ "$first_cf_domain" != "" ]; then
+  first_cf_domain_ip=$(cat "recon/analyze-hosts/resolv-domain-$first_cf_domain.txt" | head -n1)
+  first_cf_file="recon/analyze-hosts/resolv-ip-$first_cf_domain_ip.txt"
+  {
+    cat recon/analyze-hosts/cloudfront-domains.txt
+    cat $first_cf_file
+  } | sort -h | uniq > "$first_cf_file.new"
+  mv "$first_cf_file.new" "$first_cf_file"
+fi
 
 # cat "recon/analyze-hosts/resolv-domain-r.cloudfront.net.txt" | while read ip; do
 #   # cat "recon/analyze-hosts/resolv-ip-$ip.txt"
@@ -155,7 +157,7 @@ done
 echo >&2
 _ "Updating existing hosts"
 
-ls -d recon/analyze-hosts/services/* | cut -d/ -f4 | while read service ; do
+ls -d recon/analyze-hosts/services/* | as-prune-blacklisted-domains | cut -d/ -f4 | while read service ; do
 
   if [ -e "hosts/$service" ]; then
     _ "Updating existing $service"
@@ -194,8 +196,7 @@ ls -d recon/analyze-hosts/services/* | cut -d/ -f4 | while read service ; do
   fi
 done
 
-
-cat scope-ips* | while read ip; do
+cat scope-ips* | as-prune-blacklisted-ips | while read ip; do
   grep "$(echo $ip | sed 's/\./\\./g')" recon/analyze-hosts/*.txt > /dev/null || echo $ip
 done | while read ip; do
   _ "Creating new service $ip"
