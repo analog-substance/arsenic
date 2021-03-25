@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
+	"github.com/defektive/arsenic/arsenic/lib/util"
 )
 
 var discoverCmd = &cobra.Command{
@@ -11,7 +12,7 @@ var discoverCmd = &cobra.Command{
 
 Scripts should determine what hosts it needs to run against.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		executePhaseScripts("discovery")
+		util.ExecutePhaseScripts("discovery")
 	},
 }
 

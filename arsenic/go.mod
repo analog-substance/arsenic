@@ -1,4 +1,4 @@
-module github.com/defektive/arsenic/asgo
+module github.com/defektive/arsenic/arsenic
 
 go 1.13
 
@@ -7,4 +7,5 @@ require (
 	github.com/pelletier/go-toml v1.2.0
 	github.com/spf13/cobra v1.1.3
 	github.com/spf13/viper v1.7.0
+	golang.org/x/net v0.0.0-20190620200207-3b0461eec859
 )

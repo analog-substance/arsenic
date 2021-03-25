@@ -20,6 +20,11 @@ if [ -z "$CMD" ] ; then
   CMD="scan"
 fi
 
+GIT=1
+if [ ! -d .git ]; then
+  GIT=0
+fi
+
 
 #set -euo pipefail
 set -eu
@@ -28,10 +33,36 @@ WEB_PORTS="(80|443|3000|8000|8001|8080|8443)"
 WEB_PORT_REGEX="portid=\"$WEB_PORTS\"|tcp/$WEB_PORTS"
 
 
+function gitPull {
+  if [ $GIT -eq 1 ]; then
+    if ! git pull > /dev/null 2>&1 ; then
+      echo "[!] pull failed" >&2
+    fi
+  fi
+}
+
+function gitCommit {
+  if [ $GIT -eq 1 ]; then
+    path="$1"
+    msg="$2"
+    git add "$path"
+
+    if git commit -m "$msg" ; then
+      if ! git pull --rebase ; then
+        git commit -am "wtf is this..."
+        git pull --rebase
+      fi
+      git push
+    else
+      echo "nothing happened"
+    fi
+  fi
+}
+
 function newGetHostUrls {
   cat hosts/*/recon/*hostnames.txt \
   | sort -u \
-  | ar-prune-blacklisted-domains \
+  | as-prune-blacklisted-domains \
   | grep -vP "(//((sso\.|scm\.)?azurewebsites\.net|(sso\.|scm\.)?azure\-mobile\.net|s3\.amazonaws\.com)$)|((\.secureserver\.net|\.microsoftonline\.com|windows\.net|amazonaws\.com|hscoscdn)$)"  \
   | while read hostname; do
 
@@ -41,8 +72,10 @@ function newGetHostUrls {
       echo "no host found for hostname: $hostname"
     fi
 
-
-    draft=$(grep draft "hosts/$host/README.md" || echo "nope")
+    draft="nope"
+    if [ -f "hosts/$host/00_metadata.md" ] ; then
+      draft=$(grep draft "hosts/$host/00_metadata.md" || echo "nope")
+    fi
     if [ "$draft" == "nope" ]; then
 
       if grep -P "$WEB_PORT_REGEX" hosts/$host/recon/nmap-* > /dev/null 2>&1; then
@@ -76,7 +109,6 @@ function newGetHostUrls {
   done | sort -h | uniq
 }
 
-
 function getHostnames {
   SKIP_IP=0
   if ! grep -rP "\.amazonaws\.com|\.windows\.net" . > /dev/null 2>&1 ; then
@@ -99,17 +131,22 @@ function getHostnames {
 }
 
 function scanHost {
+  set +u
   host="$1"
   url="$2"
+  set -u
+
   echo "[+] Checking $host $url"
 
-
-  draft=$(grep draft "hosts/$host/README.md" || echo "nope")
+  draft="nope"
+  if [ -f "hosts/$host/00_metadata.md" ] ; then
+    draft=$(grep draft "hosts/$host/00_metadata.md" || echo "nope")
+  fi
   if [ "$draft" == "nope" ]; then
     cd "hosts/$host"
     output_file="gobuster.$(echo "$url" | sed "s/:\/\//./" | sed 's/\//\./g').$wordlist_name.txt"
 
-    # git pull
+    gitPull
     if [ ! -f "recon/$output_file" ] ; then
       echo "[+] Scanning $host $url"
       if [ ! -z $CHECK_ONLY ]; then
@@ -122,37 +159,21 @@ function scanHost {
           echo "s3" > $output_file
         else
           echo lock > "recon/$output_file"
-          ar-update-flags.sh git
-          git add .
-          git commit -m "start gobuster $url"
-
-          if ! git pull --rebase ; then
-            echo not sure what happened... help
-            exit
-          fi
-          git push
+          gitCommit "." "start gobuster $url"
 
           set +o pipefail
           set +e
 
-          arbuster -k -e -a Firefox -u $url -w $wordlist_file
+          as-buster -k -e -a Firefox -u $url -w $wordlist_file
         fi
 
-        git add .
-        git commit -m "gobuster end $url"
-
-        if ! git pull --rebase ; then
-          echo not sure what happened... help
-          exit
-        fi
-        git push
+        gitCommit "." "end gobuster $url"
         set -e
         set -o pipefail
       fi
     fi
     cd - > /dev/null
   fi
-
 
   if [ $MANUAL -eq 0 ]; then
     ARGS=$(head -n1 <<<$($ME list | grep -v "no host found"))
@@ -161,10 +182,17 @@ function scanHost {
       ARG_URL=$(echo "$ARGS" | awk '{print $2}')
       exec $ME scan
     fi
+    if grep lock hosts/*/recon/gobuster.* > /dev/null; then
+      exit 1
+    fi
   fi
 }
 
-wordlist_file=$(realpath "recon/gobuster-initial.txt")
+if [ ! -f "recon/wordlist-content-discovery.txt" ]; then
+  as-wordlist content-discovery > "recon/wordlist-content-discovery.txt"
+fi
+
+wordlist_file=$(realpath "recon/wordlist-content-discovery.txt")
 wordlist_name=`basename $wordlist_file`
 wordlist_name="${wordlist_name%.*}"
 
@@ -186,6 +214,12 @@ if [ "$CMD" == "scan" ] ; then
     ARGS=$(head -n1 <<<$($ME list | grep -v "no host found" | sort -R))
     ARG_HOST=$(echo "$ARGS" | awk '{print $1}')
     ARG_URL=$(echo "$ARGS" | awk '{print $2}')
+    if [ "$ARG_HOST" == "" ]; then
+      if grep lock hosts/*/recon/gobuster.* > /dev/null; then
+        exit 1
+      fi
+      exit
+    fi
     echo "[!] Auto selected $ARG_HOST $ARG_URL"
   fi
   scanHost $ARG_HOST $ARG_URL

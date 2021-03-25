@@ -14,14 +14,45 @@ if [ -z "$CMD" ] ; then
   CMD="scan"
 fi
 
+GIT=1
+if [ ! -d .git ]; then
+  GIT=0
+fi
+
 set -euo pipefail
 
 WEB_PORTS="80,443,3000,8000,8001,8080,8443"
 
+function gitPull {
+  if [ $GIT -eq 1 ]; then
+    if ! git pull > /dev/null 2>&1 ; then
+      echo "[!] pull failed" >&2
+    fi
+  fi
+}
+
+function gitCommit {
+  if [ $GIT -eq 1 ]; then
+    path="$1"
+    msg="$2"
+    git add "$path"
+
+    if git commit -m "$msg" ; then
+      if ! git pull --rebase ; then
+        git commit -am "wtf is this..."
+        git pull --rebase
+      fi
+      git push
+    else
+      echo "nothing happened"
+    fi
+  fi
+}
+
 function getURLs {
   {
     set +o pipefail
-    cat recon/*.gobuster-initial.txt \
+    cat recon/*.wordlist-content-discovery.txt \
     | grep -P "Status: 2"  \
     | grep -viP "\.(png|jpe?g|ico|css|gif|js)$"
     set -o pipefail
@@ -31,13 +62,11 @@ function getURLs {
 }
 
 function getHosts {
-  if ! git pull > /dev/null 2>&1 ; then
-    echo "[!] pull failed" >&2
-  fi
+  gitPull
 
    {
-     find hosts -name 'gobuster.*.gobuster-initial.txt' -size +0 | cut -d/ -f2 | sort -h | uniq
-     find hosts -name 'aquatone-gobuster-initial.txt' | cut -d/ -f2 | sort -h | uniq
+     find hosts -name 'gobuster.*.wordlist-content-discovery.txt' -size +0 | cut -d/ -f2 | sort -h | uniq
+     find hosts -name 'wordlist-content-discovery.txt' | cut -d/ -f2 | sort -h | uniq
    } | sort | uniq -c | grep "1 " | awk '{print $2}' | while read host; do
    cd hosts/$host
     urls=$(getURLs | wc -l)
@@ -52,54 +81,22 @@ function scanHost {
   host="$1"
   echo checking $host
 
-  if [ ! -f "hosts/$host/recon/aquatone-gobuster-initial.txt" ] ; then
+  if [ ! -f "hosts/$host/recon/wordlist-content-discovery.txt" ] ; then
     echo preparing to aquatone $host
 
     cd "hosts/$host"
     getURLs \
-    | tee "recon/aquatone-gobuster-initial.txt"
+    | tee "recon/wordlist-content-discovery.txt"
 
-    git add .
-    git commit -m "aquatone start $host"
-    if ! git pull --rebase ; then
-      echo something went wrong help
-      exit
-    fi
-    if ! git push ; then
-      git pull --rebase
+    gitCommit "." "aquatone start $host"
 
-      if ! git push ; then
-        echo something went wrong help
-        exit
-      fi
-
-    fi
-
-    cat "recon/aquatone-gobuster-initial.txt" | aquatone -ports $WEB_PORTS -out recon/aquatone-gobuster-initial
-    ar-update-flags.sh git
+    cat "recon/wordlist-content-discovery.txt" | aquatone -ports $WEB_PORTS -out recon/aquatone-wordlist-content-discovery
     # remove UTF BOM, this fixes aquatone being rendered in hugo
     find . -name '*.html' -exec sed -i '1s/^\xEF\xBB\xBF//' {} \;
 
-    git add .
+    gitCommit "." "aquatone end $host"
+
     cd - > /dev/null
-
-    if git commit -m "aquatone end $host" ; then
-      if ! git pull --rebase ; then
-        echo something went wrong help
-        echo I was trying to pull before pushing up the aaquatone results
-        exit
-      fi
-      if ! git push ; then
-        git pull --rebase
-
-        if ! git push ; then
-          echo something went wrong help
-          exit
-        fi
-      fi
-    else
-      echo not sure what happened. but i couldnt commit
-    fi
   fi
 
   echo host check complete
@@ -124,6 +121,9 @@ fi
 if [ "$CMD" == "scan" ] ; then
   if [ -z "$ARG" ] ; then
     ARG=$(head -n1 <<<$(getHosts | sort -R))
+    if [ "$ARG" == "" ]; then
+      exit
+    fi
     echo "[!] Auto selected $ARG"
   fi
   scanHost "$ARG"

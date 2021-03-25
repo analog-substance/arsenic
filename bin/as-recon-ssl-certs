@@ -4,7 +4,7 @@ set -euo pipefail
 
 
 function run {
-  ar-get-cert-domains.sh $1 $2 || echo "fail"
+  as-get-cert-domains $1 $2 || echo "fail"
 }
 
 nmap -p443,8443 -iL  scope-ips-public-ipv4.txt -oA recon/nmap-https-check-all-ipv4 --open
@@ -17,7 +17,7 @@ cat recon/nmap-https-check-all-ip*.gnmap|grep Ports: | awk '{print $2,$5}' | cut
 done \
   | sed 's/\*\.//g' \
   | grep "\." \
-  | ar-prune-blacklisted-domains \
+  | as-prune-blacklisted-domains \
   | sort -h | uniq > recon/ssl-cert-domains.txt
 cat recon/ssl-cert-domains.txt | grep -v " fail" | awk '{print $NF}' | sort -h | uniq | tee scope-domains-ssl-certs.txt
 

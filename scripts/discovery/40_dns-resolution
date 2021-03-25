@@ -8,6 +8,7 @@ set -euo pipefail
 
 RECON_FILE="recon/domains/resolv-domains.txt"
 if [ ! -f "$RECON_FILE" ] ; then
+  echo '[+] Resoving domains'
   fast-resolv -c $FR_THREADS -d scope-domains-combined.txt | tee "$RECON_FILE"
   cat "$RECON_FILE" | sort > sorted
   mv sorted "$RECON_FILE"

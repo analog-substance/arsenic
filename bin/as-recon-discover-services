@@ -1,7 +1,7 @@
 #! /bin/bash
 
 quick_scan() {
-    nmap --open -T3 -n -p- $1 -oA recon/nmap-punched-quick
+  nmap --open -T3 -n -p- $1 -oA recon/nmap-punched-quick-tcp
 }
 
 accurate_punch(){
@@ -14,13 +14,13 @@ accurate_punch(){
 
   echo "[+] Version scanning $ports"
 
-  nmap -oA recon/nmap-punched -n -A -p$ports $1
+  nmap -oA recon/nmap-punched-tcp -n -A -p$ports $1
 }
 
 try_punch(){
   base_dir="hosts/$ip"
   mkdir -p $base_dir/loot/passwords $base_dir/recon
-  if [ ! -f "$base_dir/recon/nmap-punched-quick.gnmap" ] ; then
+  if [ ! -f "$base_dir/recon/nmap-punched-quick-tcp.gnmap" ] ; then
     cd $base_dir
     accurate_punch $ip
     cd - 2>/dev/null

@@ -53,7 +53,7 @@ function getHosts {
   gitPull
 
   {
-    find hosts -name 'nmap-*tcp*'  | cut -d/ -f2
+    find hosts -name 'nmap-punched-udp*'  | cut -d/ -f2
     ls -d hosts/* | cut -d/ -f2
   } | as-prune-blacklisted-ips | sort -h | uniq -c | grep -P "^\s+1 " | awk '{print $2}' | sort -R
 }
@@ -65,17 +65,17 @@ function scanHost {
   fi
   echo checking $host
 
-  if ! compgen -G "hosts/$host/recon/nmap-punched*tcp*" > /dev/null 2>&1; then
+  if ! compgen -G "hosts/$host/recon/nmap-punched-udp*" > /dev/null 2>&1; then
     echo setting up host
     mkdir -p "hosts/$host/recon"
-    if [ ! -f "hosts/$host/recon/nmap-punched-quick-tcp.xml" ]; then
-      touch "hosts/$host/recon/nmap-punched-quick-tcp.xml"
+    if [ ! -f "hosts/$host/recon/nmap-punched-udp.nmap" ]; then
+      touch "hosts/$host/recon/nmap-punched-udp.nmap"
       gitCommit "hosts/$host/recon/" "new host: $host"
     fi
 
     cd "hosts/$host"
 
-    as-recon-discover-services "$host"
+    nmap -oA recon/nmap-punched-udp -sUV "$host"
     
     gitCommit "hosts/$host" "recon host: $host"
 

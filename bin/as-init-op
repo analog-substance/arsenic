@@ -34,8 +34,8 @@ if [ ! -d ".hugo" ]; then
   mkdir -p apps bin report/{findings,sections,static} hosts recon/domains
   touch {apps,bin,recon}/.keep report/static/.keep
 
-  mkdir -p hosts/127.0.0.1/recon
-  touch hosts/127.0.0.1/README.md
+  touch scope-domains.txt
+  touch scope-ips.txt
 
   _ "Setup hugo"
   git clone https://github.com/defektive/arsenic-hugo.git
@@ -71,10 +71,10 @@ if [ ! -d ".hugo" ]; then
 fi
 
 echo
-ls -d $ARSENIC_OPT_PATH/*/scripts/ar-init-op.sh 2>/dev/null
+ls -d $ARSENIC_OPT_PATH/*/scripts/as-init-op.sh 2>/dev/null
 
 
-ls -d $ARSENIC_OPT_PATH/*/scripts/ar-init-op.sh 2>/dev/null | while read hook; do
+ls -d $ARSENIC_OPT_PATH/*/scripts/as-init-op.sh 2>/dev/null | while read hook; do
   echo "[+] running $hook"
   bash "$hook"
 done
@@ -94,4 +94,4 @@ fi
 
 
 
-echo "[+] ar init complete"
+echo "[+] as init complete"
