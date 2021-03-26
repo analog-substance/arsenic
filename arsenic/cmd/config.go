@@ -33,8 +33,8 @@ Helpful to see what scripts would be executed.`,
 		s := t.String()
 		fmt.Printf(s)
 
-		fmt.Println("Discovery files to be run")
-		for _, scriptFile := range util.GetScripts("discovery") {
+		fmt.Println("discover files to be run")
+		for _, scriptFile := range util.GetScripts("discover") {
 			fmt.Println(scriptFile)
 		}
 

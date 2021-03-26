@@ -3,3 +3,4 @@
 30 as-domains-from-ssl-certs
 40 as-dns-resolution
 60 as-ip-recon
+70 as-http-screenshot-domains

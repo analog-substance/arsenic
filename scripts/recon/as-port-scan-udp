@@ -63,10 +63,8 @@ function scanHost {
   if [ "$host" == "" ]; then
     return
   fi
-  echo checking $host
 
   if ! compgen -G "hosts/$host/recon/nmap-punched-udp*" > /dev/null 2>&1; then
-    echo setting up host
     mkdir -p "hosts/$host/recon"
     if [ ! -f "hosts/$host/recon/nmap-punched-udp.nmap" ]; then
       touch "hosts/$host/recon/nmap-punched-udp.nmap"

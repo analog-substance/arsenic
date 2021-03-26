@@ -4,7 +4,7 @@ function _ {
   echo "[+] $@"
 }
 
-mkdir -p recon/domains recon/discovery recon/ips
+mkdir -p recon/domains recon/discover recon/ips
 
 declare -a root_domain_commands=("whois")
 declare -a domain_commands=("host")
@@ -104,7 +104,7 @@ function ensureInScope {
 _ "Get root domains"
 getRootDomains > /dev/null
 
-RECON_FILE="recon/discovery/amass-enum-active.txt"
+RECON_FILE="recon/discover/amass-enum-active.txt"
 if [ ! -f "$RECON_FILE" ] ; then
   _ "amass enum active"
 
@@ -125,7 +125,7 @@ if [ -f "$RECON_FILE" ] ; then
   | tee scope-domains-generated-amass-enum-active.txt
 fi
 
-RECON_FILE="recon/discovery/amass-intel-whois.txt"
+RECON_FILE="recon/discover/amass-intel-whois.txt"
 if [ ! -f "$RECON_FILE" ] ; then
   _ "amass intel whois"
   root_domains=$(echo $(getRootDomains) | sed 's/ /,/g')

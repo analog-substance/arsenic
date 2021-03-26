@@ -4,16 +4,27 @@ import (
 	"bufio"
 	"fmt"
 	"github.com/spf13/viper"
-	// "io/ioutil"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
 	"sort"
 	"syscall"
+	"strings"
 	"time"
 )
 
 func GetScripts(phase string) []string {
+	scriptMap := GetPhaseMap(phase)
+
+	scripts := []string{}
+	for _, script := range scriptMap {
+		scripts = append(scripts, script)
+	}
+	return scripts
+}
+
+func GetPhaseMap(phase string) map[string]string {
 	scriptMap := make(map[string]string)
 	for _, varDir := range viper.GetStringSlice("varDirs") {
 		potentialVarFile := fmt.Sprintf("%s/%s/default.txt", varDir, phase)
@@ -34,12 +45,29 @@ func GetScripts(phase string) []string {
 		}
 	}
 
-	scripts := []string{}
-	for _, script := range scriptMap {
-		scripts = append(scripts, script)
-	}
+	return scriptMap
+}
 
-	return scripts
+func Override(phase string) {
+	validPhases := []string{"discover","recon","hunt"}
+	for _, p := range validPhases {
+		if phase == p {
+			phaseMap := GetPhaseMap(phase)
+			content := []string{}
+
+			for phaseKey, phaseCmd := range phaseMap {
+				content = append(content, fmt.Sprintf("%s %s", phaseKey, phaseCmd))
+			}
+
+			err := os.MkdirAll("as/var/", 0755)
+			if err == nil {
+				err = ioutil.WriteFile(fmt.Sprintf("as/var/%s/default.txt", phase), []byte(strings.Join(content[:], "\n")), 0644)
+				if err != nil {
+					fmt.Println(err)
+				}
+			}
+		}
+	}
 }
 
 func ExecScript(scriptPath string, args []string) int {

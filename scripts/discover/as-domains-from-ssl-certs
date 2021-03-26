@@ -1,6 +1,6 @@
 #! /bin/bash
 
-mkdir -p recon/domains recon/discovery recon/ips
+mkdir -p recon/domains recon/discover recon/ips
 
 set -u
 

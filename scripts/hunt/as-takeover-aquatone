@@ -1,0 +1,10 @@
+#! /bin/bash
+
+find . -name aquatone_session.json | while read file; do
+  res="$(cat $file | jq '.pages[] | select(.tags[].text=="Domain Takeover") | .url' 2>/dev/null | wc -l)"
+  if [ "$res" != "0" ] ; then
+    echo "[+] Takeovers found!"
+    cat $file | jq -r '.pages[] | select(.tags[].text=="Domain Takeover") | [ .url, (.tags[] | select(.text =="Domain Takeover") | .link) ] | join("\t")' 2>/dev/null \
+    | sed 's/^/[-] /'
+  fi
+done

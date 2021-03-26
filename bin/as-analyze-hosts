@@ -35,7 +35,7 @@ cat recon/domains/resolv-domains.txt | grep "address" | sort -h | uniq | while r
 
   domain=$(echo "$line" | awk '{print $1}')
   ip=$(echo "$line" | awk '{print $NF}')
-  ip_resolv_domain=$(grep -P "^$(echo "$ip" | sed 's/\./\\./g') " recon/ips/resolv-ips.txt | awk '{print $NF}' | sed 's/\.$//g')
+  ip_resolv_domain=$(grep -P "^$(echo "$ip" | sed 's/\./\\./g') " recon/ips/resolv-ips.txt 2>/dev/null | awk '{print $NF}' | sed 's/\.$//g')
 
   if echo "$ip_resolv_domain" | grep cloudfront.net > /dev/null; then
     ip_resolv_domain="zz-cloudfront-net-cdn"
@@ -80,7 +80,7 @@ cat recon/domains/resolv-domains.txt | grep "address" | sort -h | uniq | while r
   fi
 done
 
-cat "recon/analyze-hosts/resolv-domain-zz-cloudfront-net-cdn.txt" | while read ip; do
+cat "recon/analyze-hosts/resolv-domain-zz-cloudfront-net-cdn.txt" 2>/dev/null | while read ip; do
   cat "recon/analyze-hosts/resolv-ip-$ip.txt"
   # rm "recon/analyze-hosts/resolv-ip-$ip.txt"
 done | sort -h | uniq > recon/analyze-hosts/cloudfront-domains.txt

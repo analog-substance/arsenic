@@ -11,7 +11,7 @@ fi
 ARSENIC_PATH=$(dirname `pwd`)
 popd > /dev/null
 
-if [ "$WORDLIST_TYPE" == "content-discovery" ]; then
+if [ "$WORDLIST_TYPE" == "content-discover" ]; then
   secListsPath="$(arsenic config -g secListsPath)"
 
   if [ ! -d "$secListsPath" ]; then
@@ -19,12 +19,12 @@ if [ "$WORDLIST_TYPE" == "content-discovery" ]; then
     exit 255
   fi
 
-  content_discovery_file="var/seclist-content-discovery-files.txt"
+  content_discover_file="var/seclist-content-discover-files.txt"
   {
-    if [ -f "as/$content_discovery_file" ]; then
-      cat "as/$content_discovery_file"
+    if [ -f "as/$content_discover_file" ]; then
+      cat "as/$content_discover_file"
     else
-      cat "$ARSENIC_PATH/$content_discovery_file"
+      cat "$ARSENIC_PATH/$content_discover_file"
     fi
   } | sort -u | while read path; do
     cat "$secListsPath/$path"
