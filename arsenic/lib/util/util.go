@@ -3,7 +3,6 @@ package util
 import (
 	"bufio"
 	"fmt"
-	"github.com/spf13/viper"
 	"io/ioutil"
 	"log"
 	"os"
@@ -12,14 +11,22 @@ import (
 	"strings"
 	"syscall"
 	"time"
+
+	"github.com/spf13/viper"
 )
 
 func GetScripts(phase string) []string {
 	scriptMap := GetPhaseMap(phase)
 
+	keys := []string{}
+	for key := range scriptMap {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+
 	scripts := []string{}
-	for _, script := range scriptMap {
-		scripts = append(scripts, script)
+	for _, key := range keys {
+		scripts = append(scripts, scriptMap[key])
 	}
 	return scripts
 }
