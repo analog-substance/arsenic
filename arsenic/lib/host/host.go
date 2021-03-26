@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"sort"
 	"strconv"
+
 	// "strings"
 	"github.com/defektive/arsenic/arsenic/lib/util"
 	"golang.org/x/net/publicsuffix"
@@ -63,7 +64,7 @@ func (host Host) SaveMetadata() {
 	// lets update it
 
 	hostnames := host.Hostnames()
-	if metadata.Name == "unknown" || len(metadata.Name) == 0 {
+	if (metadata.Name == "unknown" || len(metadata.Name) == 0) && len(hostnames) > 0 {
 		metadata.Name = hostnames[0]
 	}
 
