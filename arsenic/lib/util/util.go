@@ -9,8 +9,8 @@ import (
 	"os"
 	"os/exec"
 	"sort"
-	"syscall"
 	"strings"
+	"syscall"
 	"time"
 )
 
@@ -49,7 +49,7 @@ func GetPhaseMap(phase string) map[string]string {
 }
 
 func Override(phase string) {
-	validPhases := []string{"discover","recon","hunt"}
+	validPhases := []string{"discover", "recon", "hunt"}
 	for _, p := range validPhases {
 		if phase == p {
 			phaseMap := GetPhaseMap(phase)

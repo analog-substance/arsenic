@@ -1,15 +1,15 @@
 package cmd
 
 import (
+	"github.com/defektive/arsenic/arsenic/lib/util"
 	"github.com/spf13/cobra"
-		"github.com/defektive/arsenic/arsenic/lib/util"
 )
 
 // huntCmd represents the hunt command
 var huntCmd = &cobra.Command{
 	Use:   "hunt",
 	Short: "Find interesting things",
-	Long: `Find interesting things`,
+	Long:  `Find interesting things`,
 	Run: func(cmd *cobra.Command, args []string) {
 		util.ExecutePhaseScripts("hunt")
 	},

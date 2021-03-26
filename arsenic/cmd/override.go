@@ -1,17 +1,15 @@
-
 package cmd
 
 import (
-
-	"github.com/spf13/cobra"
 	"github.com/defektive/arsenic/arsenic/lib/util"
+	"github.com/spf13/cobra"
 )
 
 // overrideCmd represents the override command
 var overrideCmd = &cobra.Command{
 	Use:   "override",
 	Short: "Override a phase",
-	Long: `Override a phase`,
+	Long:  `Override a phase`,
 	Run: func(cmd *cobra.Command, args []string) {
 		for _, phase := range args {
 			util.Override(phase)
