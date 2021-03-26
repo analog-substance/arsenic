@@ -75,7 +75,7 @@ function scanHost {
 
     nmap -oA recon/nmap-punched-udp -sUV "$host"
 
-    gitCommit "hosts/$host" "recon host: $host"
+    gitCommit "." "recon host: $host"
 
     cd -
 
