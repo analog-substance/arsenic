@@ -9,41 +9,18 @@ set -euo pipefail
 
 WEB_PORTS="80,443,3000,8000,8001,8080,8443"
 
-function gitPull {
-  if [ $GIT -eq 1 ]; then
-    if ! git pull > /dev/null 2>&1 ; then
-      echo "[!] pull failed" >&2
-    fi
+
+find recon/domains/ -maxdepth 1 -type d  | tail -n +2 | while read domain_path; do
+  if [ ! -d "$domain_path/aquatone-domains" ] ; then
+    mkdir -p  "$domain_path/aquatone-domains"
+    domain=$(echo "$domain_path" | cut -d/ -f3)
+
+    cat scope-domains* \
+    | grep -P "$(echo $domain| sed 's/\./\\./g')$" \
+    | sort -u \
+    | aquatone -ports $WEB_PORTS -out  "$domain_path/aquatone-domains"
+
+    # remove UTF BOM, this fixes aquatone being rendered in hugo
+    find r"$domain_path/aquatone-domains" -name '*.html' -exec sed -i '1s/^\xEF\xBB\xBF//' {} \;
   fi
-}
-
-function gitCommit {
-  if [ $GIT -eq 1 ]; then
-    path="$1"
-    msg="$2"
-    git add "$path"
-
-    if git commit -m "$msg" ; then
-      if ! git pull --rebase ; then
-        git commit -am "wtf is this..."
-        git pull --rebase
-      fi
-      git push
-    else
-      echo "nothing happened"
-    fi
-  fi
-}
-
-if [ ! -d "recon/aquatone-domains" ] ; then
-  mkdir -p recon/aquatone-domains
-  touch recon/aquatone-domains/.keep
-
-  gitCommit "." "aquatone domains"
-
-  cat scope-domains* | sort -u | aquatone -ports $WEB_PORTS -out recon/aquatone-domains
-  # remove UTF BOM, this fixes aquatone being rendered in hugo
-  find recon/aquatone-domains -name '*.html' -exec sed -i '1s/^\xEF\xBB\xBF//' {} \;
-
-  gitCommit "." "aquatone domains end "
-fi
+done

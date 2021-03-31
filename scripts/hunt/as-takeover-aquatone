@@ -1,6 +1,7 @@
 #! /bin/bash
 
 find . -name aquatone_session.json | while read file; do
+  echo "[+] Checking $file"
   res="$(cat $file | jq '.pages[] | select(.tags[].text=="Domain Takeover") | .url' 2>/dev/null | wc -l)"
   if [ "$res" != "0" ] ; then
     echo "[+] Takeovers found!"
