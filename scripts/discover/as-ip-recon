@@ -28,7 +28,7 @@ cat scope-ips-generated-combined.txt | grep -vP "^$PRIVATE_IP_REGEX\$" | grep ":
 cat scope-ips-generated-combined.txt | grep -P "^$PRIVATE_IP_REGEX\$" | sort -h | uniq > scope-ips-generated-private-ipv4.txt
 
 
-RECON_FILE="recon/discover/amass-intel-active.txt"
+RECON_FILE="recon/discover/amass-intel-active-asn.txt"
 if [ ! -f "$RECON_FILE" ] ; then
   _ "amass intel active"
   if [ -f scope-asns.txt ]; then

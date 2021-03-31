@@ -35,6 +35,21 @@ if [ ! -f recon/ssl-cert-domains.txt ]; then
     | sort -h | uniq > recon/ssl-cert-domains.txt
 fi
 
+
+find recon/domains/ -maxdepth 1 -type d  | tail -n +2 | while read domain_path; do
+  if [ ! -f "$domain_path/ssl-cert-domains.txt" ]; then
+    domain=$(echo "$domain_path" | cut -d/ -f3)
+
+    cat scope-domains* \
+    | grep -P "$(echo $domain| sed 's/\./\\./g')$" \
+    | as-prune-blacklisted-domains > "$domain_path/combined-domains.txt"
+
+  fi
+done
+
+
+
+
 _ "Saving domains to scope"
 cat recon/ssl-cert-domains.txt \
 | ensureInScope \
