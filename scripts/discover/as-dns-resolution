@@ -6,12 +6,13 @@ if [ ! -z "$1" ]; then
 fi
 set -euo pipefail
 
-RECON_FILE="recon/domains/resolv-domains.txt"
-if [ ! -f "$RECON_FILE" ] ; then
-  mkdir -p "$(dirname $RECON_FILE)"
-  
-  echo '[+] Resoving domains'
-  fast-resolv -c $FR_THREADS -d scope-domains-generated-combined.txt | tee "$RECON_FILE"
-  cat "$RECON_FILE" | sort > sorted
-  mv sorted "$RECON_FILE"
-fi
+find recon/domains/ -maxdepth 1 -type d  | tail -n +2 | while read domain_path; do
+  RECON_FILE="$domain_path/resolv-domains.txt"
+  if [ ! -f "$RECON_FILE" ] ; then
+    mkdir -p "$(dirname $RECON_FILE)"
+    echo '[+] Resoving domains'
+    fast-resolv -c $FR_THREADS -d scope-domains-generated-combined.txt | tee "$RECON_FILE"
+    cat "$RECON_FILE" | sort > sorted
+    mv sorted "$RECON_FILE"
+  fi
+done

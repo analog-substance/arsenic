@@ -120,7 +120,7 @@ _ "Get root domains"
 getRootDomains > /dev/null
 
 _ "saving scope from amass enum active"
-cat recon/domains/*/amass-enum-active.txt \
+cat recon/domains/*/amass-enum-active.txt 2>/dev/null \
 | awk '{print $2}' \
 | ensureInScope \
 | sort -h \
@@ -128,7 +128,7 @@ cat recon/domains/*/amass-enum-active.txt \
 | tee scope-domains-generated-amass-enum-active.txt
 
 _ "saving scope from amass intel whois"
-cat recon/domains/*/amass-intel.txt \
+cat recon/domains/*/amass-intel.txt 2>/dev/null \
 | ensureInScope \
 | sort -h \
 | uniq \
