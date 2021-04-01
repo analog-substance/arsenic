@@ -1,0 +1,44 @@
+#! /bin/bash
+
+mkdir -p recon/ips
+
+set -u
+
+function _ {
+  echo "[+] $@"
+}
+
+function ensureInScope {
+  in_scope=$(echo $(cat scope-domains.txt | sed 's/\./\\./g;s/^/(.+\\.)?/g') | sed 's/ /|/g')
+  if [[ -n "$in_scope" ]]; then
+    grep -P "^$in_scope$"
+  else
+    grep -P '.*'
+  fi
+}
+
+recon_dir="recon/ips"
+if [ ! -f "$recon_dir/nmap-https-check-scope-ips-generated-combined.gnmap" ]; then
+  _ "Running nmap for ports 443,8443 on ips"
+  nmap -p443,8443 -sV -sC -iL scope-ips-generated-combined.txt -oA $recon_dir/nmap-https-check-scope-ips-generated-combined --open
+fi
+
+if [ ! -f $recon_dir/ssl-cert-domains.txt ]; then
+  _ "Getting domains from certs"
+  {
+    grep -ohP 'commonName=.+' $recon_dir/nmap-https-check-scope-*.nmap \
+    | sed 's/^commonName=//;s/^\*\.//'
+    grep -ohP 'Subject Alternative Name: DNS:.+' $recon_dir/nmap-https-check-scope-*.nmap \
+    | sed 's/^Subject Alternative Name://;s/ DNS://g;s/^\*\.//;s/,/\n/g'
+  } \
+    | grep "\." \
+    | as-prune-blacklisted-domains \
+    | sort -h | uniq > $recon_dir/ssl-cert-domains.txt
+fi
+
+_ "Saving domains to scope"
+cat $recon_dir/ssl-cert-domains.txt \
+| ensureInScope \
+| sort -h \
+| uniq \
+| tee -a scope-domains-generated-ssl-certs.txt

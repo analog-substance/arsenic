@@ -1,0 +1,51 @@
+#! /bin/bash
+
+mkdir -p recon/domains recon/discover
+
+set -u
+
+function _ {
+  echo "[+] $@"
+}
+
+function ensureInScope {
+  in_scope=$(echo $(cat scope-domains.txt | sed 's/\./\\./g;s/^/(.+\\.)?/g') | sed 's/ /|/g')
+  if [[ -n "$in_scope" ]]; then
+    grep -P "^$in_scope$"
+  else
+    grep -P '.*'
+  fi
+}
+
+find recon/domains/ -maxdepth 1 -type d  | tail -n +2 | while read domain_path; do
+  if [ -f "$domain_path/ssl-cert-domains.txt" ]; then
+    continue
+  fi
+  domain=$(echo "$domain_path" | cut -d/ -f3)
+
+  cat scope-domains* \
+  | grep -P "$(echo $domain| sed 's/\./\\./g')$" \
+  | as-prune-blacklisted-domains > "$domain_path/combined-domains.txt"
+  if [ ! -f "$domain_path/nmap-https-check-combined-domains.gnmap" ]; then
+    _ "Running nmap for ports 443,8443 on sub-domains for $domain"
+    nmap -p443,8443 -sV -sC -iL "$domain_path/combined-domains.txt" -oA $domain_path/nmap-https-check-combined-domains --open
+  fi
+
+  _ "Getting domains from certs"
+  {
+    grep -ohP 'commonName=.+' $domain_path/nmap-https-check-combined-domains.nmap \
+    | sed 's/^commonName=//;s/^\*\.//'
+    grep -ohP 'Subject Alternative Name: DNS:.+' $domain_path/nmap-https-check-combined-domains.nmap \
+    | sed 's/^Subject Alternative Name://;s/ DNS://g;s/^\*\.//;s/,/\n/g'
+  } \
+    | grep "\." \
+    | as-prune-blacklisted-domains \
+    | sort -h | uniq > $domain_path/ssl-cert-domains.txt
+done
+
+_ "Saving domains to scope"
+cat recon/domains/*/ssl-cert-domains.txt \
+| ensureInScope \
+| sort -h \
+| uniq \
+| tee -a scope-domains-generated-ssl-certs.txt
