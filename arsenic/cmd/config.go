@@ -29,19 +29,21 @@ Helpful to see what scripts would be executed.`,
 		if err != nil {
 			fmt.Println(err)
 		}
-		fmt.Println("Configuration")
+		fmt.Println("--Configuration--")
 		s := t.String()
-		fmt.Printf(s)
+		fmt.Println(s)
 
-		fmt.Println("discover files to be run")
+		fmt.Println("--Discover files to be run--")
 		for _, scriptFile := range util.GetScripts("discover") {
 			fmt.Println(scriptFile)
 		}
+		fmt.Println()
 
-		fmt.Println("Recon files to be run")
+		fmt.Println("--Recon files to be run--")
 		for _, scriptFile := range util.GetScripts("recon") {
 			fmt.Println(scriptFile)
 		}
+		fmt.Println()
 
 		if writeCfg {
 			fmt.Println("Writing Config")

@@ -2,11 +2,12 @@ package cmd
 
 import (
 	"fmt"
+	"log"
+	"os"
+
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"log"
-	"os"
 )
 
 var cfgFile string
@@ -68,7 +69,8 @@ func initConfig() {
 		viper.SetConfigFile(cfgFile)
 	} else {
 
-		// Search config in home directory with name ".as" (without extension).
+		// Search config in home directory with name ".arsenic" (without extension).
+		viper.AddConfigPath(cwd)
 		viper.AddConfigPath(home)
 		viper.SetConfigName(".arsenic")
 	}
@@ -77,6 +79,11 @@ func initConfig() {
 
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err != nil {
-		fmt.Println("Error Using config file:", viper.ConfigFileUsed())
+		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+			fmt.Println("Using default configuration")
+			fmt.Println()
+		} else {
+			fmt.Println("Error Using config file:", viper.ConfigFileUsed())
+		}
 	}
 }
