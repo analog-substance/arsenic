@@ -2,14 +2,14 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 	"log"
+	"os"
 
 	"github.com/defektive/arsenic/arsenic/lib/util"
 	// "github.com/pelletier/go-toml"
-	"gopkg.in/yaml.v2"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"gopkg.in/yaml.v2"
 )
 
 // configCmd represents the config command
@@ -22,8 +22,6 @@ Helpful to see what scripts would be executed.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		writeCfg, _ := cmd.Flags().GetBool("write")
 		getCfg, _ := cmd.Flags().GetString("get")
-    
-    
 
 		if getCfg != "" {
 			fmt.Println(viper.GetString(getCfg))
@@ -34,7 +32,6 @@ Helpful to see what scripts would be executed.`,
 		if err != nil {
 			fmt.Println(err)
 		}
-
 
 		fmt.Println("Configuration")
 		fmt.Println(string(t))
@@ -60,14 +57,14 @@ Helpful to see what scripts would be executed.`,
 	},
 }
 
-func createIfNotExist (fileName string) {
+func createIfNotExist(fileName string) {
 	_, err := os.Stat(fileName)
 	if os.IsNotExist(err) {
-			file, err := os.Create(fileName)
-			if err != nil {
-					log.Fatal(err)
-			}
-			defer file.Close()
+		file, err := os.Create(fileName)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer file.Close()
 	}
 }
 

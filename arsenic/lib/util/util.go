@@ -15,13 +15,11 @@ import (
 	"github.com/spf13/viper"
 )
 
-
 type ScriptConfig struct {
-	Script string
-	Order int
+	Script  string
+	Order   int
 	Enabled bool
 }
-
 
 func GetScripts(phase string) []ScriptConfig {
 	scripts := map[string]map[string]ScriptConfig{}

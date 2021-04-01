@@ -8,8 +8,6 @@ import (
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"log"
-	"os"
 
 	"github.com/defektive/arsenic/arsenic/lib/util"
 )
@@ -59,7 +57,6 @@ func initConfig() {
 	if err != nil {
 		log.Println(err)
 	}
-
 
 	defaultDiscoverScripts := make(map[string]util.ScriptConfig)
 	defaultReconScripts := make(map[string]util.ScriptConfig)
