@@ -68,7 +68,7 @@ func initConfig() {
 	defaultDiscoverScripts["as-dns-resolution"] = util.ScriptConfig{"as-dns-resolution", 300, true}
 	defaultDiscoverScripts["as-ip-recon"] = util.ScriptConfig{"as-ip-recon", 400, true}
 	defaultDiscoverScripts["as-domains-from-ip-ssl-certs"] = util.ScriptConfig{"as-domains-from-ip-ssl-certs", 500, true}
-	defaultDiscoverScripts["as-ip-resolution"] = util.ScriptConfig{"as-ip-recon", 600, true}
+	defaultDiscoverScripts["as-ip-resolution"] = util.ScriptConfig{"as-ip-resolution", 600, true}
 	defaultDiscoverScripts["as-http-screenshot-domains"] = util.ScriptConfig{"as-http-screenshot-domains", 700, true}
 
 	defaultReconScripts["as-port-scan-tcp"] = util.ScriptConfig{"as-port-scan-tcp", 0, true}
