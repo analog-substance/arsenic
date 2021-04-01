@@ -7,6 +7,8 @@ import (
 	"github.com/spf13/viper"
 	"log"
 	"os"
+
+	"github.com/defektive/arsenic/arsenic/lib/util"
 )
 
 var cfgFile string
@@ -55,20 +57,46 @@ func initConfig() {
 		log.Println(err)
 	}
 
-	defaultVarDirs := []string{}
-	defaultVarDirs = append(defaultVarDirs, "/opt/arsenic/var/")
-	defaultVarDirs = append(defaultVarDirs, fmt.Sprintf("%s/opt/arsenic/var/", home))
-	defaultVarDirs = append(defaultVarDirs, fmt.Sprintf("%s/as/var/", cwd))
 
-	viper.SetDefault("varDirs", defaultVarDirs)
-	viper.SetDefault("secListsPath", "/opt/SecLists")
+	defaultDiscoverScripts := make(map[string]util.ScriptConfig)
+	defaultReconScripts := make(map[string]util.ScriptConfig)
+	defaultHuntScripts := make(map[string]util.ScriptConfig)
+
+	defaultDiscoverScripts["as-subdomain-discovery"] = util.ScriptConfig{"as-subdomain-discovery", 0, true}
+	defaultDiscoverScripts["as-subdomain-enumeration"] = util.ScriptConfig{"as-subdomain-enumeration", 100, true}
+	defaultDiscoverScripts["as-domains-from-domain-ssl-certs"] = util.ScriptConfig{"as-domains-from-domain-ssl-certs", 200, true}
+	defaultDiscoverScripts["as-dns-resolution"] = util.ScriptConfig{"as-dns-resolution", 300, true}
+	defaultDiscoverScripts["as-ip-recon"] = util.ScriptConfig{"as-ip-recon", 400, true}
+	defaultDiscoverScripts["as-domains-from-ip-ssl-certs"] = util.ScriptConfig{"as-domains-from-ip-ssl-certs", 500, true}
+	defaultDiscoverScripts["as-ip-resolution"] = util.ScriptConfig{"as-ip-recon", 600, true}
+	defaultDiscoverScripts["as-http-screenshot-domains"] = util.ScriptConfig{"as-http-screenshot-domains", 700, true}
+
+	defaultReconScripts["as-port-scan-tcp"] = util.ScriptConfig{"as-port-scan-tcp", 0, true}
+	defaultReconScripts["as-content-discovery"] = util.ScriptConfig{"as-content-discovery", 100, true}
+	defaultReconScripts["as-http-screenshot-hosts"] = util.ScriptConfig{"as-http-screenshot-hosts", 200, true}
+	defaultReconScripts["as-port-scan-udp"] = util.ScriptConfig{"as-port-scan-udp", 300, true}
+
+	defaultHuntScripts["as-takeover-aquatone"] = util.ScriptConfig{"as-takeover-aquatone", 0, true}
+	defaultHuntScripts["as-searchsploit"] = util.ScriptConfig{"as-searchsploit", 100, true}
+
+	// viper.SetDefault("DiscoverScripts", defaultDiscoverScripts)
+	// viper.SetDefault("ReconScripts", defaultReconScripts)
+
+	defaultScripts := make(map[string]map[string]util.ScriptConfig)
+	defaultScripts["discover"] = defaultDiscoverScripts
+	defaultScripts["recon"] = defaultReconScripts
+	defaultScripts["hunt"] = defaultHuntScripts
+
+	viper.SetDefault("scripts", defaultScripts)
+	viper.SetDefault("sec_lists_path", "/opt/SecLists")
 
 	if cfgFile != "" {
 		// Use config file from the flag.
 		viper.SetConfigFile(cfgFile)
 	} else {
 
-		// Search config in home directory with name ".as" (without extension).
+		// Search config in home directory with name ".arsenic" (without extension).
+		viper.AddConfigPath(cwd)
 		viper.AddConfigPath(home)
 		viper.SetConfigName(".arsenic")
 	}
@@ -76,7 +104,7 @@ func initConfig() {
 	viper.AutomaticEnv() // read in environment variables that match
 
 	// If a config file is found, read it in.
-	if err := viper.ReadInConfig(); err != nil {
-		fmt.Println("Error Using config file:", viper.ConfigFileUsed())
-	}
+	// if err := viper.ReadInConfig(); err != nil {
+	// 	fmt.Println("Error Using config file:", viper.ConfigFileUsed())
+	// }
 }

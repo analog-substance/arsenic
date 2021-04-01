@@ -1,5 +1,0 @@
-00 as-port-scan-tcp
-10 as-port-scan-udp
-40 as-content-discovery
-80 as-http-screenshot-domains
-90 as-http-screenshot-hosts

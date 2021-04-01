@@ -2,9 +2,12 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	"log"
 
 	"github.com/defektive/arsenic/arsenic/lib/util"
-	"github.com/pelletier/go-toml"
+	// "github.com/pelletier/go-toml"
+	"gopkg.in/yaml.v2"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -25,30 +28,42 @@ Helpful to see what scripts would be executed.`,
 			return
 		}
 
-		t, err := toml.TreeFromMap(viper.AllSettings())
+		t, err := yaml.Marshal(viper.AllSettings())
 		if err != nil {
 			fmt.Println(err)
 		}
+
 		fmt.Println("Configuration")
-		s := t.String()
-		fmt.Printf(s)
+		fmt.Println(string(t))
+		fmt.Println()
 
 		fmt.Println("discover files to be run")
-		for _, scriptFile := range util.GetScripts("discover") {
-			fmt.Println(scriptFile)
+		for _, scriptConfig := range util.GetScripts("discover") {
+			fmt.Printf("%s\n\tenabled: %t\n\torder: %d\n\n", scriptConfig.Script, scriptConfig.Enabled, scriptConfig.Order)
 		}
 
 		fmt.Println("Recon files to be run")
-		for _, scriptFile := range util.GetScripts("recon") {
-			fmt.Println(scriptFile)
+		for _, scriptConfig := range util.GetScripts("discover") {
+			fmt.Printf("%s\n\tenabled: %t\n\torder: %d\n\n", scriptConfig.Script, scriptConfig.Enabled, scriptConfig.Order)
 		}
 
 		if writeCfg {
 			fmt.Println("Writing Config")
+			createIfNotExist(".arsenic.yaml")
 			viper.WriteConfig()
 		}
-
 	},
+}
+
+func createIfNotExist (fileName string) {
+	_, err := os.Stat(fileName)
+	if os.IsNotExist(err) {
+			file, err := os.Create(fileName)
+			if err != nil {
+					log.Fatal(err)
+			}
+			defer file.Close()
+	}
 }
 
 func init() {

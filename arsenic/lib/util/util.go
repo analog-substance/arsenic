@@ -3,78 +3,38 @@ package util
 import (
 	"bufio"
 	"fmt"
-	"io/ioutil"
+	// "io/ioutil"
 	"log"
 	"os"
 	"os/exec"
 	"sort"
-	"strings"
+	// "strings"
 	"syscall"
 	"time"
 
 	"github.com/spf13/viper"
 )
 
-func GetScripts(phase string) []string {
-	scriptMap := GetPhaseMap(phase)
 
-	keys := []string{}
-	for key := range scriptMap {
-		keys = append(keys, key)
-	}
-	sort.Strings(keys)
-
-	scripts := []string{}
-	for _, key := range keys {
-		scripts = append(scripts, scriptMap[key])
-	}
-	return scripts
+type ScriptConfig struct {
+	Script string
+	Order int
+	Enabled bool
 }
 
-func GetPhaseMap(phase string) map[string]string {
-	scriptMap := make(map[string]string)
-	for _, varDir := range viper.GetStringSlice("varDirs") {
-		potentialVarFile := fmt.Sprintf("%s/%s/default.txt", varDir, phase)
 
-		if _, err := os.Stat(potentialVarFile); !os.IsNotExist(err) {
-			scriptsLines, err := ReadLines(potentialVarFile)
-			if err != nil {
-				fmt.Println(err)
-			}
-
-			sort.Strings(scriptsLines)
-
-			for _, scriptLine := range scriptsLines {
-				scriptOrder := scriptLine[:2]
-				scriptName := scriptLine[3:]
-				scriptMap[scriptOrder] = scriptName
-			}
-		}
+func GetScripts(phase string) []ScriptConfig {
+	scripts := map[string]map[string]ScriptConfig{}
+	viper.UnmarshalKey("scripts", &scripts)
+	phaseScripts := []ScriptConfig{}
+	for _, scriptConfig := range scripts[phase] {
+		phaseScripts = append(phaseScripts, scriptConfig)
 	}
 
-	return scriptMap
-}
-
-func Override(phase string) {
-	validPhases := []string{"discover", "recon", "hunt"}
-	for _, p := range validPhases {
-		if phase == p {
-			phaseMap := GetPhaseMap(phase)
-			content := []string{}
-
-			for phaseKey, phaseCmd := range phaseMap {
-				content = append(content, fmt.Sprintf("%s %s", phaseKey, phaseCmd))
-			}
-
-			err := os.MkdirAll("as/var/", 0755)
-			if err == nil {
-				err = ioutil.WriteFile(fmt.Sprintf("as/var/%s/default.txt", phase), []byte(strings.Join(content[:], "\n")), 0644)
-				if err != nil {
-					fmt.Println(err)
-				}
-			}
-		}
-	}
+	sort.SliceStable(phaseScripts, func(i, j int) bool {
+		return phaseScripts[i].Order < phaseScripts[j].Order
+	})
+	return phaseScripts
 }
 
 func ExecScript(scriptPath string, args []string) int {
@@ -121,13 +81,18 @@ func ExecutePhaseScripts(phase string) {
 	scripts := GetScripts(phase)
 	for len(scripts) > 0 {
 		currentScript := scripts[0]
-		fmt.Printf("Running %s\n", currentScript)
-		args := []string{}
-		if ExecScript(currentScript, args) == 0 {
-			scripts = scripts[1:]
+		if currentScript.Enabled {
+			fmt.Printf("Running %s\n", currentScript.Script)
+			args := []string{}
+			if ExecScript(currentScript.Script, args) == 0 {
+				scripts = scripts[1:]
+			} else {
+				fmt.Printf("Script failed, gonna retry: %s\n", currentScript.Script)
+				time.Sleep(10 * time.Second)
+			}
 		} else {
-			fmt.Printf("Script failed, gonna retry: %s\n", currentScript)
-			time.Sleep(10 * time.Second)
+			// not enabled.. remove
+			scripts = scripts[1:]
 		}
 	}
 }
