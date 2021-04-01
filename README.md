@@ -1,4 +1,7 @@
-# Arsenic
+# Arsenic [as]
+Now with moar go!!! check out `/arsenic`!
+*******
+
 
 Arsenic aims to set conventions around how pentest data is stored. It is nothing more than a directory structure and file naming conventions. By itself it is nothing fancy, but when combined with things like [arsenic-hugo](https://github.com/defektive/arsenic-hugo) or [xenon](https://github.com/defektive/xenon) it should make operations fun again!
 
@@ -49,14 +52,44 @@ Every operation should have findings! This is where to store that information.
 
 ## Getting Started
 
-Helper scripts for running engagements.
+to start an op:
 
 ```bash
-source path/to/arsenic.rc
-cd op_dir
-echo 192.168.0.1/24 > scope-ips-generated-initial.txt
-arsenic
+as-init-op.sh opname
+cd opname
+
+echo example.com >> scope-domains.txt
+arsenic discover
 ```
+
+Next we check what hosts we have.
+```bash
+arsenic analyze
+```
+
+If there is something you dont want to scan, blacklist it and re run until you have what you want.
+
+
+Now you can review things, blacklist things.
+
+```bash
+echo bad.example.com >> blacklist-domains.txt
+```
+
+Once you have everything you want, run:
+```bash
+arsenic analyze -c
+```
+
+This will create your directories in `hosts/`. Now you can run.
+
+```bash
+arsenic recon
+```
+
+This will probably take a while... but when its done you should have port scans, content discovery, and screen shots.
+
+******
 
 ## Collaboration
 
@@ -69,12 +102,22 @@ export REVIEWER='defektive'
 ar-mark-reviewed.sh 192.168.0.1 # this will set reviewer = 'defektive' in the README for the host
 ar-update-flags.sh git # this will update the flags for modifed hosts. in this case removing  unreviewed and adding reviewed to 192.168.0.1's flags
 ```
+*****
+## Installation
 
-## Suggested Installation
+Oh goodie!! This is all still very much a WIP, but it should get better as it gets used more. Assuming you already have `go` setup and your `arsenic` is in `$HOME/opt` or `/opt`, to get started:
+```bash
+cd arsenic
+go install
+```
+Now you should be able to run `arsenic`. If not something is wrong.
+
+### Suggested Installation
 
 - Arsenic is intended to be checked out along side other similarly purposed tools in an `opt/` directory.
 - Arsenic will automatically add the `bin/` directory of sibling directories (eg: `opt/arsenic/bin`, `opt/xe/bin`) to your `$PATH`
 
+*******
 ## Requirements
 
 - curl
