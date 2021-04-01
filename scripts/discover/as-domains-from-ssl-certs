@@ -9,25 +9,30 @@ function _ {
 }
 
 function ensureInScope {
-  grep -P "^$(echo $(cat scope-domains.txt | sed 's/\./\\./g;s/^/(.+\\.)?/g') | sed 's/ /|/g')$"
-}
-
-function run {
-  as-get-cert-domains $1 $2 || echo "fail"
+  in_scope=$(echo $(cat scope-domains.txt | sed 's/\./\\./g;s/^/(.+\\.)?/g') | sed 's/ /|/g')
+  if [[ -n "$in_scope" ]]; then
+    grep -P "^$in_scope$"
+  else
+    grep -P '.*'
+  fi
 }
 
 if [ ! -f "recon/nmap-https-check-scope-domains-generated-combined.gnmap" ]; then
-  _ "Running nmap for ports 443,8443"
-  nmap -p443,8443 -sV -sC -iL  scope-domains-generated-combined.txt -oA recon/nmap-https-check-scope-domains-generated-combined --open
+  _ "Running nmap for ports 443,8443 on domains"
+  nmap -p443,8443 -sV -sC -iL scope-domains-generated-combined.txt -oA recon/nmap-https-check-scope-domains-generated-combined --open
 fi
 
+if [ ! -f "recon/nmap-https-check-scope-ips-generated-combined.gnmap" ]; then
+  _ "Running nmap for ports 443,8443 on ips"
+  nmap -p443,8443 -sV -sC -iL scope-ips.txt -oA recon/nmap-https-check-scope-ips-generated-combined --open
+fi
 
 if [ ! -f recon/ssl-cert-domains.txt ]; then
   _ "Getting domains from certs"
   {
-    grep -oP 'commonName=.+' recon/nmap-https-check-scope-domains-generated-combined.nmap \
+    grep -ohP 'commonName=.+' recon/nmap-https-check-scope-*.nmap \
     | sed 's/^commonName=//;s/^\*\.//'
-    grep -oP 'Subject Alternative Name: DNS:.+' recon/nmap-https-check-scope-domains-generated-combined.nmap \
+    grep -ohP 'Subject Alternative Name: DNS:.+' recon/nmap-https-check-scope-*.nmap \
     | sed 's/^Subject Alternative Name://;s/ DNS://g;s/^\*\.//;s/,/\n/g'
   } \
     | grep "\." \
