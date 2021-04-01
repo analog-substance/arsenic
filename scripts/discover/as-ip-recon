@@ -29,6 +29,8 @@ cat scope-ips-generated-combined.txt | grep -P "^$PRIVATE_IP_REGEX\$" | sort -h 
 
 RECON_FILE="recon/discover/amass-intel-active-asn.txt"
 if [ ! -f "$RECON_FILE" ] ; then
+  mkdir -p "$(dirname $RECON_FILE)"
+
   _ "amass intel active"
   if [ -f scope-asns.txt ]; then
     asns=$(echo $(cat scope-asns.txt | sort -u) | sed 's/ /,/g')

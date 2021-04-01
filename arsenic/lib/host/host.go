@@ -30,8 +30,6 @@ type Metadata struct {
 type Host struct {
 	dir      string
 	metadata Metadata
-	// hostnames []string
-	// ipAddresses []string
 }
 
 func InitHost(dir string) Host {
