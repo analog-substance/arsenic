@@ -30,8 +30,6 @@ type Metadata struct {
 type Host struct {
 	dir      string
 	metadata Metadata
-	// hostnames []string
-	// ipAddresses []string
 }
 
 func InitHost(dir string) Host {
@@ -64,8 +62,13 @@ func (host Host) SaveMetadata() {
 	// lets update it
 
 	hostnames := host.Hostnames()
-	if (metadata.Name == "unknown" || len(metadata.Name) == 0) && len(hostnames) > 0 {
-		metadata.Name = hostnames[0]
+	ipAddresses := host.IPAddresses()
+	if metadata.Name == "unknown" || len(metadata.Name) == 0 {
+		if len(hostnames) > 0 {
+			metadata.Name = hostnames[0]
+		} else if len(ipAddresses) == 1 {
+			metadata.Name = ipAddresses[0]
+		}
 	}
 
 	flags := host.flags()
@@ -83,7 +86,7 @@ func (host Host) SaveMetadata() {
 
 	metadata.Hostnames = hostnames
 	metadata.RootDomains = getRootDomains(hostnames)
-	metadata.IPAddresses = host.IPAddresses()
+	metadata.IPAddresses = ipAddresses
 	metadata.TCPPorts = host.tcpPorts()
 	metadata.UDPPorts = host.udpPorts()
 	metadata.Flags = flags

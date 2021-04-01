@@ -22,6 +22,8 @@ Helpful to see what scripts would be executed.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		writeCfg, _ := cmd.Flags().GetBool("write")
 		getCfg, _ := cmd.Flags().GetString("get")
+    
+    
 
 		if getCfg != "" {
 			fmt.Println(viper.GetString(getCfg))
@@ -33,19 +35,22 @@ Helpful to see what scripts would be executed.`,
 			fmt.Println(err)
 		}
 
+
 		fmt.Println("Configuration")
 		fmt.Println(string(t))
 		fmt.Println()
 
-		fmt.Println("discover files to be run")
+		fmt.Println("--Discover files to be run--")
 		for _, scriptConfig := range util.GetScripts("discover") {
 			fmt.Printf("%s\n\tenabled: %t\n\torder: %d\n\n", scriptConfig.Script, scriptConfig.Enabled, scriptConfig.Order)
 		}
+		fmt.Println()
 
-		fmt.Println("Recon files to be run")
+		fmt.Println("--Recon files to be run--")
 		for _, scriptConfig := range util.GetScripts("discover") {
 			fmt.Printf("%s\n\tenabled: %t\n\torder: %d\n\n", scriptConfig.Script, scriptConfig.Enabled, scriptConfig.Order)
 		}
+		fmt.Println()
 
 		if writeCfg {
 			fmt.Println("Writing Config")

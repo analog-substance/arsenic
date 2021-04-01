@@ -3,3 +3,4 @@ mnt
 /ops/*
 /opt/*
 test-op
+.vscode/

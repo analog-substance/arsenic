@@ -203,6 +203,7 @@ done | while read ip; do
 
   if [ "$MODE" == "create" ]; then
     mkdir -p "hosts/$ip/recon"
+    echo "$ip" > hosts/$ip/recon/ip-addresses.txt
     touch "hosts/$ip/README.md"
     touch "hosts/$ip/00_metadata.md"
   fi

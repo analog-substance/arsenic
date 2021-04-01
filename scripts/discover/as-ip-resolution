@@ -13,7 +13,8 @@ function _ {
 
 RECON_FILE="recon/ips/resolv-ips.txt"
 if [ ! -f "$RECON_FILE" ] ; then
-  mkdir -p "recon/ips"
+  mkdir -p "$(dirname $RECON_FILE)"
+  
   echo '[+] Resoving IP Addresses'
   fast-resolv -c $FR_THREADS -d scope-ips-generated-public*.txt | tee "$RECON_FILE"
   cat "$RECON_FILE" | sort > sorted

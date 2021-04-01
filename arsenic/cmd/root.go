@@ -2,6 +2,9 @@ package cmd
 
 import (
 	"fmt"
+	"log"
+	"os"
+
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -103,8 +106,4 @@ func initConfig() {
 
 	viper.AutomaticEnv() // read in environment variables that match
 
-	// If a config file is found, read it in.
-	// if err := viper.ReadInConfig(); err != nil {
-	// 	fmt.Println("Error Using config file:", viper.ConfigFileUsed())
-	// }
 }
