@@ -188,11 +188,11 @@ function scanHost {
   fi
 }
 
-if [ ! -f "recon/wordlist-content-discovery.txt" ]; then
-  as-wordlist content-discovery > "recon/wordlist-content-discovery.txt"
+if [ ! -f "recon/wordlist-content-discover.txt" ]; then
+  as-wordlist content-discover > "recon/wordlist-content-discover.txt"
 fi
 
-wordlist_file=$(realpath "recon/wordlist-content-discovery.txt")
+wordlist_file=$(realpath "recon/wordlist-content-discover.txt")
 wordlist_name=`basename $wordlist_file`
 wordlist_name="${wordlist_name%.*}"
 
