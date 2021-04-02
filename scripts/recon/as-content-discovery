@@ -45,7 +45,9 @@ function gitCommit {
   if [ $GIT -eq 1 ]; then
     path="$1"
     msg="$2"
+    set +u
     mode="$3"
+    set -u
     git add "$path"
 
     if git commit -m "$msg" ; then
