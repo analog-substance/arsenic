@@ -117,6 +117,7 @@ func (host Host) Hostnames() []string {
 	if err != nil {
 		return []string{}
 	}
+	sort.Strings(hostnames)
 	return hostnames
 }
 
@@ -244,5 +245,6 @@ func getRootDomains(domains []string) []string {
 	for rootDomain, _ := range rootDomainMap {
 		rootDomains = append(rootDomains, rootDomain)
 	}
+	sort.Strings(rootDomains)
 	return rootDomains
 }
