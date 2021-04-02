@@ -52,7 +52,7 @@ function gitCommit {
 function getURLs {
   {
     set +o pipefail
-    cat recon/*.wordlist-content-discovery.txt \
+    cat recon/*.wordlist-content-discover.txt \
     | grep -P "Status: 2"  \
     | grep -viP "\.(png|jpe?g|ico|css|gif|js)$"
     set -o pipefail
@@ -90,7 +90,7 @@ function scanHost {
 
     gitCommit "." "aquatone start $host"
 
-    cat "recon/wordlist-content-discovery.txt" | aquatone -ports $WEB_PORTS -out recon/aquatone-wordlist-content-discovery
+    cat "recon/wordlist-content-discover.txt" | aquatone -ports $WEB_PORTS -out recon/aquatone-wordlist-content-discover
     # remove UTF BOM, this fixes aquatone being rendered in hugo
     find . -name '*.html' -exec sed -i '1s/^\xEF\xBB\xBF//' {} \;
 
