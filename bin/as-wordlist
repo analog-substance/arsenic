@@ -12,7 +12,7 @@ ARSENIC_PATH=$(dirname `pwd`)
 popd > /dev/null
 
 if [ "$WORDLIST_TYPE" == "content-discover" ]; then
-  secListsPath="$(arsenic config -g secListsPath)"
+  secListsPath="$(arsenic config -g sec_lists_path)"
 
   if [ ! -d "$secListsPath" ]; then
     echo "Not a dir $secListsPath"
