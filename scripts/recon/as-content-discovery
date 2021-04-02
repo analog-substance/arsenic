@@ -185,7 +185,7 @@ function scanHost {
 
     set +e
     if grep lock hosts/*/recon/gobuster*.txt | grep :lock > /dev/null; then
-      echo "other gobusters are still running... lets wait before continueing"
+      echo "other gobusters are still running... lets wait before continuing"
       exit 1
     fi
   fi
@@ -220,7 +220,7 @@ if [ "$CMD" == "scan" ] ; then
     if [ "$ARG_HOST" == "" ]; then
       set +e
       if grep lock hosts/*/recon/gobuster*.txt | grep :lock > /dev/null; then
-        echo "other gobusters are still running... lets wait before continueing"
+        echo "other gobusters are still running... lets wait before continuing"
         exit 1
       fi
       exit
