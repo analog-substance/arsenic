@@ -182,7 +182,10 @@ function scanHost {
       ARG_URL=$(echo "$ARGS" | awk '{print $2}')
       exec $ME scan
     fi
-    if grep lock hosts/*/recon/gobuster*.txt | grep :lock  > /dev/null; then
+
+    set +e
+    if grep lock hosts/*/recon/gobuster*.txt | grep :lock > /dev/null; then
+      echo "other gobusters are still running... lets wait before continueing"
       exit 1
     fi
   fi
@@ -215,7 +218,9 @@ if [ "$CMD" == "scan" ] ; then
     ARG_HOST=$(echo "$ARGS" | awk '{print $1}')
     ARG_URL=$(echo "$ARGS" | awk '{print $2}')
     if [ "$ARG_HOST" == "" ]; then
+      set +e
       if grep lock hosts/*/recon/gobuster*.txt | grep :lock > /dev/null; then
+        echo "other gobusters are still running... lets wait before continueing"
         exit 1
       fi
       exit
