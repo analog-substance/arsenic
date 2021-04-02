@@ -169,7 +169,7 @@ func (host Host) metadataFile() string {
 func (host Host) flags() []string {
 	flags := []string{}
 
-	globbed, _ := filepath.Glob(fmt.Sprintf("%s/recon/%s", host.dir, "nmap-punched.*"))
+	globbed, _ := filepath.Glob(fmt.Sprintf("%s/recon/%s", host.dir, "nmap-punched-tcp.*"))
 	if len(globbed) > 0 {
 		flags = append(flags, "nmap-tcp")
 	}
