@@ -215,7 +215,7 @@ if [ "$CMD" == "scan" ] ; then
     ARG_HOST=$(echo "$ARGS" | awk '{print $1}')
     ARG_URL=$(echo "$ARGS" | awk '{print $2}')
     if [ "$ARG_HOST" == "" ]; then
-      if grep lock hosts/*/recon/gobuster.* > /dev/null; then
+      if grep lock hosts/*/recon/gobuster*.txt | grep :lock > /dev/null; then
         exit 1
       fi
       exit
