@@ -44,14 +44,13 @@ Helpful to see what scripts would be executed.`,
 		fmt.Println()
 
 		fmt.Println("--Recon files to be run--")
-		for _, scriptConfig := range util.GetScripts("discover") {
+		for _, scriptConfig := range util.GetScripts("recon") {
 			fmt.Printf("%s\n\tenabled: %t\n\torder: %d\n\n", scriptConfig.Script, scriptConfig.Enabled, scriptConfig.Order)
 		}
-		fmt.Println()
 
 		if writeCfg {
 			fmt.Println("Writing Config")
-			createIfNotExist(".arsenic.yaml")
+			createIfNotExist("arsenic.yaml")
 			viper.WriteConfig()
 		}
 	},

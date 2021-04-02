@@ -3,11 +3,13 @@ package util
 import (
 	"bufio"
 	"fmt"
+
 	// "io/ioutil"
 	"log"
 	"os"
 	"os/exec"
 	"sort"
+
 	// "strings"
 	"syscall"
 	"time"
@@ -19,6 +21,14 @@ type ScriptConfig struct {
 	Script  string
 	Order   int
 	Enabled bool
+}
+
+func NewScriptConfig(script string, order int, enabled bool) ScriptConfig {
+	return ScriptConfig{
+		Script:  script,
+		Order:   order,
+		Enabled: enabled,
+	}
 }
 
 func GetScripts(phase string) []ScriptConfig {
