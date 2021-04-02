@@ -24,7 +24,17 @@ Helpful to see what scripts would be executed.`,
 		getCfg, _ := cmd.Flags().GetString("get")
 
 		if getCfg != "" {
-			fmt.Println(viper.GetString(getCfg))
+			if !viper.InConfig(getCfg) {
+				fmt.Println("Key not found in config")
+				return
+			}
+
+			t, err := yaml.Marshal(viper.Get(getCfg))
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+			fmt.Println(string(t))
 			return
 		}
 
