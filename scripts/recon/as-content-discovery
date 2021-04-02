@@ -45,11 +45,19 @@ function gitCommit {
   if [ $GIT -eq 1 ]; then
     path="$1"
     msg="$2"
+    mode="$3"
     git add "$path"
 
     if git commit -m "$msg" ; then
       if ! git pull --rebase ; then
-        git commit -am "wtf is this..."
+        echo '[!] pull rebase failed'
+        if [ "$mode" == "reset" ] ; then
+          echo '[!] reset to origin'
+          git reset --hard origin/master
+          exit 2
+        fi
+        echo '[!] not sure what to do. i guess i will git add and hope it works'
+        git commit -am "not sure what this is"
         git pull --rebase
       fi
       git push
@@ -157,9 +165,10 @@ function scanHost {
         # If the host points to an S3 bucket, we don't want to gobuster it
         if curl -sIL $host | grep -q "https://aws.amazon.com/s3/"; then
           echo "s3" > $output_file
+          gitCommit "recon/$output_file" "skip gobuster $url" reset
         else
           echo lock > "recon/$output_file"
-          gitCommit "." "start gobuster $url"
+          gitCommit "recon/$output_file" "start gobuster $url" reset
 
           set +o pipefail
           set +e

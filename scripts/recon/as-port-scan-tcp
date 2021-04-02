@@ -35,11 +35,19 @@ function gitCommit {
   if [ $GIT -eq 1 ]; then
     path="$1"
     msg="$2"
+    mode="$3"
     git add "$path"
 
     if git commit -m "$msg" ; then
       if ! git pull --rebase ; then
-        git commit -am "wtf is this..."
+        echo '[!] pull rebase failed'
+        if [ "$mode" == "reset" ] ; then
+          echo '[!] reset to origin'
+          git reset --hard origin/master
+          exit 2
+        fi
+        echo '[!] not sure what to do. i guess i will git add and hope it works'
+        git commit -am "not sure what this is"
         git pull --rebase
       fi
       git push
@@ -67,8 +75,8 @@ function scanHost {
   if ! compgen -G "hosts/$host/recon/nmap-punched*tcp*" > /dev/null 2>&1; then
     mkdir -p "hosts/$host/recon"
     if [ ! -f "hosts/$host/recon/nmap-punched-quick-tcp.xml" ]; then
-      touch "hosts/$host/recon/nmap-punched-quick-tcp.xml"
-      gitCommit "hosts/$host/recon/" "new host: $host"
+      echo lock > "hosts/$host/recon/nmap-punched-quick-tcp.xml"
+      gitCommit "hosts/$host/recon/nmap-punched-quick-tcp.xml" "new host: $host" "reset"
     fi
 
     cd "hosts/$host"

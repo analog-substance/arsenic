@@ -35,11 +35,19 @@ function gitCommit {
   if [ $GIT -eq 1 ]; then
     path="$1"
     msg="$2"
+    mode="$3"
     git add "$path"
 
     if git commit -m "$msg" ; then
       if ! git pull --rebase ; then
-        git commit -am "wtf is this..."
+        echo '[!] pull rebase failed'
+        if [ "$mode" == "reset" ] ; then
+          echo '[!] reset to origin'
+          git reset --hard origin/master
+          exit 2
+        fi
+        echo '[!] not sure what to do. i guess i will git add and hope it works'
+        git commit -am "not sure what this is"
         git pull --rebase
       fi
       git push
@@ -85,10 +93,12 @@ function scanHost {
     echo preparing to aquatone $host
 
     cd "hosts/$host"
+
+    echo lock > "recon/wordlist-content-discover.txt"
+    gitCommit "recon/wordlist-content-discover.txt" "aquatone start $host" reset
+
     getURLs \
     | tee "recon/wordlist-content-discover.txt"
-
-    gitCommit "." "aquatone start $host"
 
     cat "recon/wordlist-content-discover.txt" | aquatone -ports $WEB_PORTS -out recon/aquatone-wordlist-content-discover
     # remove UTF BOM, this fixes aquatone being rendered in hugo
