@@ -182,7 +182,7 @@ function scanHost {
       ARG_URL=$(echo "$ARGS" | awk '{print $2}')
       exec $ME scan
     fi
-    if grep lock hosts/*/recon/gobuster.* > /dev/null; then
+    if grep lock hosts/*/recon/gobuster*.txt | grep :lock  > /dev/null; then
       exit 1
     fi
   fi
