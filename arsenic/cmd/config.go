@@ -19,48 +19,34 @@ var configCmd = &cobra.Command{
 	Long: `Display config information.
 
 Helpful to see what scripts would be executed.`,
+	Args: cobra.RangeArgs(0, 3),
 	Run: func(cmd *cobra.Command, args []string) {
-		writeCfg, _ := cmd.Flags().GetBool("write")
-		getCfg, _ := cmd.Flags().GetString("get")
-
-		if getCfg != "" {
-			if !viper.InConfig(getCfg) {
+		switch len(args) {
+		case 0:
+			printConfig()
+		case 1:
+			key := args[0]
+			if !viper.IsSet(key) {
 				fmt.Println("Key not found in config")
 				return
 			}
 
-			t, err := yaml.Marshal(viper.Get(getCfg))
+			t, err := yaml.Marshal(viper.Get(key))
 			if err != nil {
 				fmt.Println(err)
 				return
 			}
 			fmt.Println(string(t))
-			return
-		}
-
-		t, err := yaml.Marshal(viper.AllSettings())
-		if err != nil {
-			fmt.Println(err)
-		}
-
-		fmt.Println("Configuration")
-		fmt.Println(string(t))
-		fmt.Println()
-
-		fmt.Println("--Discover files to be run--")
-		for _, scriptConfig := range util.GetScripts("discover") {
-			fmt.Printf("%s\n\tenabled: %t\n\torder: %d\n\n", scriptConfig.Script, scriptConfig.Enabled, scriptConfig.Order)
-		}
-		fmt.Println()
-
-		fmt.Println("--Recon files to be run--")
-		for _, scriptConfig := range util.GetScripts("recon") {
-			fmt.Printf("%s\n\tenabled: %t\n\torder: %d\n\n", scriptConfig.Script, scriptConfig.Enabled, scriptConfig.Order)
-		}
-
-		if writeCfg {
+		case 2:
 			fmt.Println("Writing Config")
-			createIfNotExist("arsenic.yaml")
+
+			file := viper.ConfigFileUsed()
+			if file == "" {
+				file = "arsenic.yaml"
+			}
+			createIfNotExist(file)
+
+			viper.Set(args[0], args[1])
 			viper.WriteConfig()
 		}
 	},
@@ -77,9 +63,28 @@ func createIfNotExist(fileName string) {
 	}
 }
 
+func printConfig() {
+	t, err := yaml.Marshal(viper.AllSettings())
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	fmt.Println("Configuration")
+	fmt.Println(string(t))
+	fmt.Println()
+
+	fmt.Println("--Discover files to be run--")
+	for _, scriptConfig := range util.GetScripts("discover") {
+		fmt.Printf("%s\n\tenabled: %t\n\torder: %d\n\n", scriptConfig.Script, scriptConfig.Enabled, scriptConfig.Order)
+	}
+	fmt.Println()
+
+	fmt.Println("--Recon files to be run--")
+	for _, scriptConfig := range util.GetScripts("recon") {
+		fmt.Printf("%s\n\tenabled: %t\n\torder: %d\n\n", scriptConfig.Script, scriptConfig.Enabled, scriptConfig.Order)
+	}
+}
+
 func init() {
 	rootCmd.AddCommand(configCmd)
-
-	configCmd.Flags().BoolP("write", "w", false, "write config")
-	configCmd.Flags().StringP("get", "g", "", "get config value")
 }

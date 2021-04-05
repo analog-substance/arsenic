@@ -58,9 +58,9 @@ func initConfig() {
 		log.Println(err)
 	}
 
-	defaultDiscoverScripts := make(map[string]util.ScriptConfig)
-	defaultReconScripts := make(map[string]util.ScriptConfig)
-	defaultHuntScripts := make(map[string]util.ScriptConfig)
+	defaultDiscoverScripts := make(map[string]interface{})
+	defaultReconScripts := make(map[string]interface{})
+	defaultHuntScripts := make(map[string]interface{})
 
 	defaultDiscoverScripts["as-subdomain-discovery"] = util.NewScriptConfig("as-subdomain-discovery", 0, true)
 	defaultDiscoverScripts["as-subdomain-enumeration"] = util.NewScriptConfig("as-subdomain-enumeration", 100, true)
@@ -82,13 +82,14 @@ func initConfig() {
 	// viper.SetDefault("DiscoverScripts", defaultDiscoverScripts)
 	// viper.SetDefault("ReconScripts", defaultReconScripts)
 
-	defaultScripts := make(map[string]map[string]util.ScriptConfig)
+	defaultScripts := make(map[string]interface{})
 	defaultScripts["discover"] = defaultDiscoverScripts
 	defaultScripts["recon"] = defaultReconScripts
 	defaultScripts["hunt"] = defaultHuntScripts
 
-	viper.SetDefault("scripts", defaultScripts)
-	viper.SetDefault("sec_lists_path", "/opt/SecLists")
+	// viper.SetDefault("scripts", defaultScripts)
+	setConfigDefault("scripts", defaultScripts)
+	setConfigDefault("sec_lists_path", "/opt/SecLists")
 
 	if cfgFile != "" {
 		// Use config file from the flag.
@@ -103,4 +104,19 @@ func initConfig() {
 
 	viper.AutomaticEnv() // read in environment variables that match
 	viper.ReadInConfig()
+}
+
+func setConfigDefault(key string, value interface{}) {
+	if valueMap, ok := value.(map[string]interface{}); ok {
+		for k, v := range valueMap {
+			setConfigDefault(fmt.Sprintf("%s.%s", key, k), v)
+		}
+	} else if mappable, ok := value.(util.Mappable); ok {
+		valueMap := mappable.ToMap()
+		for k, v := range valueMap {
+			setConfigDefault(fmt.Sprintf("%s.%s", key, k), v)
+		}
+	} else {
+		viper.SetDefault(key, value)
+	}
 }
