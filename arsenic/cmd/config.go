@@ -41,7 +41,7 @@ Helpful to see what scripts would be executed.`,
 					fmt.Println(err)
 					return
 				}
-				fmt.Println(string(t))
+				fmt.Print(string(t))
 				return
 			}
 
