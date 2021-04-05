@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
+	"strings"
 
 	"github.com/defektive/arsenic/arsenic/lib/util"
 	// "github.com/pelletier/go-toml"
@@ -21,23 +23,46 @@ var configCmd = &cobra.Command{
 Helpful to see what scripts would be executed.`,
 	Args: cobra.RangeArgs(0, 3),
 	Run: func(cmd *cobra.Command, args []string) {
-		switch len(args) {
+		count := len(args)
+		switch count {
 		case 0:
 			printConfig()
-		case 1:
+		case 1, 2:
 			key := args[0]
 			if !viper.IsSet(key) {
 				fmt.Println("Key not found in config")
 				return
 			}
 
-			t, err := yaml.Marshal(viper.Get(key))
-			if err != nil {
-				fmt.Println(err)
+			currentValue := viper.Get(key)
+			if count == 1 {
+				t, err := yaml.Marshal(currentValue)
+				if err != nil {
+					fmt.Println(err)
+					return
+				}
+				fmt.Println(string(t))
 				return
 			}
-			fmt.Println(string(t))
-		case 2:
+
+			userValue := args[1]
+			var newValue interface{}
+			var err error
+			if _, ok := currentValue.(bool); ok {
+				newValue = strings.ToLower(userValue) == "true"
+			} else if _, ok := currentValue.(int); ok {
+				newValue, err = strconv.Atoi(userValue)
+				if err != nil {
+					fmt.Printf("Error converting %s to an integer\n", userValue)
+					return
+				}
+			} else if _, ok := currentValue.(string); ok {
+				newValue = userValue
+			} else {
+				fmt.Println("Cannot set keys that are not of type int, string or bool")
+				return
+			}
+
 			fmt.Println("Writing Config")
 
 			file := viper.ConfigFileUsed()
@@ -46,7 +71,7 @@ Helpful to see what scripts would be executed.`,
 			}
 			createIfNotExist(file)
 
-			viper.Set(args[0], args[1])
+			viper.Set(key, newValue)
 			viper.WriteConfig()
 		}
 	},
