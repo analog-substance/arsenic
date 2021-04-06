@@ -5,7 +5,6 @@ import (
 	"log"
 	"os"
 	"strconv"
-	"strings"
 
 	"github.com/defektive/arsenic/arsenic/lib/util"
 	// "github.com/pelletier/go-toml"
@@ -27,7 +26,7 @@ Helpful to see what scripts would be executed.`,
 		switch count {
 		case 0:
 			printConfig()
-		case 1, 2:
+		case 1, 2: // 1 arg = get config value, 2 args = set config value
 			key := args[0]
 			if !viper.IsSet(key) {
 				fmt.Println("Key not found in config")
@@ -36,14 +35,14 @@ Helpful to see what scripts would be executed.`,
 
 			currentValue := viper.Get(key)
 			if count == 1 { // If only one argument, just display the current config value
-				keysOnly, _ := cmd.Flags().GetBool("keys")
-				if keysOnly {
+				subKeysOnly, _ := cmd.Flags().GetBool("sub-keys")
+				if subKeysOnly {
 					if valueMap, ok := currentValue.(map[string]interface{}); ok {
 						for key := range valueMap {
 							fmt.Println(key)
 						}
 					} else {
-						fmt.Println(key)
+						fmt.Println("No sub-keys")
 					}
 					return
 				}
@@ -78,9 +77,13 @@ Helpful to see what scripts would be executed.`,
 }
 
 func convertToConfigType(currentValue interface{}, userValue string) (interface{}, error) {
-	// Currently our config values are either string, int, or bool
+	// Currently our config values are either bool, int, or string
 	if _, ok := currentValue.(bool); ok {
-		return strings.ToLower(userValue) == "true", nil
+		value, err := strconv.ParseBool(userValue)
+		if err != nil {
+			return nil, fmt.Errorf("error converting %s to a bool\n%v", userValue, err)
+		}
+		return value, nil
 	} else if _, ok := currentValue.(int); ok {
 		value, err := strconv.Atoi(userValue)
 		if err != nil {
@@ -128,5 +131,5 @@ func printConfig() {
 
 func init() {
 	rootCmd.AddCommand(configCmd)
-	configCmd.Flags().BoolP("keys", "k", false, "display only the keys")
+	configCmd.Flags().BoolP("sub-keys", "k", false, "display only the sub-keys")
 }
