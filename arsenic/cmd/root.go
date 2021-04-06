@@ -89,7 +89,7 @@ func initConfig() {
 
 	// viper.SetDefault("scripts", defaultScripts)
 	setConfigDefault("scripts", defaultScripts)
-	setConfigDefault("sec_lists_path", "/opt/SecLists")
+	setConfigDefault("sec-lists-path", "/opt/SecLists")
 
 	if cfgFile != "" {
 		// Use config file from the flag.
@@ -106,6 +106,9 @@ func initConfig() {
 	viper.ReadInConfig()
 }
 
+// If no config file exists, all possible keys in the defaults
+// need to be registered with viper otherwise viper will only think
+// scripts and sec-lists-path are valid keys
 func setConfigDefault(key string, value interface{}) {
 	if valueMap, ok := value.(map[string]interface{}); ok {
 		for k, v := range valueMap {
