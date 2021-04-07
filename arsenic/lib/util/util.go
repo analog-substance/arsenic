@@ -3,11 +3,13 @@ package util
 import (
 	"bufio"
 	"fmt"
+
 	// "io/ioutil"
 	"log"
 	"os"
 	"os/exec"
 	"sort"
+
 	// "strings"
 	"syscall"
 	"time"
@@ -15,10 +17,30 @@ import (
 	"github.com/spf13/viper"
 )
 
+type Mappable interface {
+	ToMap() map[string]interface{}
+}
+
 type ScriptConfig struct {
 	Script  string
 	Order   int
 	Enabled bool
+}
+
+func NewScriptConfig(script string, order int, enabled bool) ScriptConfig {
+	return ScriptConfig{
+		Script:  script,
+		Order:   order,
+		Enabled: enabled,
+	}
+}
+
+func (c ScriptConfig) ToMap() map[string]interface{} {
+	mapping := make(map[string]interface{})
+	mapping["script"] = c.Script
+	mapping["order"] = c.Order
+	mapping["enabled"] = c.Enabled
+	return mapping
 }
 
 func GetScripts(phase string) []ScriptConfig {
