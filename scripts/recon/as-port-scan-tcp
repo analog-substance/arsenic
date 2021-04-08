@@ -69,6 +69,8 @@ function scanHost {
   fi
 }
 
+gitPull
+
 if [ "$CMD" == "list" ]; then
   getHosts
   exit

@@ -193,6 +193,8 @@ if [ -z "$CMD" ] ; then
   exit
 fi
 
+gitPull
+
 if [ "$CMD" == "list" ]; then
   newGetHostUrls
   exit
