@@ -13,16 +13,13 @@ import (
 
 // wordlistCmd represents the wordlist command
 var wordlistCmd = &cobra.Command{
-	Use:   "wordlist",
-	Short: "Generate a wordlist",
-	Long:  `Generate a wordlist`,
+	Use:       "wordlist",
+	Short:     "Generate a wordlist",
+	Long:      `Generate a wordlist`,
+	ValidArgs: []string{"web-content"},
+	Args:      cobra.ExactValidArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		if len(args) == 1 {
-			generateWordlist(args[0])
-		} else {
-			fmt.Println("need wordlist type")
-		}
-
+		generateWordlist(args[0])
 	},
 }
 
