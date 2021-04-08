@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"path"
 	"sort"
 
 	// "strings"
@@ -55,6 +56,33 @@ func GetScripts(phase string) []ScriptConfig {
 		return phaseScripts[i].Order < phaseScripts[j].Order
 	})
 	return phaseScripts
+}
+
+func GetWordlists(wordlistType string) []string {
+	wordlistPaths := []string{}
+	wordlists := make(map[string][]string)
+
+	cwd, err := os.Getwd()
+	if err != nil {
+		log.Println(err)
+	}
+
+	dirs := append([]string{cwd}, viper.GetStringSlice("wordlist-paths")...)
+
+	viper.UnmarshalKey("wordlists", &wordlists)
+	if len(wordlists[wordlistType]) > 0 {
+		for _, wordlist := range wordlists[wordlistType] {
+			for _, dir := range dirs {
+				wordlistPath := path.Join(dir, wordlist)
+				if fileExists(wordlistPath) {
+					wordlistPaths = append(wordlistPaths, wordlistPath)
+					break
+				}
+			}
+		}
+	}
+
+	return wordlistPaths
 }
 
 func ExecScript(scriptPath string, args []string) int {
@@ -130,4 +158,12 @@ func ReadLines(path string) ([]string, error) {
 		lines = append(lines, scanner.Text())
 	}
 	return lines, scanner.Err()
+}
+
+func fileExists(filename string) bool {
+	info, err := os.Stat(filename)
+	if os.IsNotExist(err) {
+		return false
+	}
+	return !info.IsDir()
 }
