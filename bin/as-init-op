@@ -1,5 +1,22 @@
 #! /bin/bash
 
+####
+## BEGIN: Load common functions
+
+if [ -z "$ARSENIC_PATH" ]; then
+  pushd $(dirname $(dirname ${BASH_SOURCE[0]})) > /dev/null
+  export ARSENIC_PATH=`pwd`
+  popd > /dev/null
+fi
+
+if [ -f "$ARSENIC_PATH/etc/common.sh" ]; then
+  source "$ARSENIC_PATH/etc/common.sh"
+fi
+
+## END: Load common functions
+####
+
+ARSENIC_OPT_PATH=$(dirname $ARSENIC_PATH)
 OP_PATH="$OP_PATH"
 
 set -euo pipefail
@@ -14,13 +31,6 @@ fi
 if [ -z "$OP_PATH" ]; then
   OP_PATH="$DEFAULT_OP"
 fi
-
-function _ {
-  echo "[+] $@"
-}
-
-ARSENIC_PATH="$( cd "$(dirname "$0")/../" >/dev/null 2>&1 ; pwd -P )"
-ARSENIC_OPT_PATH=$(dirname $ARSENIC_PATH)
 
 export OP_NAME=$(basename "$OP_PATH")
 
@@ -75,23 +85,23 @@ ls -d $ARSENIC_OPT_PATH/*/scripts/as-init-op.sh 2>/dev/null
 
 
 ls -d $ARSENIC_OPT_PATH/*/scripts/as-init-op.sh 2>/dev/null | while read hook; do
-  echo "[+] running $hook"
+  _ "running $hook"
   bash "$hook"
 done
 
-echo "[+] Hooks completed"
+_ "Hooks completed"
 
 if [ -d .git ]; then
-  echo "[+] echo git found"
+  _ "git found"
   if [ "$(git status --porcelain | wc -l)" -gt 0 ]; then
-    echo "[!] git changes detected"
+    _warn "git changes detected"
     git status
   fi
 
   echo
-  echo "[+] git clone $(cat .git/config | grep op.git | awk '{print $3}')"
+  _ "git clone $(cat .git/config | grep op.git | awk '{print $3}')"
 fi
 
 
 
-echo "[+] as init complete"
+_ "as init complete"

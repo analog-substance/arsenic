@@ -1,10 +1,26 @@
 #! /bin/bash
 
+####
+## BEGIN: Load common functions
+
+if [ -z "$ARSENIC_PATH" ]; then
+  pushd $(dirname $(dirname $(dirname ${BASH_SOURCE[0]}))) > /dev/null
+  export ARSENIC_PATH=`pwd`
+  popd > /dev/null
+fi
+
+if [ -f "$ARSENIC_PATH/etc/common.sh" ]; then
+  source "$ARSENIC_PATH/etc/common.sh"
+fi
+
+## END: Load common functions
+####
+
 find . -name aquatone_session.json | while read file; do
-  echo "[+] Checking $file"
+  _ "Checking $file"
   res="$(cat $file | jq '.pages[] | select(.tags[].text=="Domain Takeover") | .url' 2>/dev/null | wc -l)"
   if [ "$res" != "0" ] ; then
-    echo "[+] Takeovers found!"
+    _warn "Takeovers found!"
     cat $file | jq -r '.pages[] | select(.tags[].text=="Domain Takeover") | [ .url, (.tags[] | select(.text =="Domain Takeover") | .link) ] | join("\t")' 2>/dev/null \
     | sed 's/^/[-] /'
   fi

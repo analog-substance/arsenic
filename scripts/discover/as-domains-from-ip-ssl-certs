@@ -1,21 +1,24 @@
 #! /bin/bash
 
+####
+## BEGIN: Load common functions
+
+if [ -z "$ARSENIC_PATH" ]; then
+  pushd $(dirname $(dirname $(dirname ${BASH_SOURCE[0]}))) > /dev/null
+  export ARSENIC_PATH=`pwd`
+  popd > /dev/null
+fi
+
+if [ -f "$ARSENIC_PATH/etc/common.sh" ]; then
+  source "$ARSENIC_PATH/etc/common.sh"
+fi
+
+## END: Load common functions
+####
+
 mkdir -p recon/ips
 
 set -u
-
-function _ {
-  echo "[+] $@"
-}
-
-function ensureInScope {
-  in_scope=$(echo $(cat scope-domains.txt | sed 's/\./\\./g;s/^/(.+\\.)?/g') | sed 's/ /|/g')
-  if [[ -n "$in_scope" ]]; then
-    grep -P "^$in_scope$"
-  else
-    grep -P '.*'
-  fi
-}
 
 recon_dir="recon/ips"
 if [ ! -f "$recon_dir/nmap-https-check-scope-ips-generated-combined.gnmap" ]; then

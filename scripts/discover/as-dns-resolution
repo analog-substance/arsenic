@@ -1,4 +1,21 @@
 #! /bin/bash
+
+####
+## BEGIN: Load common functions
+
+if [ -z "$ARSENIC_PATH" ]; then
+  pushd $(dirname $(dirname $(dirname ${BASH_SOURCE[0]}))) > /dev/null
+  export ARSENIC_PATH=`pwd`
+  popd > /dev/null
+fi
+
+if [ -f "$ARSENIC_PATH/etc/common.sh" ]; then
+  source "$ARSENIC_PATH/etc/common.sh"
+fi
+
+## END: Load common functions
+####
+
 FR_THREADS=100
 
 if [ ! -z "$1" ]; then
@@ -10,7 +27,7 @@ find recon/domains/ -maxdepth 1 -type d  | tail -n +2 | while read domain_path; 
   RECON_FILE="$domain_path/resolv-domains.txt"
   if [ ! -f "$RECON_FILE" ] ; then
     mkdir -p "$(dirname $RECON_FILE)"
-    echo '[+] Resoving domains'
+    _ 'Resoving domains'
     fast-resolv -c $FR_THREADS -d scope-domains-generated-combined.txt | tee "$RECON_FILE"
     cat "$RECON_FILE" | sort > sorted
     mv sorted "$RECON_FILE"
