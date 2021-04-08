@@ -45,10 +45,10 @@ func (c ScriptConfig) ToMap() map[string]interface{} {
 }
 
 func GetScripts(phase string) []ScriptConfig {
-	scripts := map[string]map[string]ScriptConfig{}
-	viper.UnmarshalKey("scripts", &scripts)
+	scripts := map[string]ScriptConfig{}
+	viper.UnmarshalKey(fmt.Sprintf("scripts.%s", phase), &scripts)
 	phaseScripts := []ScriptConfig{}
-	for _, scriptConfig := range scripts[phase] {
+	for _, scriptConfig := range scripts {
 		phaseScripts = append(phaseScripts, scriptConfig)
 	}
 
@@ -60,7 +60,6 @@ func GetScripts(phase string) []ScriptConfig {
 
 func GetWordlists(wordlistType string) []string {
 	wordlistPaths := []string{}
-	wordlists := make(map[string][]string)
 
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -69,15 +68,13 @@ func GetWordlists(wordlistType string) []string {
 
 	dirs := append([]string{cwd}, viper.GetStringSlice("wordlist-paths")...)
 
-	viper.UnmarshalKey("wordlists", &wordlists)
-	if len(wordlists[wordlistType]) > 0 {
-		for _, wordlist := range wordlists[wordlistType] {
-			for _, dir := range dirs {
-				wordlistPath := path.Join(dir, wordlist)
-				if fileExists(wordlistPath) {
-					wordlistPaths = append(wordlistPaths, wordlistPath)
-					break
-				}
+	wordlists := viper.GetStringSlice(fmt.Sprintf("wordlists.%s", wordlistType))
+	for _, wordlist := range wordlists {
+		for _, dir := range dirs {
+			wordlistPath := path.Join(dir, wordlist)
+			if fileExists(wordlistPath) {
+				wordlistPaths = append(wordlistPaths, wordlistPath)
+				break
 			}
 		}
 	}
