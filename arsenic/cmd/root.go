@@ -79,17 +79,38 @@ func initConfig() {
 	defaultHuntScripts["as-takeover-aquatone"] = util.NewScriptConfig("as-takeover-aquatone", 0, true)
 	defaultHuntScripts["as-searchsploit"] = util.NewScriptConfig("as-searchsploit", 100, true)
 
-	// viper.SetDefault("DiscoverScripts", defaultDiscoverScripts)
-	// viper.SetDefault("ReconScripts", defaultReconScripts)
-
 	defaultScripts := make(map[string]interface{})
 	defaultScripts["discover"] = defaultDiscoverScripts
 	defaultScripts["recon"] = defaultReconScripts
 	defaultScripts["hunt"] = defaultHuntScripts
 
-	// viper.SetDefault("scripts", defaultScripts)
+	wordlists := make(map[string][]string)
+	wordlists["web-content"] = []string{
+		"Discovery/Web-Content/AdobeCQ-AEM.txt",
+		"Discovery/Web-Content/apache.txt",
+		"Discovery/Web-Content/Common-DB-Backups.txt",
+		"Discovery/Web-Content/Common-PHP-Filenames.txt",
+		"Discovery/Web-Content/common.txt",
+		"Discovery/Web-Content/confluence-administration.txt",
+		"Discovery/Web-Content/default-web-root-directory-linux.txt",
+		"Discovery/Web-Content/default-web-root-directory-windows.txt",
+		"Discovery/Web-Content/frontpage.txt",
+		"Discovery/Web-Content/graphql.txt",
+		"Discovery/Web-Content/jboss.txt",
+		"Discovery/Web-Content/Jenkins-Hudson.txt",
+		"Discovery/Web-Content/nginx.txt",
+		"Discovery/Web-Content/oracle.txt",
+		"Discovery/Web-Content/quickhits.txt",
+		"Discovery/Web-Content/raft-large-directories.txt",
+		"Discovery/Web-Content/raft-medium-words.txt",
+		"Discovery/Web-Content/reverse-proxy-inconsistencies.txt",
+		"Discovery/Web-Content/RobotsDisallowed-Top1000.txt",
+		"Discovery/Web-Content/websphere.txt",
+	}
+
 	setConfigDefault("scripts", defaultScripts)
-	setConfigDefault("sec-lists-path", "/opt/SecLists")
+	setConfigDefault("wordlists", wordlists)
+	setConfigDefault("wordlist-paths", []string{"/opt/SecLists"})
 
 	if cfgFile != "" {
 		// Use config file from the flag.

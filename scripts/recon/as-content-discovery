@@ -203,7 +203,7 @@ function scanHost {
 }
 
 if [ ! -f "recon/wordlist-content-discover.txt" ]; then
-  as-wordlist content-discover > "recon/wordlist-content-discover.txt"
+  arsenic wordlist web-content > "recon/wordlist-content-discover.txt"
 fi
 
 wordlist_file=$(realpath "recon/wordlist-content-discover.txt")
