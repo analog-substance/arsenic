@@ -211,7 +211,7 @@ done
 
 cat scope-ips* | as-prune-blacklisted-ips | while read ip; do
   grep "$(echo $ip | sed 's/\./\\./g')" recon/analyze-hosts/*.txt > /dev/null || echo $ip
-done | while read ip; do
+done | sort -h | uniq | while read ip; do
   _ "Creating new service $ip"
 
   if [ "$MODE" == "create" ]; then

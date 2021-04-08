@@ -48,7 +48,7 @@ function scanHost {
     return
   fi
 
-  _info "Port Scan / TCP / $host / checking"
+  _ "Port Scan / TCP / $host / checking"
   if ! compgen -G "hosts/$host/recon/nmap-punched*tcp*" > /dev/null 2>&1; then
     _info "Port Scan / TCP / $host / preparing"
     mkdir -p "hosts/$host/recon"
