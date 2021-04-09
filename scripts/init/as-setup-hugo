@@ -16,38 +16,12 @@ fi
 ## END: Load common functions
 ####
 
-ARSENIC_OPT_PATH=$(dirname $ARSENIC_PATH)
-OP_PATH="$OP_PATH"
-
 set -euo pipefail
 
-DEFAULT_OP="op"
-OP_ARG=${1:-}
-
-if [ ! -z "$OP_ARG" ]; then
-  DEFAULT_OP="$OP_ARG"
-fi
-
-if [ -z "$OP_PATH" ]; then
-  OP_PATH="$DEFAULT_OP"
-fi
-
-export OP_NAME=$(basename "$OP_PATH")
-
-_ "Creating op: $OP_NAME"
-
-mkdir -p "$OP_PATH"
-cd "$OP_PATH"
+OP_NAME=$(basename $(pwd))
 
 if [ ! -d ".hugo" ]; then
-
-  mkdir -p apps bin report/{findings,sections,static} hosts recon/domains
-  touch {apps,bin,recon}/.keep report/static/.keep
-
-  touch scope-domains.txt
-  touch scope-ips.txt
-
-  _ "Setup hugo"
+  _ "Setup Hugo"
   git clone https://github.com/defektive/arsenic-hugo.git
 
   rm -rf arsenic-hugo/.git
@@ -69,7 +43,6 @@ if [ ! -d ".hugo" ]; then
   ls -d ../../report/* | xargs -n 1 ln -srf
 
   _ "Hugo Setup complete"
-
   cd ../../
 
   if [ ! -f Makefile ]; then
@@ -78,30 +51,5 @@ if [ ! -d ".hugo" ]; then
       echo -e "\thugo server"
     } >> Makefile
   fi
+  _ "Setup Hugo complete"
 fi
-
-echo
-ls -d $ARSENIC_OPT_PATH/*/scripts/as-init-op.sh 2>/dev/null
-
-
-ls -d $ARSENIC_OPT_PATH/*/scripts/as-init-op.sh 2>/dev/null | while read hook; do
-  _ "running $hook"
-  bash "$hook"
-done
-
-_ "Hooks completed"
-
-if [ -d .git ]; then
-  _ "git found"
-  if [ "$(git status --porcelain | wc -l)" -gt 0 ]; then
-    _warn "git changes detected"
-    git status
-  fi
-
-  echo
-  _ "git clone $(cat .git/config | grep op.git | awk '{print $3}')"
-fi
-
-
-
-_ "as init complete"
