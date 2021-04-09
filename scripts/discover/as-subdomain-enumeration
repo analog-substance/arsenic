@@ -18,5 +18,4 @@ fi
 
 set -euo pipefail
 
-
 echo DO DNS ENUMERATION

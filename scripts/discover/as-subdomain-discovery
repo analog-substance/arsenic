@@ -19,51 +19,7 @@ fi
 mkdir -p recon/domains recon/discover recon/ips
 
 declare -a root_domain_commands=("whois")
-declare -a domain_commands=("host")
 declare -a dig_commands=("TXT" "NS" "MX" "SOA" "A")
-declare -a ip_commands=("whois")
-
-REMOVE_DOMAIN_REGEX="(\._domainkey\.|hscoscdn10\.net|sites\.hubspot\.net|amazonaws\.com|azurewebsites\.net|azurewebsites\.windows\.net|azure\.com|cloudapp\.net|readthedocs\.io|my\.jobs|googlehosted\.com|readthedocs\.org)$"
-
-# Right now just gonna ignore these.
-NON_ROOT_DOMAIN_REGEX="co\.|com\.|herokuapp\."
-function getRootDomains {
-  ## Lets get a unique list of root domains
-  # cat all domains
-  # remove *. prefix
-  # remove email addr prefixes
-  # remove problematic domains
-  # print last 2 octets in the domain
-  # remove things like co.uk, com.uk
-  cat scope-domains* \
-  | removeInvalidThings \
-  | awk -F. '{print $(NF-1) "." $NF}' \
-  | grep -vP "$NON_ROOT_DOMAIN_REGEX" \
-  | sort -h | uniq \
-  | tee scope-domains-generated-root.txt
-}
-
-function getAllDomains {
-  # create a combined scope file
-    cat scope-domains* \
-    | removeInvalidThings \
-    | cat - scope-domains.txt \
-    | sort -h |  uniq \
-    | tee scope-domains-generated-combined.txt
-}
-
-
-function domain_recon {
-  domain=$(echo $1 | tr 'A-Z' 'a-z')
-  if echo "$domain" | grep -P "$REMOVE_DOMAIN_REGEX" > /dev/null ; then
-    _warn "Skipping common domain: $domain" >&2
-  else
-    for cmd in "${domain_commands[@]}";  do
-        $cmd $domain | tr 'A-Z' 'a-z' &
-    done
-    wait
-  fi
-}
 
 function root_domain_recon {
   domain=$(echo $1 | tr 'A-Z' 'a-z')
@@ -109,32 +65,26 @@ function root_domain_recon {
   fi
 }
 
-_ "Get root domains"
-getRootDomains > /dev/null
+# Recon root domains
+_ "Recon on root domains"
+getRootDomains | while read domain; do
+  root_domain_recon "$domain"
+done
 
 _ "saving scope from amass enum active"
 cat recon/domains/*/amass-enum-active.txt 2>/dev/null \
 | awk '{print $2}' \
-| ensureInScope \
+| ensureDomainInScope \
 | sort -h \
 | uniq \
 | tee scope-domains-generated-amass-enum-active.txt
 
 _ "saving scope from amass intel whois"
 cat recon/domains/*/amass-intel.txt 2>/dev/null \
-| ensureInScope \
+| ensureDomainInScope \
 | sort -h \
 | uniq \
 | tee scope-domains-generated-amass-intel-whois.txt
-
-_ "Combine all discovered domains"
-getAllDomains > /dev/null
-
-# Recon root domains
-_ "Recon on root domains"
-getRootDomains | while read domain; do
-  root_domain_recon "$domain"
-done
 
 _ "Combine all discovered domains"
 getAllDomains

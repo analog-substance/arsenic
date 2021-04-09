@@ -1,4 +1,9 @@
 
+
+export REMOVE_DOMAIN_REGEX="(\._domainkey\.|hscoscdn10\.net|sites\.hubspot\.net|amazonaws\.com|azurewebsites\.net|cloudfront\.net|azurewebsites\.windows\.net|azure\.com|cloudapp\.net|readthedocs\.io|my\.jobs|googlehosted\.com|readthedocs\.org)\$"
+# Right now just gonna ignore these.
+export NON_ROOT_DOMAIN_REGEX="co\.|com\.|herokuapp\."
+
 function _ {
   echo  "[+] $@"
 }
@@ -11,16 +16,16 @@ function _info {
   echo "[-] $@"
 }
 
-function ensureInScope {
+function ensureDomainInScope {
   in_scope=$(echo $(cat scope-domains.txt | sed 's/\./\\./g;s/^/(.+\\.)?/g') | sed 's/ /|/g')
   if [[ -n "$in_scope" ]]; then
-    grep -P "^$in_scope$"
+    grep -P "^$in_scope\$"
   else
     grep -P '.*'
   fi
 }
 
-function removeInvalidThings {
+function removeInvalidDomains {
   # remove *. prefix
   # remove email addr prefixes
   # remove IP addrs
@@ -28,8 +33,9 @@ function removeInvalidThings {
   # remove domain regex
   sed 's/^\*\.//g' \
   | sed 's/^[^@]\+@//g' \
+  | sed 's/\.$//g' \
   | tr 'A-Z' 'a-z' \
-  | grep -vP "^([0-9]{1,3}\.){3}[0-9]{1,3}$" \
+  | grep -vP "^([0-9]{1,3}\.){3}[0-9]{1,3}\$" \
   | grep -vP "$REMOVE_DOMAIN_REGEX" \
   | grep -P '^[a-z0-9_\-\.]+$' \
   | as-prune-blacklisted-domains \
@@ -75,6 +81,31 @@ function gitCommit {
 function gitLock {
   echo lock > "$1"
   gitCommit "hosts/$host/recon/nmap-punched-udp.nmap" "new host: $host" reset
+}
+
+function getRootDomains {
+  ## Lets get a unique list of root domains
+  # cat all domains
+  # remove *. prefix
+  # remove email addr prefixes
+  # remove problematic domains
+  # print last 2 octets in the domain
+  # remove things like co.uk, com.uk
+  cat scope-domains* \
+  | removeInvalidDomains \
+  | awk -F. '{print $(NF-1) "." $NF}' \
+  | grep -vP "$NON_ROOT_DOMAIN_REGEX" \
+  | sort -h | uniq \
+  | tee scope-domains-generated-root.txt
+}
+
+function getAllDomains {
+  # create a combined scope file
+    cat scope-domains* \
+    | removeInvalidDomains \
+    | cat - scope-domains.txt \
+    | sort -h |  uniq \
+    | tee scope-domains-generated-combined.txt
 }
 
 export GIT=1
