@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"reflect"
 
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
@@ -58,10 +59,10 @@ func initConfig() {
 		log.Println(err)
 	}
 
-	defaultDiscoverScripts := make(map[string]interface{})
-	defaultReconScripts := make(map[string]interface{})
-	defaultHuntScripts := make(map[string]interface{})
-	defaultInitScripts := make(map[string]interface{})
+	defaultDiscoverScripts := make(map[string]util.ScriptConfig)
+	defaultReconScripts := make(map[string]util.ScriptConfig)
+	defaultHuntScripts := make(map[string]util.ScriptConfig)
+	defaultInitScripts := make(map[string]util.ScriptConfig)
 
 	defaultInitScripts["as-init-op"] = util.NewScriptConfig("as-init-op", 0, true)
 	defaultInitScripts["as-setup-hugo"] = util.NewScriptConfig("as-setup-hugo", 100, true)
@@ -92,13 +93,13 @@ func initConfig() {
 	defaultHuntScripts["as-takeover-aquatone"] = util.NewScriptConfig("as-takeover-aquatone", 0, true)
 	defaultHuntScripts["as-searchsploit"] = util.NewScriptConfig("as-searchsploit", 100, true)
 
-	defaultScripts := make(map[string]interface{})
+	defaultScripts := make(map[string]map[string]util.ScriptConfig)
 	defaultScripts["init"] = defaultInitScripts
 	defaultScripts["discover"] = defaultDiscoverScripts
 	defaultScripts["recon"] = defaultReconScripts
 	defaultScripts["hunt"] = defaultHuntScripts
 
-	wordlists := make(map[string]interface{})
+	wordlists := make(map[string][]string)
 	wordlists["web-content"] = []string{
 		"Discovery/Web-Content/AdobeCQ-AEM.txt",
 		"Discovery/Web-Content/apache.txt",
@@ -143,16 +144,25 @@ func initConfig() {
 
 // If no config file exists, all possible keys in the defaults
 // need to be registered with viper otherwise viper will only think
-// scripts and sec-lists-path are valid keys
+// the keys explicitly set via viper.SetDefault() exist.
 func setConfigDefault(key string, value interface{}) {
-	if valueMap, ok := value.(map[string]interface{}); ok {
-		for k, v := range valueMap {
+	valueType := reflect.TypeOf(value)
+	valueValue := reflect.ValueOf(value)
+
+	if valueType.Kind() == reflect.Map {
+		iter := valueValue.MapRange()
+		for iter.Next() {
+			k := iter.Key().Interface()
+			v := iter.Value().Interface()
 			setConfigDefault(fmt.Sprintf("%s.%s", key, k), v)
 		}
-	} else if mappable, ok := value.(util.Mappable); ok {
-		valueMap := mappable.ToMap()
-		for k, v := range valueMap {
-			setConfigDefault(fmt.Sprintf("%s.%s", key, k), v)
+	} else if valueType.Kind() == reflect.Struct {
+		numFields := valueType.NumField()
+		for i := 0; i < numFields; i++ {
+			structField := valueType.Field(i)
+			fieldValue := valueValue.Field(i)
+
+			setConfigDefault(fmt.Sprintf("%s.%s", key, structField.Name), fieldValue.Interface())
 		}
 	} else {
 		viper.SetDefault(key, value)
