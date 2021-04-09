@@ -18,10 +18,6 @@ import (
 	"github.com/spf13/viper"
 )
 
-type Mappable interface {
-	ToMap() map[string]interface{}
-}
-
 type ScriptConfig struct {
 	Script  string
 	Order   int
@@ -34,14 +30,6 @@ func NewScriptConfig(script string, order int, enabled bool) ScriptConfig {
 		Order:   order,
 		Enabled: enabled,
 	}
-}
-
-func (c ScriptConfig) ToMap() map[string]interface{} {
-	mapping := make(map[string]interface{})
-	mapping["script"] = c.Script
-	mapping["order"] = c.Order
-	mapping["enabled"] = c.Enabled
-	return mapping
 }
 
 func GetScripts(phase string) []ScriptConfig {
