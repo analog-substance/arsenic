@@ -9,7 +9,7 @@ import (
 // initCmd represents the init command
 var initCmd = &cobra.Command{
 	Use:   "init",
-	Args: cobra.RangeArgs(1, 1),
+	Args: cobra.EaxactArgs(1),
 	Short: "Init a new engagement",
 	Long: `Init a new engagement`,
 	Run: func(cmd *cobra.Command, args []string) {
