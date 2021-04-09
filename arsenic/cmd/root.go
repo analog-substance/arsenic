@@ -61,6 +61,12 @@ func initConfig() {
 	defaultDiscoverScripts := make(map[string]interface{})
 	defaultReconScripts := make(map[string]interface{})
 	defaultHuntScripts := make(map[string]interface{})
+	defaultInitScripts := make(map[string]interface{})
+
+	defaultInitScripts["as-init-op"] = util.NewScriptConfig("as-init-op", 0, true)
+	defaultInitScripts["as-setup-hugo"] = util.NewScriptConfig("as-setup-hugo", 100, true)
+	defaultInitScripts["as-init-hooks"] = util.NewScriptConfig("as-init-hooks", 200, true)
+	defaultInitScripts["as-init-cleanup"] = util.NewScriptConfig("as-init-cleanup", 300, true)
 
 	defaultDiscoverScripts["as-subdomain-discovery"] = util.NewScriptConfig("as-subdomain-discovery", 0, true)
 	defaultDiscoverScripts["as-subdomain-enumeration"] = util.NewScriptConfig("as-subdomain-enumeration", 100, true)
@@ -80,6 +86,7 @@ func initConfig() {
 	defaultHuntScripts["as-searchsploit"] = util.NewScriptConfig("as-searchsploit", 100, true)
 
 	defaultScripts := make(map[string]interface{})
+	defaultScripts["init"] = defaultInitScripts
 	defaultScripts["discover"] = defaultDiscoverScripts
 	defaultScripts["recon"] = defaultReconScripts
 	defaultScripts["hunt"] = defaultHuntScripts

@@ -125,13 +125,12 @@ func ExecScript(scriptPath string, args []string) int {
 	return exitStatus
 }
 
-func ExecutePhaseScripts(phase string) {
+func ExecutePhaseScripts(phase string, args []string) {
 	scripts := GetScripts(phase)
 	for len(scripts) > 0 {
 		currentScript := scripts[0]
 		if currentScript.Enabled {
 			fmt.Printf("Running %s\n", currentScript.Script)
-			args := []string{}
 			if ExecScript(currentScript.Script, args) == 0 {
 				scripts = scripts[1:]
 			} else {

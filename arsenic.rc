@@ -14,7 +14,7 @@ if [ "$ARSENIC_INIT" != 1 ]; then
 
   ARSENIC_OPT_PATH=$(dirname $ARSENIC_PATH)
   PATH="$(echo $(ls -d $ARSENIC_OPT_PATH/*/bin) | sed 's/ /:/g'):$PATH"
-  export PATH="$ARSENIC_PATH/scripts/discover:$ARSENIC_PATH/scripts/recon:$ARSENIC_PATH/scripts/hunt:$PATH"
+  export PATH="$ARSENIC_PATH/scripts/init:$ARSENIC_PATH/scripts/discover:$ARSENIC_PATH/scripts/recon:$ARSENIC_PATH/scripts/hunt:$PATH"
 
   # iterate of *.arsenicrc files and source them
   setopt +o nomatch

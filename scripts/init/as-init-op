@@ -1,0 +1,29 @@
+#! /bin/bash
+
+####
+## BEGIN: Load common functions
+
+if [ -z "$ARSENIC_PATH" ]; then
+  pushd $(dirname $(dirname ${BASH_SOURCE[0]})) > /dev/null
+  export ARSENIC_PATH=`pwd`
+  popd > /dev/null
+fi
+
+if [ -f "$ARSENIC_PATH/etc/common.sh" ]; then
+  source "$ARSENIC_PATH/etc/common.sh"
+fi
+
+## END: Load common functions
+####
+
+set -euo pipefail
+
+OP_NAME=$(basename $(pwd))
+
+_ "Creating op: $OP_NAME"
+
+mkdir -p apps bin report/{findings,sections,static} hosts recon/domains
+touch {apps,bin,recon}/.keep report/static/.keep
+
+touch scope-domains.txt
+touch scope-ips.txt

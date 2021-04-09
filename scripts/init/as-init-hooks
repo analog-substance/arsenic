@@ -1,0 +1,27 @@
+#! /bin/bash
+
+####
+## BEGIN: Load common functions
+
+if [ -z "$ARSENIC_PATH" ]; then
+  pushd $(dirname $(dirname ${BASH_SOURCE[0]})) > /dev/null
+  export ARSENIC_PATH=`pwd`
+  popd > /dev/null
+fi
+
+if [ -f "$ARSENIC_PATH/etc/common.sh" ]; then
+  source "$ARSENIC_PATH/etc/common.sh"
+fi
+
+## END: Load common functions
+####
+
+ARSENIC_OPT_PATH=$(dirname $ARSENIC_PATH)
+OP_NAME=$(basename $(pwd))
+
+ls -d $ARSENIC_OPT_PATH/*/scripts/as-init-op.sh 2>/dev/null | while read hook; do
+  _ "running $hook"
+  bash "$hook"
+done
+
+_ "Hooks completed"
