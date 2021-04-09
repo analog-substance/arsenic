@@ -68,6 +68,13 @@ Helpful to see what scripts would be executed.`,
 					return
 				}
 
+				if arrayValue, ok := currentValue.([]string); ok {
+					for _, value := range arrayValue {
+						fmt.Println(value)
+					}
+					return
+				}
+
 				t, err := yaml.Marshal(currentValue)
 				if err != nil {
 					fmt.Println(err)
