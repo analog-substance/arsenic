@@ -1,4 +1,21 @@
 #! /bin/bash
+
+####
+## BEGIN: Load common functions
+
+if [ -z "$ARSENIC_PATH" ]; then
+  pushd $(dirname $(dirname $(dirname ${BASH_SOURCE[0]}))) > /dev/null
+  export ARSENIC_PATH=`pwd`
+  popd > /dev/null
+fi
+
+if [ -f "$ARSENIC_PATH/etc/common.sh" ]; then
+  source "$ARSENIC_PATH/etc/common.sh"
+fi
+
+## END: Load common functions
+####
+
 CHECK_ONLY=""
 CMD=""
 ARG_HOST=""
@@ -20,54 +37,11 @@ if [ -z "$CMD" ] ; then
   CMD="scan"
 fi
 
-GIT=1
-if [ ! -d .git ]; then
-  GIT=0
-fi
-
-
 #set -euo pipefail
 set -eu
 # set -x
 WEB_PORTS="(80|443|3000|8000|8001|8080|8443)"
 WEB_PORT_REGEX="portid=\"$WEB_PORTS\"|tcp/$WEB_PORTS"
-
-
-function gitPull {
-  if [ $GIT -eq 1 ]; then
-    if ! git pull > /dev/null 2>&1 ; then
-      echo "[!] pull failed" >&2
-    fi
-  fi
-}
-
-function gitCommit {
-  if [ $GIT -eq 1 ]; then
-    path="$1"
-    msg="$2"
-    set +u
-    mode="$3"
-    set -u
-    git add "$path"
-
-    if git commit -m "$msg" ; then
-      if ! git pull --rebase ; then
-        echo '[!] pull rebase failed'
-        if [ "$mode" == "reset" ] ; then
-          echo '[!] reset to origin'
-          git reset --hard origin/master
-          exit 2
-        fi
-        echo '[!] not sure what to do. i guess i will git add and hope it works'
-        git commit -am "not sure what this is"
-        git pull --rebase
-      fi
-      git push
-    else
-      echo "nothing happened"
-    fi
-  fi
-}
 
 function newGetHostUrls {
   cat hosts/*/recon/*hostnames.txt \
@@ -79,7 +53,7 @@ function newGetHostUrls {
     host=$(grep -rP "^$(echo $hostname | sed 's/\./\\./g')$" hosts/*/recon/*hostnames.txt | head -n1 | cut -d/ -f2)
 
     if [ -z "$host" ]; then
-      echo "no host found for hostname: $hostname"
+      _warn "no host found for hostname: $hostname"
     fi
 
     draft="nope"
@@ -146,19 +120,21 @@ function scanHost {
   url="$2"
   set -u
 
-  echo "[+] Checking $host $url"
+  _ "Content Discovery / $host / $url / checking"
+
 
   draft="nope"
   if [ -f "hosts/$host/00_metadata.md" ] ; then
     draft=$(grep draft "hosts/$host/00_metadata.md" || echo "nope")
   fi
   if [ "$draft" == "nope" ]; then
+    _info "Content Discovery / $host / $url / preparing"
     cd "hosts/$host"
     output_file="gobuster.$(echo "$url" | sed "s/:\/\//./" | sed 's/\//\./g').$wordlist_name.txt"
 
     gitPull
     if [ ! -f "recon/$output_file" ] ; then
-      echo "[+] Scanning $host $url"
+      _ "Scanning $host $url"
       if [ ! -z $CHECK_ONLY ]; then
         echo "$url"
       else
@@ -166,21 +142,23 @@ function scanHost {
 
         # If the host points to an S3 bucket, we don't want to gobuster it
         if curl -sIL $host | grep -q "https://aws.amazon.com/s3/"; then
+          _info "Content Discovery / $host / $url / s3 detected"
           echo "s3" > $output_file
           gitCommit "recon/$output_file" "skip gobuster $url" reset
         else
-          echo lock > "recon/$output_file"
-          gitCommit "recon/$output_file" "start gobuster $url" reset
+          gitLock "recon/$output_file" "start gobuster $url"
 
           set +o pipefail
           set +e
 
+          _info "Content Discovery / $host / $url / running"
           as-buster -k -e -a Firefox -u $url -w $wordlist_file
         fi
 
         gitCommit "." "end gobuster $url"
         set -e
         set -o pipefail
+        _info "Content Discovery / $host / $url / complete"
       fi
     fi
     cd - > /dev/null
@@ -196,7 +174,7 @@ function scanHost {
 
     set +e
     if grep lock hosts/*/recon/gobuster*.txt | grep :lock > /dev/null; then
-      echo "other gobusters are still running... lets wait before continuing"
+      _warn "other gobusters are still running... lets wait before continuing"
       exit 1
     fi
   fi
@@ -211,9 +189,11 @@ wordlist_name=`basename $wordlist_file`
 wordlist_name="${wordlist_name%.*}"
 
 if [ -z "$CMD" ] ; then
-  echo "$0 [ list | scan  [ hostname/ip url ]  ]"
+  _warn "$0 [ list | scan  [ hostname/ip url ]  ]"
   exit
 fi
+
+gitPull
 
 if [ "$CMD" == "list" ]; then
   newGetHostUrls
@@ -224,19 +204,19 @@ if [ "$CMD" == "scan" ] ; then
   MANUAL=1
   if [ -z "$ARG_HOST" ] ; then
     MANUAL=0
-    echo no args found, autodetecting
+    _warn no args found, autodetecting
     ARGS=$(head -n1 <<<$($ME list | grep -v "no host found" | sort -R))
     ARG_HOST=$(echo "$ARGS" | awk '{print $1}')
     ARG_URL=$(echo "$ARGS" | awk '{print $2}')
     if [ "$ARG_HOST" == "" ]; then
       set +e
       if grep lock hosts/*/recon/gobuster*.txt | grep :lock > /dev/null; then
-        echo "other gobusters are still running... lets wait before continuing"
+        _warn "other gobusters are still running... lets wait before continuing"
         exit 1
       fi
       exit
     fi
-    echo "[!] Auto selected $ARG_HOST $ARG_URL"
+    _warn "Auto selected $ARG_HOST $ARG_URL"
   fi
   scanHost $ARG_HOST $ARG_URL
 fi

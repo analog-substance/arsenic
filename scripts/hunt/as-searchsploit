@@ -1,5 +1,21 @@
 #! /bin/bash
 
+####
+## BEGIN: Load common functions
+
+if [ -z "$ARSENIC_PATH" ]; then
+  pushd $(dirname $(dirname $(dirname ${BASH_SOURCE[0]}))) > /dev/null
+  export ARSENIC_PATH=`pwd`
+  popd > /dev/null
+fi
+
+if [ -f "$ARSENIC_PATH/etc/common.sh" ]; then
+  source "$ARSENIC_PATH/etc/common.sh"
+fi
+
+## END: Load common functions
+####
+
 export COLUMNS=140
 find . -name 'nmap-punched*.xml' | while read file; do
   echo '[!] checking '"$file"

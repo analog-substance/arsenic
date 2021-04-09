@@ -9,7 +9,7 @@ if [ "$ARSENIC_INIT" != 1 ]; then
     pushd `dirname $0` > /dev/null
   fi
 
-  ARSENIC_PATH=`pwd`
+  export ARSENIC_PATH=`pwd`
   popd > /dev/null
 
   ARSENIC_OPT_PATH=$(dirname $ARSENIC_PATH)

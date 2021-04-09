@@ -1,5 +1,21 @@
 #! /bin/bash
 
+####
+## BEGIN: Load common functions
+
+if [ -z "$ARSENIC_PATH" ]; then
+  pushd $(dirname $(dirname $(dirname ${BASH_SOURCE[0]}))) > /dev/null
+  export ARSENIC_PATH=`pwd`
+  popd > /dev/null
+fi
+
+if [ -f "$ARSENIC_PATH/etc/common.sh" ]; then
+  source "$ARSENIC_PATH/etc/common.sh"
+fi
+
+## END: Load common functions
+####
+
 CMD=""
 ARG=""
 if [ ! -z "$1" ]; then
@@ -10,54 +26,12 @@ if [ ! -z "$2" ]; then
   ARG="$2"
 fi
 
-
 if [ -z "$CMD" ] ; then
   CMD="scan"
 fi
 
-GIT=1
-if [ ! -d .git ]; then
-  GIT=0
-fi
-
 # set -x
 set -euo pipefail
-
-function gitPull {
-  if [ $GIT -eq 1 ]; then
-    if ! git pull > /dev/null 2>&1 ; then
-      echo "[!] pull failed" >&2
-    fi
-  fi
-}
-
-function gitCommit {
-  if [ $GIT -eq 1 ]; then
-    path="$1"
-    msg="$2"
-    set +u
-    mode="$3"
-    set -u
-    git add "$path"
-
-    if git commit -m "$msg" ; then
-      if ! git pull --rebase ; then
-        echo '[!] pull rebase failed'
-        if [ "$mode" == "reset" ] ; then
-          echo '[!] reset to origin'
-          git reset --hard origin/master
-          exit 2
-        fi
-        echo '[!] not sure what to do. i guess i will git add and hope it works'
-        git commit -am "not sure what this is"
-        git pull --rebase
-      fi
-      git push
-    else
-      echo "nothing happened"
-    fi
-  fi
-}
 
 function getHosts {
   gitPull
@@ -74,29 +48,28 @@ function scanHost {
     return
   fi
 
+  _ "Port Scan / UDP / $host / checking"
   if ! compgen -G "hosts/$host/recon/nmap-punched-udp*" > /dev/null 2>&1; then
+    _info "Port Scan / UDP / $host / preparing"
     mkdir -p "hosts/$host/recon"
-    if [ ! -f "hosts/$host/recon/nmap-punched-udp.nmap" ]; then
-      echo lock > "hosts/$host/recon/nmap-punched-udp.nmap"
-      gitCommit "hosts/$host/recon/nmap-punched-udp.nmap" "new host: $host" reset
-    fi
+    gitLock "hosts/$host/recon/nmap-punched-udp.nmap" "hosts/$host/recon/nmap-punched-udp.nmap" "new host: $host"
 
     cd "hosts/$host"
-
+    _info "Port Scan / UDP / $host / running"
     nmap -oA recon/nmap-punched-udp -sUV -F -T4 --version-intensity 0 "$host"
-
     gitCommit "." "recon host: $host"
-
     cd -
 
+    _info "Port Scan / UDP / $host / complete"
   fi
-  echo host check complete
 
   ARG=$(head -n1 <<<$(getHosts | sort -R))
   if [ ! -z "$ARG" ] ; then
     exec $0 scan "$ARG"
   fi
 }
+
+gitPull
 
 if [ "$CMD" == "list" ]; then
   getHosts
@@ -109,7 +82,7 @@ if [ "$CMD" == "scan" ] ; then
     if [ "$ARG" == "" ]; then
       exit
     fi
-    echo "[!] Auto selected $ARG"
+    _warn "Auto selected $ARG"
   fi
   scanHost "$ARG"
 fi
