@@ -84,7 +84,7 @@ func initConfig() {
 	defaultScripts["recon"] = defaultReconScripts
 	defaultScripts["hunt"] = defaultHuntScripts
 
-	wordlists := make(map[string][]string)
+	wordlists := make(map[string]interface{})
 	wordlists["web-content"] = []string{
 		"Discovery/Web-Content/AdobeCQ-AEM.txt",
 		"Discovery/Web-Content/apache.txt",

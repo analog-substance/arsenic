@@ -8,8 +8,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/defektive/arsenic/arsenic/lib/util"
 	// "github.com/pelletier/go-toml"
+
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"gopkg.in/yaml.v2"
@@ -65,6 +65,13 @@ Helpful to see what scripts would be executed.`,
 						overwriteInMemConfig(viper.AllSettings())
 					}
 					saveConfig()
+					return
+				}
+
+				if arrayValue, ok := currentValue.([]string); ok {
+					for _, value := range arrayValue {
+						fmt.Println(value)
+					}
 					return
 				}
 
@@ -129,6 +136,8 @@ func matchConfigType(currentValue interface{}, userValue string) (interface{}, e
 		return value, nil
 	} else if _, ok := currentValue.(string); ok {
 		return userValue, nil
+	} else if stringSlice, ok := currentValue.([]string); ok {
+		return append(stringSlice, userValue), nil
 	} else if currentValue == nil { // If currentValue is nil, we are setting a new key and we must guess the value type
 		intValue, err := strconv.Atoi(userValue)
 		if err == nil {
@@ -164,22 +173,10 @@ func printConfig() {
 	t, err := yaml.Marshal(viper.AllSettings())
 	if err != nil {
 		fmt.Println(err)
+		return
 	}
 
-	fmt.Println("Configuration")
 	fmt.Println(string(t))
-	fmt.Println()
-
-	fmt.Println("--Discover files to be run--")
-	for _, scriptConfig := range util.GetScripts("discover") {
-		fmt.Printf("%s\n\tenabled: %t\n\torder: %d\n\n", scriptConfig.Script, scriptConfig.Enabled, scriptConfig.Order)
-	}
-	fmt.Println()
-
-	fmt.Println("--Recon files to be run--")
-	for _, scriptConfig := range util.GetScripts("recon") {
-		fmt.Printf("%s\n\tenabled: %t\n\torder: %d\n\n", scriptConfig.Script, scriptConfig.Enabled, scriptConfig.Order)
-	}
 }
 
 func printKeys(value interface{}) {
