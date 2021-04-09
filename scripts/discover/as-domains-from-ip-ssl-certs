@@ -35,13 +35,14 @@ if [ ! -f $recon_dir/ssl-cert-domains.txt ]; then
     | sed 's/^Subject Alternative Name://;s/ DNS://g;s/^\*\.//;s/,/\n/g'
   } \
     | grep "\." \
-    | as-prune-blacklisted-domains \
+    | removeInvalidDomains \
     | sort -h | uniq > $recon_dir/ssl-cert-domains.txt
 fi
 
 _ "Saving domains to scope"
 cat $recon_dir/ssl-cert-domains.txt \
-| ensureInScope \
+| removeInvalidDomains \
+| ensureDomainInScope \
 | sort -h \
 | uniq \
 | tee -a scope-domains-generated-ssl-certs.txt

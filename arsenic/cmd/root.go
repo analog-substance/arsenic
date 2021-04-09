@@ -74,7 +74,14 @@ func initConfig() {
 	defaultDiscoverScripts["as-dns-resolution"] = util.NewScriptConfig("as-dns-resolution", 300, true)
 	defaultDiscoverScripts["as-ip-recon"] = util.NewScriptConfig("as-ip-recon", 400, true)
 	defaultDiscoverScripts["as-domains-from-ip-ssl-certs"] = util.NewScriptConfig("as-domains-from-ip-ssl-certs", 500, true)
+	defaultDiscoverScripts["as-subdomain-discovery2"] = util.NewScriptConfig("as-subdomain-discovery", 540, true)
+	defaultDiscoverScripts["as-subdomain-enumeration2"] = util.NewScriptConfig("as-subdomain-enumeration", 550, true)
+	defaultDiscoverScripts["as-domains-from-domain-ssl-certs2"] = util.NewScriptConfig("as-domains-from-domain-ssl-certs", 560, true)
+	defaultDiscoverScripts["as-dns-resolution2"] = util.NewScriptConfig("as-dns-resolution", 570, true)
+	defaultDiscoverScripts["as-ip-recon2"] = util.NewScriptConfig("as-ip-recon", 580, true)
+	defaultDiscoverScripts["as-domains-from-ip-ssl-certs2"] = util.NewScriptConfig("as-domains-from-ip-ssl-certs", 590, true)
 	defaultDiscoverScripts["as-ip-resolution"] = util.NewScriptConfig("as-ip-resolution", 600, true)
+
 	defaultDiscoverScripts["as-http-screenshot-domains"] = util.NewScriptConfig("as-http-screenshot-domains", 700, true)
 
 	defaultReconScripts["as-port-scan-tcp"] = util.NewScriptConfig("as-port-scan-tcp", 0, true)

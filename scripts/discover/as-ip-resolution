@@ -33,3 +33,9 @@ if [ ! -f "$RECON_FILE" ] ; then
   cat "$RECON_FILE" | sort > sorted
   mv sorted "$RECON_FILE"
 fi
+
+cat "$RECON_FILE" \
+| grep "domain name pointer" \
+| awk '{print $NF}' \
+| removeInvalidDomains \
+| tee scope-domains-generated-resolv-ips.txt
