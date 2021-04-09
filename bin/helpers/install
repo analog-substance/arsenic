@@ -1,0 +1,22 @@
+#! /bin/bash
+
+git pull
+
+cd arsenic
+go install
+cd -
+
+read -p "Would you like to source arsenic.rc in your .zshrc or .bashrc? " -n 1 -r
+echo
+if [[ $REPLY =~ ^[Yy]$ ]]
+then
+  if [[ -n "$BASH_VERSION" ]]; then
+    RC_FILE="$HOME/.bashrc"
+  else
+    RC_FILE="$HOME/.zshrc"
+  fi
+
+  if ! grep "arsenic.rc" "$RC_FILE" > /dev/null; then
+    echo `pwd`/arsenic.rc >> "$RC_FILE"
+  fi
+fi

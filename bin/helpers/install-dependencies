@@ -1,0 +1,36 @@
+#! /bin/bash
+
+####
+## BEGIN: Load common functions
+
+if [ -z "$ARSENIC_PATH" ]; then
+  pushd $(dirname $(dirname $(dirname ${BASH_SOURCE[0]}))) > /dev/null
+  export ARSENIC_PATH=`pwd`
+  popd > /dev/null
+fi
+
+if [ -f "$ARSENIC_PATH/etc/common.sh" ]; then
+  source "$ARSENIC_PATH/etc/common.sh"
+fi
+
+## END: Load common functions
+####
+
+# function check_
+
+function install_searchsploit {
+  _ "Installing $dep"
+}
+
+function install_SecLists {
+  _ "Installing $dep"
+}
+
+cat "$ARSENIC_PATH/dependencies.txt" | while read dep; do
+  if which "$dep" > /dev/null 2>&1; then
+    _ "Dependency $dep: Installed"
+  else
+    _warn "Dependency $dep: Missing"
+    install_$dep
+  fi
+done
