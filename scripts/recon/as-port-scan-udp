@@ -57,6 +57,7 @@ function scanHost {
     cd "hosts/$host"
     _info "Port Scan / UDP / $host / running"
     nmap -oA recon/nmap-punched-udp -sUV -F -T4 --version-intensity 0 "$host"
+    sed -i 's|file://.*nmap\.xsl|/static/nmap.xsl|g' recon/nmap-punched-udp.xml
     gitCommit "." "recon host: $host"
     cd -
 
