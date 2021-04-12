@@ -11,6 +11,7 @@ import (
 	"strconv"
 
 	// "strings"
+	"github.com/defektive/arsenic/arsenic/lib/slice"
 	"github.com/defektive/arsenic/arsenic/lib/util"
 	"golang.org/x/net/publicsuffix"
 )
@@ -149,8 +150,8 @@ func Get(hostDirsOrHostnames []string) []Host {
 		host := InitHost(hostDir)
 		hostnames := host.Metadata.Hostnames
 		hostnames = append(hostnames, host.Metadata.Name)
-		if util.Any(hostDirsOrHostnames, func(hostDirOrHostname interface{}) bool {
-			return util.Any(hostnames, func(hostname interface{}) bool {
+		if slice.Any(hostDirsOrHostnames, func(hostDirOrHostname interface{}) bool {
+			return slice.Any(hostnames, func(hostname interface{}) bool {
 				return hostDirOrHostname == hostname
 			})
 		}) {

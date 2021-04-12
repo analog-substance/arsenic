@@ -1,10 +1,12 @@
 package cmd
 
 import (
+	"reflect"
 	"sort"
 
 	"github.com/defektive/arsenic/arsenic/lib/host"
-	"github.com/defektive/arsenic/arsenic/lib/util"
+	"github.com/defektive/arsenic/arsenic/lib/set"
+	"github.com/defektive/arsenic/arsenic/lib/slice"
 	"github.com/spf13/cobra"
 )
 
@@ -29,15 +31,16 @@ Flags are neat`,
 		userFlagsToRemove, _ := cmd.Flags().GetStringSlice("remove")
 
 		for _, host := range hosts {
-			flagsSet := util.NewStringSet()
+			flagsSet := set.NewSet(reflect.TypeOf(""))
 			for _, flag := range host.Metadata.UserFlags {
-				if util.Any(userFlagsToRemove, func(item interface{}) bool { return flag == item }) {
+				if slice.Any(userFlagsToRemove, func(item interface{}) bool { return flag == item }) {
 					continue
 				}
 				flagsSet.Add(flag)
 			}
 			flagsSet.AddRange(userFlagsToAdd)
-			host.Metadata.UserFlags = flagsSet.Slice()
+
+			host.Metadata.UserFlags = flagsSet.Slice().([]string)
 			sort.Strings(host.Metadata.UserFlags)
 
 			host.SaveMetadata()
