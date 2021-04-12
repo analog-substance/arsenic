@@ -3,6 +3,7 @@ package util
 import (
 	"bufio"
 	"fmt"
+	"reflect"
 
 	// "io/ioutil"
 	"log"
@@ -144,10 +145,80 @@ func ReadLines(path string) ([]string, error) {
 	return lines, scanner.Err()
 }
 
+func Any(x interface{}, predicate func(item interface{}) bool) bool {
+	xValue := reflect.ValueOf(x)
+	if xValue.Kind() != reflect.Slice {
+		return false
+	}
+
+	length := xValue.Len()
+	for i := 0; i < length; i++ {
+		value := xValue.Index(i).Interface()
+		if predicate(value) {
+			return true
+		}
+	}
+	return false
+}
+
 func fileExists(filename string) bool {
 	info, err := os.Stat(filename)
 	if os.IsNotExist(err) {
 		return false
 	}
 	return !info.IsDir()
+}
+
+type StringSet struct {
+	Set map[string]bool
+}
+
+func NewStringSet() StringSet {
+	return StringSet{Set: map[string]bool{}}
+}
+
+// Add an element to a set
+func (set *StringSet) Add(s string) bool {
+	_, found := set.Set[s]
+	set.Set[s] = true
+	return !found
+}
+
+// AddRange adds a list of elements to a set
+func (set *StringSet) AddRange(ss []string) {
+	for _, s := range ss {
+		set.Set[s] = true
+	}
+}
+
+// Contains tests if an element is in a set
+func (set *StringSet) Contains(s string) bool {
+	_, found := set.Set[s]
+	return found
+}
+
+// ContainsAny checks if any of the elements exist
+func (set *StringSet) ContainsAny(ss []string) bool {
+	for _, s := range ss {
+		if set.Set[s] {
+			return true
+		}
+	}
+	return false
+}
+
+// Length returns the length of the Set
+func (set *StringSet) Length() int {
+	return len(set.Set)
+}
+
+// Slice returns the set as a slice
+func (set *StringSet) Slice() []string {
+	values := make([]string, len(set.Set))
+	i := 0
+	for s := range set.Set {
+		values[i] = s
+		i++
+	}
+	return values
 }
