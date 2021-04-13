@@ -106,7 +106,6 @@ func (host Host) SaveMetadata() {
 	}
 
 	if host.Metadata.changed {
-		fmt.Printf("Updating %s\n", host.metadataFile())
 		err = ioutil.WriteFile(host.metadataFile(), out, 0644)
 		if err != nil {
 			fmt.Println(err)
@@ -142,6 +141,14 @@ func All() []Host {
 		allHosts = append(allHosts, host)
 	}
 	return allHosts
+}
+
+func AllDirNames() []string {
+	var hosts []string
+	for _, host := range getHostDirs() {
+		hosts = append(hosts, filepath.Base(host))
+	}
+	return hosts
 }
 
 func Get(hostDirsOrHostnames []string) []Host {
