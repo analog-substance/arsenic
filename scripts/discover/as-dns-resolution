@@ -33,3 +33,10 @@ find recon/domains/ -maxdepth 1 -type d  | tail -n +2 | while read domain_path; 
     mv sorted "$RECON_FILE"
   fi
 done
+
+cat recon/domains/*/resolv-domains.txt \
+| grep -P "has address|an alias" \
+| awk '{print $1}' \
+| sort -h \
+| uniq \
+| tee scope-domains-generated-resolved.txt

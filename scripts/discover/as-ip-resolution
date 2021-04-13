@@ -34,6 +34,7 @@ if [ ! -f "$RECON_FILE" ] ; then
   mv sorted "$RECON_FILE"
 fi
 
+set +o pipefail
 cat "$RECON_FILE" \
 | grep "domain name pointer" \
 | awk '{print $NF}' \

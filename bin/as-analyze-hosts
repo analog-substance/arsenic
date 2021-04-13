@@ -170,7 +170,15 @@ done
 echo >&2
 _ "Updating existing hosts"
 
-ls -d recon/analyze-hosts/services/* | as-prune-blacklisted-domains | cut -d/ -f4 | while read service ; do
+ls -d recon/analyze-hosts/services/* | cut -d/ -f4 | while read service ; do
+
+  safe=$(echo "$service" | as-prune-blacklisted-domains| ensureDomainInScope )
+  if [ -z "$safe" ]; then
+    if ! grep -rP "^$(echo $service | sed 's/\./\\./g')\$" scope-domains >/dev/null 2>&1; then
+      _ "Ignoring $service"
+      continue
+    fi
+  fi
 
   if [ -e "hosts/$service" ]; then
     _ "Updating existing $service"
