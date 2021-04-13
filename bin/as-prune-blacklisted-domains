@@ -24,6 +24,6 @@ fi
 #IN_SCOPE_REGEX=$(echo $(cat scope-domains.txt | sed 's/\./\\./g') | sed 's/ /|/g')
 BLACKLIST_REGEX=$(echo $(cat blacklist-domains.txt | sed 's/\./\\./g') | sed 's/ /|/g')
 
-grep -P "$REMOVE_DOMAIN_REGEX" \
+grep -vP "$REMOVE_DOMAIN_REGEX" \
 | grep -vP $BLACKLIST_REGEX
 
