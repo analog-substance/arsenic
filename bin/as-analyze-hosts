@@ -217,7 +217,8 @@ ls -d recon/analyze-hosts/services/* | cut -d/ -f4 | while read service ; do
   fi
 done
 
-cat scope-ips* | as-prune-blacklisted-ips | while read ip; do
+# remove blacklisted things and cidrs `/`
+cat scope-ips* | as-prune-blacklisted-ips | grep -vP "/" |while read ip; do
   grep "$(echo $ip | sed 's/\./\\./g')" recon/analyze-hosts/*.txt > /dev/null || echo $ip
 done | sort -h | uniq | while read ip; do
   _ "Creating new service $ip"
