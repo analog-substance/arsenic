@@ -6,10 +6,12 @@ import (
 	"reflect"
 	"sort"
 	"strings"
+	"text/template"
 
 	"github.com/defektive/arsenic/arsenic/lib/host"
 	"github.com/defektive/arsenic/arsenic/lib/set"
 	"github.com/defektive/arsenic/arsenic/lib/slice"
+	"github.com/defektive/arsenic/arsenic/lib/util"
 	"github.com/ryanuber/columnize"
 	"github.com/spf13/cobra"
 )
@@ -23,9 +25,40 @@ var hostsCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		hostsArgs, _ := cmd.Flags().GetStringSlice("host")
 
+		query, _ := cmd.Flags().GetString("query")
+
 		var hosts []host.Host
 		if len(hostsArgs) > 0 {
 			hosts = host.Get(hostsArgs)
+		} else if query != "" {
+			hostTemplate := template.New("host")
+			funcMap := make(template.FuncMap)
+			funcMap["in"] = func(s1 []string, s2 ...string) bool {
+				// Loop through s1 then s2 and check whether any values of s2 are equal to any values in s1
+				return slice.Any(s1, func(s1Item interface{}) bool {
+					return slice.Any(s2, func(s2Item interface{}) bool {
+						return s1Item == s2Item
+					})
+				})
+			}
+
+			funcMap["appendMatch"] = func(match host.Host) string {
+				hosts = append(hosts, match)
+				return ""
+			}
+
+			templateString := fmt.Sprintf(`{{range $host := .}}{{with .Metadata}}{{if %s}}{{appendMatch $host}}{{end}}{{end}}{{end}}`, query)
+			_, err := hostTemplate.Funcs(funcMap).Parse(templateString)
+			if err != nil {
+				cmd.PrintErrln(err)
+				return
+			}
+
+			err = hostTemplate.Execute(util.NoopWriter{}, host.All())
+			if err != nil {
+				cmd.PrintErrln(err)
+				return
+			}
 		} else {
 			hosts = host.All()
 		}
@@ -38,7 +71,7 @@ var hostsCmd = &cobra.Command{
 		shouldSave := len(userFlagsToRemove) > 0 || len(userFlagsToAdd) > 0 || updateArsenicFlags
 
 		for _, host := range hosts {
-			if  shouldSave {
+			if shouldSave {
 				flagsSet := set.NewSet(reflect.TypeOf(""))
 				for _, flag := range host.Metadata.UserFlags {
 					if slice.Any(userFlagsToRemove, func(item interface{}) bool { return flag == item }) {
@@ -80,4 +113,5 @@ func init() {
 	hostsCmd.RegisterFlagCompletionFunc("host", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		return host.AllDirNames(), cobra.ShellCompDirectiveDefault
 	})
+	hostsCmd.Flags().StringP("query", "q", "", "the host query")
 }
