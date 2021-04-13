@@ -27,6 +27,14 @@ grep -riP "has (IPv6 )?address" recon/domains/  \
   | removeInvalidDomains \
   | tee scope-ips-generated-client-domains.txt
 
+
+
+RECON_FILE="recon/ips/scope-ips.nmap"
+if [ ! -f "$RECON_FILE" ] ; then
+  nmap -iL scope-ips.txt -sP -oA recon/ips/scope-ips
+fi
+
+
 ## maybe this should be in the IPs?
 cat scope-ips* | as-prune-blacklisted-ips | cat - scope-ips.txt | sort -h | uniq > scope-ips-generated-combined.txt
 
