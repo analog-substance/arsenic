@@ -25,5 +25,9 @@ _ "Creating op: $OP_NAME"
 mkdir -p apps bin report/{findings,sections,static} hosts recon/domains
 touch {apps,bin,recon}/.keep report/static/.keep
 
+if [ -f "/usr/share/nmap/nmap.xsl" ]; then
+  cp /usr/share/nmap/nmap.xsl report/static
+fi
+
 touch scope-domains.txt
 touch scope-ips.txt
