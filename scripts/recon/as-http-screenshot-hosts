@@ -72,7 +72,7 @@ function scanHost {
 
     cd "hosts/$host"
 
-    gitLock "recon/wordlist-content-discover.txt" "aquatone start $host"
+    gitLock "recon/wordlist-content-discover.txt" "Aquatone lock: $host"
     getURLs \
     | tee "recon/wordlist-content-discover.txt"
 
@@ -81,7 +81,7 @@ function scanHost {
     # remove UTF BOM, this fixes aquatone being rendered in hugo
     find . -name '*.html' -exec sed -i '1s/^\xEF\xBB\xBF//' {} \;
 
-    gitCommit "." "aquatone end $host"
+    gitCommit "." "Aquatone complete: $host"
     cd - > /dev/null
   fi
 

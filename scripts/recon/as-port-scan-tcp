@@ -52,12 +52,12 @@ function scanHost {
   if ! compgen -G "hosts/$host/recon/nmap-punched*tcp*" > /dev/null 2>&1; then
     _info "Port Scan / TCP / $host / preparing"
     mkdir -p "hosts/$host/recon"
-    gitLock "hosts/$host/recon/nmap-punched-quick-tcp.xml" "new host: $host"
+    gitLock "hosts/$host/recon/nmap-punched-quick-tcp.xml" "TCP port scan lock: $host"
 
     cd "hosts/$host"
     _info "Port Scan / TCP / $host / running"
     as-recon-discover-services "$host"
-    gitCommit "." "recon host: $host"
+    gitCommit "." "TCP port scan complete: $host"
     cd -
 
     _info "Port Scan / TCP / $host / complete"

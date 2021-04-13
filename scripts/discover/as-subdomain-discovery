@@ -23,7 +23,7 @@ declare -a dig_commands=("TXT" "NS" "MX" "SOA" "A")
 
 function root_domain_recon {
   domain=$(echo $1 | tr 'A-Z' 'a-z')
-  if echo "$domain" | grep -P "$REMOVE_DOMAIN_REGEX" > /dev/null ; then
+  if echo "$domain" | as-prune-blacklisted-domains > /dev/null ; then
     _warn "Skipping common domain: $domain"
   else
     mkdir -p "recon/domains/$domain"

@@ -52,13 +52,13 @@ function scanHost {
   if ! compgen -G "hosts/$host/recon/nmap-punched-udp*" > /dev/null 2>&1; then
     _info "Port Scan / UDP / $host / preparing"
     mkdir -p "hosts/$host/recon"
-    gitLock "hosts/$host/recon/nmap-punched-udp.nmap" "hosts/$host/recon/nmap-punched-udp.nmap" "new host: $host"
+    gitLock "hosts/$host/recon/nmap-punched-udp.nmap" "UDP port scan lock: $host"
 
     cd "hosts/$host"
     _info "Port Scan / UDP / $host / running"
     nmap -oA recon/nmap-punched-udp -sUV -F -T4 --version-intensity 0 "$host"
     sed -i 's|file://.*nmap\.xsl|/static/nmap.xsl|g' recon/nmap-punched-udp.xml
-    gitCommit "." "recon host: $host"
+    gitCommit "." "UDP port scan complete: $host"
     cd -
 
     _info "Port Scan / UDP / $host / complete"

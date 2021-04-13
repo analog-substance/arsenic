@@ -170,7 +170,13 @@ done
 echo >&2
 _ "Updating existing hosts"
 
-ls -d recon/analyze-hosts/services/* | as-prune-blacklisted-domains | cut -d/ -f4 | while read service ; do
+ls -d recon/analyze-hosts/services/* | cut -d/ -f4 | while read service ; do
+
+  safe=$(echo "$service" | as-prune-blacklisted-domains| ensureDomainInScope )
+  if [ -z "$safe" ]; then
+    _ "Ignoring $service"
+    continue
+  fi
 
   if [ -e "hosts/$service" ]; then
     _ "Updating existing $service"
@@ -209,7 +215,8 @@ ls -d recon/analyze-hosts/services/* | as-prune-blacklisted-domains | cut -d/ -f
   fi
 done
 
-cat scope-ips* | as-prune-blacklisted-ips | while read ip; do
+# remove blacklisted things and cidrs `/`
+cat scope-ips* | as-prune-blacklisted-ips | grep -vP "/" |while read ip; do
   grep "$(echo $ip | sed 's/\./\\./g')" recon/analyze-hosts/*.txt > /dev/null || echo $ip
 done | sort -h | uniq | while read ip; do
   _ "Creating new service $ip"
