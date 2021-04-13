@@ -3,17 +3,18 @@ package cmd
 import (
 	"bufio"
 	"fmt"
-	"github.com/defektive/arsenic/arsenic/lib/util"
-	"github.com/spf13/cobra"
 	"os"
 	"regexp"
 	"sort"
 	"strings"
+
+	"github.com/defektive/arsenic/arsenic/lib/util"
+	"github.com/spf13/cobra"
 )
 
 // wordlistCmd represents the wordlist command
 var wordlistCmd = &cobra.Command{
-	Use:       "wordlist",
+	Use:       "wordlist (web-content)",
 	Short:     "Generate a wordlist",
 	Long:      `Generate a wordlist`,
 	ValidArgs: []string{"web-content"},

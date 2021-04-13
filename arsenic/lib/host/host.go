@@ -11,6 +11,7 @@ import (
 	"strconv"
 
 	// "strings"
+	"github.com/defektive/arsenic/arsenic/lib/slice"
 	"github.com/defektive/arsenic/arsenic/lib/util"
 	"golang.org/x/net/publicsuffix"
 )
@@ -25,20 +26,19 @@ type Metadata struct {
 	TCPPorts    []int
 	UDPPorts    []int
 	ReviewedBy  string
+	existing    string
+	changed     bool
 }
 
 type Host struct {
 	dir      string
-	metadata Metadata
+	Metadata Metadata
 }
 
 func InitHost(dir string) Host {
-	return Host{dir, defaultMetadata()}
-}
+	host := Host{dir: dir}
 
-func (host Host) SaveMetadata() {
 	var metadata Metadata
-	changed := false
 	if _, err := os.Stat(host.metadataFile()); !os.IsNotExist(err) {
 		jsonFile, err := os.Open(host.metadataFile())
 		if err != nil {
@@ -50,16 +50,15 @@ func (host Host) SaveMetadata() {
 		json.Unmarshal(byteValue, &metadata)
 	} else {
 		metadata = defaultMetadata()
-		changed = true
+		metadata.changed = true
 	}
 
 	existing, err := json.MarshalIndent(metadata, "", "  ")
 	if err != nil {
 		fmt.Println(err)
-		return
+		return host
 	}
-	// we have are base metadata loaded
-	// lets update it
+	metadata.existing = string(existing)
 
 	hostnames := host.Hostnames()
 	ipAddresses := host.IPAddresses()
@@ -91,18 +90,22 @@ func (host Host) SaveMetadata() {
 	metadata.UDPPorts = host.udpPorts()
 	metadata.Flags = flags
 
-	out, err := json.MarshalIndent(metadata, "", "  ")
+	host.Metadata = metadata
+	return host
+}
+
+func (host Host) SaveMetadata() {
+	out, err := json.MarshalIndent(host.Metadata, "", "  ")
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	if string(existing) != string(out) {
-		changed = true
+	if string(host.Metadata.existing) != string(out) {
+		host.Metadata.changed = true
 	}
 
-	if changed {
-		fmt.Printf("Updating %s\n", host.metadataFile())
+	if host.Metadata.changed {
 		err = ioutil.WriteFile(host.metadataFile(), out, 0644)
 		if err != nil {
 			fmt.Println(err)
@@ -131,12 +134,6 @@ func (host Host) IPAddresses() []string {
 	return IPAddresses
 }
 
-func UpdateFlags() {
-	for _, host := range All() {
-		host.SaveMetadata()
-	}
-}
-
 func All() []Host {
 	allHosts := []Host{}
 	for _, hostDir := range getHostDirs() {
@@ -144,6 +141,34 @@ func All() []Host {
 		allHosts = append(allHosts, host)
 	}
 	return allHosts
+}
+
+func AllDirNames() []string {
+	var hosts []string
+	for _, hostDir := range getHostDirs() {
+		host := InitHost(hostDir)
+		hostnames := host.Metadata.Hostnames
+		hostnames = append(hostnames, host.Metadata.Name)
+		hosts = append(hosts, hostnames...)
+	}
+	return hosts
+}
+
+func Get(hostDirsOrHostnames []string) []Host {
+	hosts := []Host{}
+	for _, hostDir := range getHostDirs() {
+		host := InitHost(hostDir)
+		hostnames := host.Metadata.Hostnames
+		hostnames = append(hostnames, host.Metadata.Name)
+		if slice.Any(hostDirsOrHostnames, func(hostDirOrHostname interface{}) bool {
+			return slice.Any(hostnames, func(hostname interface{}) bool {
+				return hostDirOrHostname == hostname
+			})
+		}) {
+			hosts = append(hosts, host)
+		}
+	}
+	return hosts
 }
 
 func getHostDirs() []string {
@@ -155,7 +180,7 @@ func getHostDirs() []string {
 		}
 
 		for _, file := range files {
-			filePaths = append(filePaths, fmt.Sprintf("hosts/%s", file.Name()))
+			filePaths = append(filePaths, filepath.Join("hosts", file.Name()))
 		}
 	}
 
@@ -164,7 +189,7 @@ func getHostDirs() []string {
 }
 
 func (host Host) metadataFile() string {
-	return fmt.Sprintf("%s/%s", host.dir, "00_metadata.md")
+	return filepath.Join(host.dir, "00_metadata.md")
 }
 
 func (host Host) flags() []string {
