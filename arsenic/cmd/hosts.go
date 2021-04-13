@@ -3,7 +3,6 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 	"reflect"
 	"sort"
 	"strings"
@@ -12,6 +11,7 @@ import (
 	"github.com/defektive/arsenic/arsenic/lib/host"
 	"github.com/defektive/arsenic/arsenic/lib/set"
 	"github.com/defektive/arsenic/arsenic/lib/slice"
+	"github.com/defektive/arsenic/arsenic/lib/util"
 	"github.com/ryanuber/columnize"
 	"github.com/spf13/cobra"
 )
@@ -50,11 +50,13 @@ var hostsCmd = &cobra.Command{
 			templateString := fmt.Sprintf(`{{range $host := .}}{{with .Metadata}}{{if %s}}{{appendMatch $host}}{{end}}{{end}}{{end}}`, query)
 			_, err := hostTemplate.Funcs(funcMap).Parse(templateString)
 			if err != nil {
-				panic(err)
+				cmd.PrintErrln(err)
+				return
 			}
-			err = hostTemplate.Execute(os.Stdout, host.All())
+
+			err = hostTemplate.Execute(util.NoopWriter{}, host.All())
 			if err != nil {
-				fmt.Println(err)
+				cmd.PrintErrln(err)
 				return
 			}
 		} else {

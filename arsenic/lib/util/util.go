@@ -151,3 +151,10 @@ func fileExists(filename string) bool {
 	}
 	return !info.IsDir()
 }
+
+type NoopWriter struct {
+}
+
+func (w NoopWriter) Write(bytes []byte) (int, error) {
+	return 0, nil
+}
