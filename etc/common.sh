@@ -1,6 +1,6 @@
 
 
-export REMOVE_DOMAIN_REGEX="(\._domainkey\.|hscoscdn10\.net|sites\.hubspot\.net|amazonaws\.com|azurewebsites\.net|cloudfront\.net|azurewebsites\.windows\.net|azure\.com|cloudapp\.net|readthedocs\.io|my\.jobs|googlehosted\.com|readthedocs\.org)\$"
+export REMOVE_DOMAIN_REGEX="(\._domainkey\.|hscoscdn10\.net|sites\.hubspot\.net|amazonaws\.com|azurewebsites\.net|cloudfront\.net|azurewebsites\.windows\.net|azure\.com|cloudapp\.net|readthedocs\.io|my\.jobs|googlehosted\.com|readthedocs\.org|akamaitechnologies\.com)\$"
 # Right now just gonna ignore these.
 export NON_ROOT_DOMAIN_REGEX="co\.|com\.|herokuapp\."
 
