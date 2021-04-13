@@ -80,7 +80,7 @@ function gitCommit {
 
 function gitLock {
   echo lock > "$1"
-  gitCommit "hosts/$host/recon/nmap-punched-udp.nmap" "new host: $host" reset
+  gitCommit "$1" "$2" reset
 }
 
 function getRootDomains {

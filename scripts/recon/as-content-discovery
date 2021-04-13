@@ -146,7 +146,7 @@ function scanHost {
           echo "s3" > $output_file
           gitCommit "recon/$output_file" "skip gobuster $url" reset
         else
-          gitLock "recon/$output_file" "start gobuster $url"
+          gitLock "recon/$output_file" "Gobuster lock: $url"
 
           set +o pipefail
           set +e
@@ -155,7 +155,7 @@ function scanHost {
           as-buster -k -e -a Firefox -u $url -w $wordlist_file
         fi
 
-        gitCommit "." "end gobuster $url"
+        gitCommit "." "Gobuster complete: $url"
         set -e
         set -o pipefail
         _info "Content Discovery / $host / $url / complete"
