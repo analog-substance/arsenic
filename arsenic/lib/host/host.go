@@ -32,7 +32,7 @@ type Metadata struct {
 
 type Host struct {
 	dir      string
-	Metadata Metadata
+	Metadata *Metadata
 }
 
 func InitHost(dir string) Host {
@@ -90,7 +90,7 @@ func InitHost(dir string) Host {
 	metadata.UDPPorts = host.udpPorts()
 	metadata.Flags = flags
 
-	host.Metadata = metadata
+	host.Metadata = &metadata
 	return host
 }
 
