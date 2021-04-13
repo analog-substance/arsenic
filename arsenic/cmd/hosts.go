@@ -18,15 +18,11 @@ var hostsCmd = &cobra.Command{
 	Short: "manage hosts",
 	Long: `Add, Update, and delete flags from hosts
 `,
-	ValidArgs: host.AllDirNames(),
-	Args: cobra.OnlyValidArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		hostsArgs, _ := cmd.Flags().GetStringSlice("host")
 
 		var hosts []host.Host
-		if len(args) > 0 {
-			hosts = host.Get(args)
-		} else if len(hostsArgs) > 0 {
+		if len(hostsArgs) > 0 {
 			hosts = host.Get(hostsArgs)
 		} else {
 			hosts = host.All()
@@ -71,4 +67,7 @@ func init() {
 	hostsCmd.Flags().StringSliceP("remove-flags", "r", []string{}, "flag(s) to remove")
 	hostsCmd.Flags().BoolP("update", "u", false, "Update arsenic flags")
 	hostsCmd.Flags().StringSliceP("host", "H", []string{}, "host(s) to add/remove/update flags")
+	hostsCmd.RegisterFlagCompletionFunc("host", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		return host.AllDirNames(), cobra.ShellCompDirectiveDefault
+	})
 }

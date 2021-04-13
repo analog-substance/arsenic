@@ -145,8 +145,11 @@ func All() []Host {
 
 func AllDirNames() []string {
 	var hosts []string
-	for _, host := range getHostDirs() {
-		hosts = append(hosts, filepath.Base(host))
+	for _, hostDir := range getHostDirs() {
+		host := InitHost(hostDir)
+		hostnames := host.Metadata.Hostnames
+		hostnames = append(hostnames, host.Metadata.Name)
+		hosts = append(hosts, hostnames...)
 	}
 	return hosts
 }
