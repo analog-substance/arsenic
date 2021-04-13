@@ -34,6 +34,11 @@ if [ ! -f "$RECON_FILE" ] ; then
   nmap -iL scope-ips.txt -sP -oA recon/ips/scope-ips
 fi
 
+cat recon/ips/scope-ips.gnmap \
+| grep Host: \
+| awk '{print $2}' \
+| as-prune-blacklisted-ips \
+> scope-ips-generated-pinged.txt
 
 ## maybe this should be in the IPs?
 cat scope-ips* | as-prune-blacklisted-ips | cat - scope-ips.txt | sort -h | uniq > scope-ips-generated-combined.txt
