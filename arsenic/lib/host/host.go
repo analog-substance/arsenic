@@ -30,6 +30,52 @@ type Metadata struct {
 	changed     bool
 }
 
+func containsInt(i1 []int, i2 ...int) bool {
+	for _, i1v := range i1 {
+		for _, v := range i2 {
+			if i1v == v {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func containsStr(i1 []string, i2 ...string) bool {
+	for _, i1v := range i1 {
+		for _, v := range i2 {
+			if i1v == v {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func (md Metadata) HasPorts(ports ...int) bool {
+	return md.HasTCPPorts(ports...) || md.HasUDPPorts(ports...)
+}
+
+func (md Metadata) HasTCPPorts(ports ...int) bool {
+	return containsInt(md.TCPPorts, ports...)
+}
+
+func (md Metadata) HasUDPPorts(ports ...int) bool {
+	return containsInt(md.UDPPorts, ports...)
+}
+
+func (md Metadata) HasFlags(flags ...string) bool {
+	return md.HasASFlags(flags...) || md.HasUserFlags(flags...)
+}
+
+func (md Metadata) HasASFlags(flags ...string) bool {
+	return containsStr(md.Flags, flags...)
+}
+
+func (md Metadata) HasUserFlags(flags ...string) bool {
+	return containsStr(md.UserFlags, flags...)
+}
+
 type Host struct {
 	dir      string
 	Metadata *Metadata
