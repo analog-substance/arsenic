@@ -19,8 +19,34 @@ import (
 // hostsCmd represents the flags command
 var hostsCmd = &cobra.Command{
 	Use:   "hosts",
-	Short: "manage hosts",
-	Long: `Add, Update, and delete flags from hosts
+	Short: "View, query, and flag hosts",
+	Long: `View, query, and flag hosts
+
+Show unreviewed hosts:
+
+  $ arsenic hosts -q '.HasFlags "Unreviewed"'
+
+Show hosts that have Gobuster results:
+
+  $ arsenic hosts -q '.HasFlags "Gobuster"'
+
+Show hosts with the root domain example.com:
+
+  $ arsenic hosts -q 'in .RootDomains "example.com"'
+
+Show hosts with ports 22 or 2022:
+
+  $ arsenic hosts -q '.HasPorts 22 2022'
+
+Currently Metadata has the following methods:
+
+- HasPorts
+- HasTCPPorts
+- HasUDPPorts
+- HasFlags
+- HasASFlags
+- HasUserFlags
+
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 		hostsArgs, _ := cmd.Flags().GetStringSlice("host")
@@ -108,10 +134,10 @@ func init() {
 	hostsCmd.Flags().StringSliceP("add-flags", "a", []string{}, "flag(s) to add")
 	hostsCmd.Flags().StringSliceP("remove-flags", "r", []string{}, "flag(s) to remove")
 	hostsCmd.Flags().BoolP("update", "u", false, "Update arsenic flags")
-	hostsCmd.Flags().BoolP("json", "j", false, "Update arsenic flags")
+	hostsCmd.Flags().BoolP("json", "j", false, "Return JSON")
 	hostsCmd.Flags().StringSliceP("host", "H", []string{}, "host(s) to add/remove/update flags")
 	hostsCmd.RegisterFlagCompletionFunc("host", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		return host.AllDirNames(), cobra.ShellCompDirectiveDefault
 	})
-	hostsCmd.Flags().StringP("query", "q", "", "the host query")
+	hostsCmd.Flags().StringP("query", "q", "", "Query to run. Using Go Template style conditionals.")
 }
