@@ -8,7 +8,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/defektive/arsenic/arsenic/lib/util"
+	"github.com/defektive/arsenic/lib/util"
 	"github.com/spf13/cobra"
 )
 

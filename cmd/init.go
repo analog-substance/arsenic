@@ -1,9 +1,9 @@
 package cmd
 
 import (
-	"os"
+	"github.com/defektive/arsenic/lib/util"
 	"github.com/spf13/cobra"
-	"github.com/defektive/arsenic/arsenic/lib/util"
+	"os"
 )
 
 // initCmd represents the init command

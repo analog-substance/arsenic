@@ -8,10 +8,10 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/defektive/arsenic/arsenic/lib/host"
-	"github.com/defektive/arsenic/arsenic/lib/set"
-	"github.com/defektive/arsenic/arsenic/lib/slice"
-	"github.com/defektive/arsenic/arsenic/lib/util"
+	"github.com/defektive/arsenic/lib/host"
+	"github.com/defektive/arsenic/lib/set"
+	"github.com/defektive/arsenic/lib/slice"
+	"github.com/defektive/arsenic/lib/util"
 	"github.com/ryanuber/columnize"
 	"github.com/spf13/cobra"
 )

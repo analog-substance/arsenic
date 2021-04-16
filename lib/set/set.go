@@ -3,7 +3,7 @@ package set
 import (
 	"reflect"
 
-	"github.com/defektive/arsenic/arsenic/lib/slice"
+	"github.com/defektive/arsenic/lib/slice"
 )
 
 type Set struct {
