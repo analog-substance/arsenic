@@ -1,5 +1,5 @@
 # Arsenic [as]
-Now with moar go!!! check out `/arsenic`!
+Now with moar go!!!
 *******
 
 
