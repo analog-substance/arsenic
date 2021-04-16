@@ -55,8 +55,7 @@ Every operation should have findings! This is where to store that information.
 to start an op:
 
 ```bash
-as-init-op.sh opname
-cd opname
+arsenic init opname
 
 echo example.com >> scope-domains.txt
 arsenic discover
@@ -99,8 +98,9 @@ Working with friends? Not a problem. [arsenic-hugo](https://github.com/defektive
 
 ```bash
 export REVIEWER='defektive'
+
 ar-mark-reviewed.sh 192.168.0.1 # this will set reviewer = 'defektive' in the README for the host
-ar-update-flags.sh git # this will update the flags for modifed hosts. in this case removing  unreviewed and adding reviewed to 192.168.0.1's flags
+arsenic hosts -u
 ```
 *****
 ## Installation
