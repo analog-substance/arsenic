@@ -11,8 +11,8 @@ import (
 	"strconv"
 
 	// "strings"
-	"github.com/defektive/arsenic/arsenic/lib/slice"
-	"github.com/defektive/arsenic/arsenic/lib/util"
+	"github.com/defektive/arsenic/lib/slice"
+	"github.com/defektive/arsenic/lib/util"
 	"golang.org/x/net/publicsuffix"
 )
 
