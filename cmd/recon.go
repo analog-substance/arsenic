@@ -12,7 +12,7 @@ var reconCmd = &cobra.Command{
 
 Scripts should determine what hosts it needs to run against.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		dryRun, _  := cmd.Flags().GetBool("dry-run")
+		dryRun, _ := cmd.Flags().GetBool("dry-run")
 		util.ExecutePhaseScripts("recon", []string{}, dryRun)
 	},
 }

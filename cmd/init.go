@@ -9,13 +9,13 @@ import (
 // initCmd represents the init command
 var initCmd = &cobra.Command{
 	Use:   "init",
-	Args: cobra.ExactArgs(1),
+	Args:  cobra.ExactArgs(1),
 	Short: "Init a new engagement",
-	Long: `Init a new engagement`,
+	Long:  `Init a new engagement`,
 	Run: func(cmd *cobra.Command, args []string) {
 		os.MkdirAll(args[0], 0755)
 		os.Chdir(args[0])
-		dryRun, _  := cmd.Flags().GetBool("dry-run")
+		dryRun, _ := cmd.Flags().GetBool("dry-run")
 		util.ExecutePhaseScripts("init", []string{}, dryRun)
 	},
 }

@@ -16,9 +16,9 @@ import (
 var cfgFile string
 
 var rootCmd = &cobra.Command{
-	Use:   "arsenic",
+	Use:     "arsenic",
 	Version: "v0.1.0",
-	Short: "Pentesting conventions",
+	Short:   "Pentesting conventions",
 	Long: `Arsenic - Pentest Conventions
 
 

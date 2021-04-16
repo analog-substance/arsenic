@@ -11,7 +11,7 @@ var huntCmd = &cobra.Command{
 	Short: "Find interesting things",
 	Long:  `Find interesting things`,
 	Run: func(cmd *cobra.Command, args []string) {
-		dryRun, _  := cmd.Flags().GetBool("dry-run")
+		dryRun, _ := cmd.Flags().GetBool("dry-run")
 		util.ExecutePhaseScripts("hunt", []string{}, dryRun)
 	},
 }

@@ -21,7 +21,7 @@ import (
 type ScriptConfig struct {
 	Script  string
 	Order   int
-	Count int
+	Count   int
 	Enabled bool
 }
 
@@ -30,7 +30,7 @@ func NewScriptConfig(script string, order int, count int, enabled bool) ScriptCo
 		Script:  script,
 		Order:   order,
 		Enabled: enabled,
-		Count: count,
+		Count:   count,
 	}
 }
 
@@ -114,7 +114,7 @@ func ExecScript(scriptPath string, args []string) int {
 
 func ExecutePhaseScripts(phase string, args []string, dryRun bool) {
 	phaseScripts := GetScripts(phase)
-	for i:=0 ; ; i++{
+	for i := 0; ; i++ {
 		scripts := phaseScripts
 		scriptsRan := false
 		for len(scripts) > 0 {
