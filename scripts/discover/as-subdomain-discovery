@@ -52,6 +52,7 @@ function root_domain_recon {
         _warn "skipping $domain $cmd"
       fi
     done
+
     for cmd in "${dig_commands[@]}";  do
       if [ ! -f "recon/domains/$domain/dig-$cmd.txt" ]; then
         _ "running dig $domain $cmd"

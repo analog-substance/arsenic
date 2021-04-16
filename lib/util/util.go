@@ -21,14 +21,16 @@ import (
 type ScriptConfig struct {
 	Script  string
 	Order   int
+	Count int
 	Enabled bool
 }
 
-func NewScriptConfig(script string, order int, enabled bool) ScriptConfig {
+func NewScriptConfig(script string, order int, count int, enabled bool) ScriptConfig {
 	return ScriptConfig{
 		Script:  script,
 		Order:   order,
 		Enabled: enabled,
+		Count: count,
 	}
 }
 
@@ -110,21 +112,33 @@ func ExecScript(scriptPath string, args []string) int {
 	return exitStatus
 }
 
-func ExecutePhaseScripts(phase string, args []string) {
-	scripts := GetScripts(phase)
-	for len(scripts) > 0 {
-		currentScript := scripts[0]
-		if currentScript.Enabled {
-			fmt.Printf("Running %s\n", currentScript.Script)
-			if ExecScript(currentScript.Script, args) == 0 {
-				scripts = scripts[1:]
+func ExecutePhaseScripts(phase string, args []string, dryRun bool) {
+	phaseScripts := GetScripts(phase)
+	for i:=0 ; ; i++{
+		scripts := phaseScripts
+		scriptsRan := false
+		for len(scripts) > 0 {
+			currentScript := scripts[0]
+			if currentScript.Enabled && currentScript.Count > i {
+				fmt.Printf("Running %s %d\n", currentScript.Script, i)
+				scriptsRan = true
+				if dryRun {
+					scripts = scripts[1:]
+				} else {
+					if ExecScript(currentScript.Script, args) == 0 {
+						scripts = scripts[1:]
+					} else {
+						fmt.Printf("Script failed, gonna retry: %s\n", currentScript.Script)
+						time.Sleep(10 * time.Second)
+					}
+				}
 			} else {
-				fmt.Printf("Script failed, gonna retry: %s\n", currentScript.Script)
-				time.Sleep(10 * time.Second)
+				// not enabled.. remove
+				scripts = scripts[1:]
 			}
-		} else {
-			// not enabled.. remove
-			scripts = scripts[1:]
+		}
+		if !scriptsRan {
+			break
 		}
 	}
 }
