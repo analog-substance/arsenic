@@ -12,10 +12,12 @@ var discoverCmd = &cobra.Command{
 
 Scripts should determine what hosts it needs to run against.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		util.ExecutePhaseScripts("discover", []string{})
+		dryRun, _ := cmd.Flags().GetBool("dry-run")
+		util.ExecutePhaseScripts("discover", []string{}, dryRun)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(discoverCmd)
+	discoverCmd.Flags().BoolP("dry-run", "d", false, "Dry run")
 }
