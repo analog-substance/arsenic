@@ -9,9 +9,10 @@ import (
 	"regexp"
 	"sort"
 	"strconv"
+	"strings"
 
 	// "strings"
-	"github.com/defektive/arsenic/lib/slice"
+	"github.com/ahmetb/go-linq/v3"
 	"github.com/defektive/arsenic/lib/util"
 	"golang.org/x/net/publicsuffix"
 )
@@ -74,6 +75,10 @@ func (md Metadata) HasASFlags(flags ...string) bool {
 
 func (md Metadata) HasUserFlags(flags ...string) bool {
 	return containsStr(md.UserFlags, flags...)
+}
+
+func (md Metadata) Columnize() string {
+	return fmt.Sprintf("%s | %s | %s\n", md.Name, strings.Join(md.Flags, ","), strings.Join(md.UserFlags, ","))
 }
 
 type Host struct {
@@ -206,8 +211,9 @@ func Get(hostDirsOrHostnames []string) []Host {
 		host := InitHost(hostDir)
 		hostnames := host.Metadata.Hostnames
 		hostnames = append(hostnames, host.Metadata.Name)
-		if slice.Any(hostDirsOrHostnames, func(hostDirOrHostname interface{}) bool {
-			return slice.Any(hostnames, func(hostname interface{}) bool {
+
+		if linq.From(hostDirsOrHostnames).AnyWith(func(hostDirOrHostname interface{}) bool {
+			return linq.From(hostnames).AnyWith(func(hostname interface{}) bool {
 				return hostDirOrHostname == hostname
 			})
 		}) {
@@ -313,7 +319,7 @@ func getRootDomains(domains []string) []string {
 		}
 	}
 
-	for rootDomain, _ := range rootDomainMap {
+	for rootDomain := range rootDomainMap {
 		rootDomains = append(rootDomains, rootDomain)
 	}
 	sort.Strings(rootDomains)

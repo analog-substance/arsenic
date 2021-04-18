@@ -3,7 +3,7 @@ package set
 import (
 	"reflect"
 
-	"github.com/defektive/arsenic/lib/slice"
+	"github.com/ahmetb/go-linq/v3"
 )
 
 type Set struct {
@@ -25,7 +25,7 @@ func (set *Set) Add(item interface{}) bool {
 	return !found
 }
 func (set *Set) AddRange(items interface{}) {
-	slice.ForEach(items, func(item interface{}) { set.Set[item] = true })
+	linq.From(items).ForEach(func(i interface{}) { set.Set[i] = true })
 }
 func (set *Set) Slice() interface{} {
 	sliceType := reflect.SliceOf(set.itemType)

@@ -5,12 +5,11 @@ import (
 	"fmt"
 	"reflect"
 	"sort"
-	"strings"
 	"text/template"
 
+	"github.com/ahmetb/go-linq/v3"
 	"github.com/defektive/arsenic/lib/host"
 	"github.com/defektive/arsenic/lib/set"
-	"github.com/defektive/arsenic/lib/slice"
 	"github.com/defektive/arsenic/lib/util"
 	"github.com/ryanuber/columnize"
 	"github.com/spf13/cobra"
@@ -61,8 +60,8 @@ Currently Metadata has the following methods:
 			funcMap := make(template.FuncMap)
 			funcMap["in"] = func(s1 []string, s2 ...string) bool {
 				// Loop through s1 then s2 and check whether any values of s2 are equal to any values in s1
-				return slice.Any(s1, func(s1Item interface{}) bool {
-					return slice.Any(s2, func(s2Item interface{}) bool {
+				return linq.From(s1).AnyWith(func(s1Item interface{}) bool {
+					return linq.From(s2).AnyWith(func(s2Item interface{}) bool {
 						return s1Item == s2Item
 					})
 				})
@@ -96,11 +95,11 @@ Currently Metadata has the following methods:
 
 		shouldSave := len(userFlagsToRemove) > 0 || len(userFlagsToAdd) > 0 || updateArsenicFlags
 
-		for _, host := range hosts {
-			if shouldSave {
+		if shouldSave {
+			for _, host := range hosts {
 				flagsSet := set.NewSet(reflect.TypeOf(""))
 				for _, flag := range host.Metadata.UserFlags {
-					if slice.Any(userFlagsToRemove, func(item interface{}) bool { return flag == item }) {
+					if linq.From(userFlagsToRemove).AnyWith(func(item interface{}) bool { return flag == item }) {
 						continue
 					}
 					flagsSet.Add(flag)
@@ -121,9 +120,9 @@ Currently Metadata has the following methods:
 			fmt.Println(string(json))
 		} else {
 			var lines []string
-			for _, host := range hosts {
-				lines = append(lines, fmt.Sprintf("%s | %s | %s\n", host.Metadata.Name, strings.Join(host.Metadata.Flags, ","), strings.Join(host.Metadata.UserFlags, ",")))
-			}
+			linq.From(hosts).SelectT(func(host host.Host) string {
+				return host.Metadata.Columnize()
+			}).ToSlice(&lines)
 			fmt.Println(columnize.SimpleFormat(lines))
 		}
 	},
