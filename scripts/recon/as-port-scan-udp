@@ -39,7 +39,7 @@ function getHosts {
   {
     find hosts -name 'nmap-punched-udp*'  | cut -d/ -f2
     ls -d hosts/* | cut -d/ -f2
-  } | as-prune-blacklisted-ips | sort -h | uniq -c | grep -P "^\s+1 " | awk '{print $2}' | sort -R
+  } | sort -h | uniq -c | grep -P "^\s+1 " | awk '{print $2}' | sort -R
 }
 
 function scanHost {
