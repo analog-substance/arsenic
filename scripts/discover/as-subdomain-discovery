@@ -23,7 +23,7 @@ declare -a dig_commands=("TXT" "NS" "MX" "SOA" "A")
 
 function root_domain_recon {
   domain=$(echo $1 | tr 'A-Z' 'a-z')
-  if echo "$domain" | as-prune-blacklisted-domains > /dev/null ; then
+  if ! echo "$domain" | as-prune-blacklisted-domains | grep "$domain" > /dev/null ; then
     _warn "Skipping common domain: $domain"
   else
     mkdir -p "recon/domains/$domain"
@@ -72,20 +72,24 @@ getRootDomains | while read domain; do
   root_domain_recon "$domain"
 done
 
-_ "saving scope from amass enum active"
-cat recon/domains/*/amass-enum-active.txt 2>/dev/null \
-| awk '{print $2}' \
-| ensureDomainInScope \
-| sort -h \
-| uniq \
-| tee scope-domains-generated-amass-enum-active.txt
 
-_ "saving scope from amass intel whois"
-cat recon/domains/*/amass-intel.txt 2>/dev/null \
-| ensureDomainInScope \
-| sort -h \
-| uniq \
-| tee scope-domains-generated-amass-intel-whois.txt
+if compgen -G "recon/domains/*/amass-enum-active.txt" ; then
+  _ "saving scope from amass enum active"
+  cat recon/domains/*/amass-enum-active.txt 2>/dev/null \
+  | awk '{print $2}' \
+  | ensureDomainInScope \
+  | sort -h \
+  | uniq \
+  | tee scope-domains-generated-amass-enum-active.txt
+fi
 
+if compgen -G "recon/domains/*/amass-intel.txt" ; then
+  _ "saving scope from amass intel whois"
+  cat recon/domains/*/amass-intel.txt 2>/dev/null \
+  | ensureDomainInScope \
+  | sort -h \
+  | uniq \
+  | tee scope-domains-generated-amass-intel-whois.txt
+fi
 _ "Combine all discovered domains"
 getAllDomains

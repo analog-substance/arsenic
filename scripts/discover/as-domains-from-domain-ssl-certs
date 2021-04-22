@@ -45,10 +45,13 @@ find recon/domains/ -maxdepth 1 -type d  | tail -n +2 | while read domain_path; 
     | sort -h | uniq > $domain_path/ssl-cert-domains.txt
 done
 
-_ "Saving domains to scope"
-cat recon/domains/*/ssl-cert-domains.txt \
-| removeInvalidDomains \
-| ensureDomainInScope \
-| sort -h \
-| uniq \
-| tee -a scope-domains-generated-ssl-certs.txt
+
+if compgen -G "recon/domains/*/ssl-cert-domains.txt" ; then
+  _ "Saving domains to scope"
+  cat recon/domains/*/ssl-cert-domains.txt \
+  | removeInvalidDomains \
+  | ensureDomainInScope \
+  | sort -h \
+  | uniq \
+  | tee -a scope-domains-generated-ssl-certs.txt
+fi
