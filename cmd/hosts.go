@@ -3,6 +3,7 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"reflect"
 	"sort"
 	"text/template"
@@ -88,12 +89,19 @@ Currently Metadata has the following methods:
 			hosts = host.All()
 		}
 
+		addReviewedBy := false
+		reviewerFlag, _ := cmd.Flags().GetString("reviewed-by")
+
+		if len(reviewerFlag) > 0 && (len(hostsArgs) > 0 || len(query) > 0) {
+			addReviewedBy = true
+		}
+		reviewer := getReviewer(reviewerFlag)
 		userFlagsToAdd, _ := cmd.Flags().GetStringSlice("add-flags")
 		userFlagsToRemove, _ := cmd.Flags().GetStringSlice("remove-flags")
 		updateArsenicFlags, _ := cmd.Flags().GetBool("update")
 		jsonOut, _ := cmd.Flags().GetBool("json")
 
-		shouldSave := len(userFlagsToRemove) > 0 || len(userFlagsToAdd) > 0 || updateArsenicFlags
+		shouldSave := len(userFlagsToRemove) > 0 || len(userFlagsToAdd) > 0 || updateArsenicFlags || addReviewedBy
 
 		if shouldSave {
 			for _, host := range hosts {
@@ -107,6 +115,9 @@ Currently Metadata has the following methods:
 				flagsSet.AddRange(userFlagsToAdd)
 				host.Metadata.UserFlags = flagsSet.Slice().([]string)
 				sort.Strings(host.Metadata.UserFlags)
+				if addReviewedBy {
+					host.Metadata.ReviewedBy = reviewer
+				}
 				host.SaveMetadata()
 			}
 		}
@@ -128,6 +139,20 @@ Currently Metadata has the following methods:
 	},
 }
 
+func getReviewer(reviewerFlag string) string {
+	if reviewerFlag == "operator" {
+		envReviewer := os.Getenv("AS_REVIEWER")
+		envUser := os.Getenv("USER")
+		if len(envReviewer) > 0 {
+			reviewerFlag = envReviewer
+		} else if len(envUser) > 0 {
+			reviewerFlag = envUser
+		}
+	}
+
+	return reviewerFlag
+}
+
 func init() {
 	rootCmd.AddCommand(hostsCmd)
 	hostsCmd.Flags().StringSliceP("add-flags", "a", []string{}, "flag(s) to add")
@@ -139,4 +164,6 @@ func init() {
 		return host.AllDirNames(), cobra.ShellCompDirectiveDefault
 	})
 	hostsCmd.Flags().StringP("query", "q", "", "Query to run. Using Go Template style conditionals.")
+	hostsCmd.Flags().StringP("reviewed-by", "R", "operator", "Set the reviewer. -R=reviewer or reads from $AS_REVIEWER, and $USER.")
+	hostsCmd.Flags().Lookup("reviewed-by").NoOptDefVal = "operator"
 }

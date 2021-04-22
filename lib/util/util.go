@@ -3,6 +3,7 @@ package util
 import (
 	"bufio"
 	"fmt"
+	"time"
 
 	// "io/ioutil"
 	"log"
@@ -11,11 +12,9 @@ import (
 	"path"
 	"sort"
 
+	"github.com/spf13/viper"
 	// "strings"
 	"syscall"
-	"time"
-
-	"github.com/spf13/viper"
 )
 
 type ScriptConfig struct {
@@ -112,7 +111,7 @@ func ExecScript(scriptPath string, args []string) int {
 	return exitStatus
 }
 
-func ExecutePhaseScripts(phase string, args []string, dryRun bool) {
+func executePhaseScripts(phase string, args []string, dryRun bool) (bool, string) {
 	phaseScripts := GetScripts(phase)
 	for i := 0; ; i++ {
 		scripts := phaseScripts
@@ -128,8 +127,7 @@ func ExecutePhaseScripts(phase string, args []string, dryRun bool) {
 					if ExecScript(currentScript.Script, args) == 0 {
 						scripts = scripts[1:]
 					} else {
-						fmt.Printf("Script failed, gonna retry: %s\n", currentScript.Script)
-						time.Sleep(10 * time.Second)
+						return false, currentScript.Script
 					}
 				}
 			} else {
@@ -140,6 +138,20 @@ func ExecutePhaseScripts(phase string, args []string, dryRun bool) {
 		if !scriptsRan {
 			break
 		}
+	}
+
+	return true, ""
+}
+
+func ExecutePhaseScripts(phase string, args []string, dryRun bool) {
+	for {
+		status, script := executePhaseScripts(phase, args, dryRun)
+		if status {
+			return
+		}
+
+		fmt.Printf("Script failed, gonna retry: %s\n", script)
+		time.Sleep(10 * time.Second)
 	}
 }
 
