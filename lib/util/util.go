@@ -146,7 +146,7 @@ func executePhaseScripts(phase string, args []string, dryRun bool) (bool, string
 func ExecutePhaseScripts(phase string, args []string, dryRun bool) {
 	for {
 		status, script := executePhaseScripts(phase, args, dryRun)
-		if  status {
+		if status {
 			return
 		}
 
