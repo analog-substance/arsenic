@@ -146,6 +146,9 @@ func executePhaseScripts(phase string, args []string, dryRun bool) (bool, string
 }
 
 func ExecutePhaseScripts(phase string, args []string, dryRun bool) {
+	minWait := 10
+	maxWait := 60
+
 	for {
 		status, script := executePhaseScripts(phase, args, dryRun)
 		if status {
@@ -153,7 +156,9 @@ func ExecutePhaseScripts(phase string, args []string, dryRun bool) {
 		}
 
 		fmt.Printf("Script failed, gonna retry: %s\n", script)
-		time.Sleep(10 * time.Second)
+
+		timeToSleep := rand.Intn(maxWait-minWait) + minWait
+		time.Sleep(time.Duration(timeToSleep) * time.Second)
 	}
 }
 
