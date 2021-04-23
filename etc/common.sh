@@ -60,18 +60,18 @@ function gitCommit {
     git add "$path"
 
     if git commit -m "$msg" ; then
-      if ! git pull --rebase ; then
-        echo '[!] pull rebase failed'
-        if [ "$mode" == "reset" ] ; then
-          echo '[!] reset to origin'
-          git reset --hard origin/master
+      if ! git push ; then
+        _warn "First push failed"
+        if ! git pull --rebase ; then
+          echo '[!] pull rebase failed'
+          if [ "$mode" == "reset" ] ; then
+            echo '[!] reset to origin'
+            git reset --hard origin/master
+          fi
           exit 2
         fi
-        echo '[!] not sure what to do. i guess i will git add and hope it works'
-        git commit -am "not sure what this is"
-        git pull --rebase
+        git push
       fi
-      git push
     else
       echo "nothing happened"
     fi
@@ -79,7 +79,14 @@ function gitCommit {
 }
 
 function gitLock {
-  echo lock > "$1"
+  gitPull
+
+  if [ -f "$1" ]; then
+    _warn "cant lock a file that exists"
+    exit 1
+  fi
+
+  echo "lock::$(openssl rand 100 | base64 | tr -cd 'A-Za-z0-9' | cut -b1-16)" > "$1"
   gitCommit "$1" "$2" reset
 }
 

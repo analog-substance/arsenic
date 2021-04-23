@@ -92,6 +92,12 @@ function scanHost {
   if [ ! -z "$ARG" ] ; then
     exec $ME scan "$ARG"
   fi
+
+  set +e
+  if grep lock hosts/*/recon/wordlist-content-discover.txt | grep :lock > /dev/null; then
+    _warn "other aquatones are still running... lets wait before continuing"
+    exit 1
+  fi
 }
 
 if [ -z "$CMD" ] ; then

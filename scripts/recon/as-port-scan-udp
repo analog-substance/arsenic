@@ -68,6 +68,13 @@ function scanHost {
   if [ ! -z "$ARG" ] ; then
     exec $0 scan "$ARG"
   fi
+
+
+  set +e
+  if grep lock hosts/*/recon/nmap-punched-udp.nmap | grep :lock > /dev/null; then
+    _warn "other UDP port scans are still running... lets wait before continuing"
+    exit 1
+  fi
 }
 
 gitPull

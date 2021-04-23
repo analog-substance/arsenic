@@ -52,7 +52,7 @@ function scanHost {
   if ! compgen -G "hosts/$host/recon/nmap-punched*tcp*" > /dev/null 2>&1; then
     _info "Port Scan / TCP / $host / preparing"
     mkdir -p "hosts/$host/recon"
-    gitLock "hosts/$host/recon/nmap-punched-quick-tcp.xml" "TCP port scan lock: $host"
+    gitLock "hosts/$host/recon/nmap-punched-quick-tcp.nmap" "TCP port scan lock: $host"
 
     cd "hosts/$host"
     _info "Port Scan / TCP / $host / running"
@@ -66,6 +66,12 @@ function scanHost {
   ARG=$(head -n1 <<<$(getHosts | sort -R))
   if [ ! -z "$ARG" ] ; then
     exec $0 scan "$ARG"
+  fi
+
+  set +e
+  if grep lock hosts/*/recon/nmap-punched-quick-tcp.nmap | grep :lock > /dev/null; then
+    _warn "other UDP port scans are still running... lets wait before continuing"
+    exit 1
   fi
 }
 
