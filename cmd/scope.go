@@ -1,4 +1,3 @@
-
 package cmd
 
 import (
@@ -16,7 +15,7 @@ import (
 var scopeCmd = &cobra.Command{
 	Use:   "scope",
 	Short: "Print all scope",
-	Long: `Print all scope`,
+	Long:  `Print all scope`,
 	Run: func(cmd *cobra.Command, args []string) {
 		domains, _ := getScope("domains")
 		ips, _ := getScope("ips")
@@ -32,7 +31,7 @@ func init() {
 	rootCmd.AddCommand(scopeCmd)
 }
 
-func getScope(scopeType string) ([]string, error){
+func getScope(scopeType string) ([]string, error) {
 
 	glob := fmt.Sprintf("scope-%s-", scopeType)
 	actualFile := fmt.Sprintf("scope-%s.txt", scopeType)
@@ -60,7 +59,7 @@ func getScope(scopeType string) ([]string, error){
 		for scanner.Scan() {
 			for _, re := range blacklistRegexp {
 				line := normalizeScope(scanner.Text(), scopeType)
-				if ! re.MatchString(line) {
+				if !re.MatchString(line) {
 					scope[line] = true
 				}
 			}
@@ -89,7 +88,7 @@ func getScope(scopeType string) ([]string, error){
 	return scopeAr, nil
 }
 
-func normalizeScope (scopeItem, scopeType string) string {
+func normalizeScope(scopeItem, scopeType string) string {
 
 	if scopeType == "domains" {
 		re := regexp.MustCompile(`^\*\.`)
