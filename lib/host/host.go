@@ -14,7 +14,6 @@ import (
 	// "strings"
 	"github.com/ahmetb/go-linq/v3"
 	"github.com/defektive/arsenic/lib/util"
-	"golang.org/x/net/publicsuffix"
 )
 
 type Metadata struct {
@@ -135,7 +134,7 @@ func InitHost(dir string) Host {
 	flags = append(flags, reviewStatus)
 
 	metadata.Hostnames = hostnames
-	metadata.RootDomains = getRootDomains(hostnames)
+	metadata.RootDomains = util.GetRootDomains(hostnames)
 	metadata.IPAddresses = ipAddresses
 	metadata.TCPPorts = host.tcpPorts()
 	metadata.UDPPorts = host.udpPorts()
@@ -307,21 +306,4 @@ func defaultMetadata() Metadata {
 		UDPPorts:    []int{},
 		ReviewedBy:  "",
 	}
-}
-
-func getRootDomains(domains []string) []string {
-	rootDomainMap := map[string]int{}
-	rootDomains := []string{}
-	for _, domain := range domains {
-		rootDomain, _ := publicsuffix.EffectiveTLDPlusOne(domain)
-		if rootDomain != "" {
-			rootDomainMap[rootDomain] = 1
-		}
-	}
-
-	for rootDomain := range rootDomainMap {
-		rootDomains = append(rootDomains, rootDomain)
-	}
-	sort.Strings(rootDomains)
-	return rootDomains
 }

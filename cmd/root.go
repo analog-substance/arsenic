@@ -6,7 +6,7 @@ import (
 	"os"
 	"reflect"
 
-	homedir "github.com/mitchellh/go-homedir"
+	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -109,6 +109,25 @@ func initConfig() {
 		"Discovery/Web-Content/websphere.txt",
 	}
 
+	blackistedRootDomains := []string{
+		"1e100.net",
+		"akamaitechnologies.com",
+		"amazonaws.com",
+		"azure.com",
+		"azurewebsites.net",
+		"azurewebsites.windows.net",
+		"c7dc.com",
+		"cloudapp.net",
+		"cloudfront.net",
+		"googlehosted.com",
+		"hscoscdn10.net",
+		"my.jobs",
+		"readthedocs.io",
+		"readthedocs.org",
+		"sites.hubspot.net",
+	}
+
+	setConfigDefault("blacklist.root-domains", blackistedRootDomains)
 	setConfigDefault("scripts", defaultScripts)
 	setConfigDefault("wordlists", wordlists)
 	setConfigDefault("wordlist-paths", []string{"/opt/SecLists"})

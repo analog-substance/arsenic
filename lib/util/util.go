@@ -3,6 +3,8 @@ package util
 import (
 	"bufio"
 	"fmt"
+	"golang.org/x/net/publicsuffix"
+	"math/rand"
 	"time"
 
 	// "io/ioutil"
@@ -61,7 +63,7 @@ func GetWordlists(wordlistType string) []string {
 	for _, wordlist := range wordlists {
 		for _, dir := range dirs {
 			wordlistPath := path.Join(dir, wordlist)
-			if fileExists(wordlistPath) {
+			if FileExists(wordlistPath) {
 				wordlistPaths = append(wordlistPaths, wordlistPath)
 				break
 			}
@@ -170,7 +172,7 @@ func ReadLines(path string) ([]string, error) {
 	return lines, scanner.Err()
 }
 
-func fileExists(filename string) bool {
+func FileExists(filename string) bool {
 	info, err := os.Stat(filename)
 	if os.IsNotExist(err) {
 		return false
@@ -183,4 +185,35 @@ type NoopWriter struct {
 
 func (w NoopWriter) Write(bytes []byte) (int, error) {
 	return 0, nil
+}
+
+func GetRootDomains(domains []string) []string {
+
+	blacklistedRootDomains := viper.GetStringSlice("blacklist.root-domains")
+	rootDomainMap := map[string]int{}
+	var rootDomains []string
+	for _, domain := range domains {
+		rootDomain, _ := publicsuffix.EffectiveTLDPlusOne(domain)
+
+		if len(rootDomain) > 0 {
+			rootDomainMap[rootDomain] = 1
+		}
+	}
+
+	for rootDomain := range rootDomainMap {
+
+		addRootDomain := true
+		for _, badRootDomain := range blacklistedRootDomains {
+			if badRootDomain == rootDomain {
+				addRootDomain = false
+				break
+			}
+		}
+
+		if addRootDomain {
+			rootDomains = append(rootDomains, rootDomain)
+		}
+	}
+	sort.Strings(rootDomains)
+	return rootDomains
 }
