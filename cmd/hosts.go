@@ -92,7 +92,7 @@ Currently Metadata has the following methods:
 		addReviewedBy := false
 		reviewerFlag, _ := cmd.Flags().GetString("reviewed-by")
 
-		if len(reviewerFlag) > 0 && (len(hostsArgs) > 0 || len(query) > 0) {
+		if cmd.Flags().Lookup("reviewed-by").Changed && (len(hostsArgs) > 0 || len(query) > 0) {
 			addReviewedBy = true
 		}
 		reviewer := getReviewer(reviewerFlag)
