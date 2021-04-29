@@ -131,7 +131,6 @@ func InitHost(dir string) Host {
 
 	tcpPorts := protoPorts(ports, "tcp")
 	udpPorts := protoPorts(ports, "udp")
-	fmt.Println(udpPorts)
 
 	reviewStatus := "Reviewed"
 	if len(ports) > 0 {
