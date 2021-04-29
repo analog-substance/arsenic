@@ -78,7 +78,7 @@ if compgen -G "recon/domains/*/amass-enum-active.txt" ; then
   cat recon/domains/*/amass-enum-active.txt 2>/dev/null \
   | awk '{print $2}' \
   | ensureDomainInScope \
-  | sort -h \
+  | sort -d \
   | uniq \
   | tee scope-domains-generated-amass-enum-active.txt
 fi
@@ -87,7 +87,7 @@ if compgen -G "recon/domains/*/amass-intel.txt" ; then
   _ "saving scope from amass intel whois"
   cat recon/domains/*/amass-intel.txt 2>/dev/null \
   | ensureDomainInScope \
-  | sort -h \
+  | sort -d \
   | uniq \
   | tee scope-domains-generated-amass-intel-whois.txt
 fi

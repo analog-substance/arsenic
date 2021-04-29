@@ -39,7 +39,7 @@ function removeInvalidDomains {
   | grep -vP "$REMOVE_DOMAIN_REGEX" \
   | grep -P '^[a-z0-9_\-\.]+$' \
   | as-prune-blacklisted-domains \
-  | sort -h | uniq
+  | sort -d | uniq
 }
 
 function gitPull {
@@ -102,7 +102,7 @@ function getRootDomains {
   | removeInvalidDomains \
   | awk -F. '{print $(NF-1) "." $NF}' \
   | grep -vP "$NON_ROOT_DOMAIN_REGEX" \
-  | sort -h | uniq \
+  | sort -d | uniq \
   | tee scope-domains-generated-root.txt
 }
 
@@ -111,7 +111,7 @@ function getAllDomains {
     cat scope-domains* \
     | removeInvalidDomains \
     | cat - scope-domains.txt \
-    | sort -h |  uniq \
+    | sort -d | uniq \
     | tee scope-domains-generated-combined.txt
 }
 

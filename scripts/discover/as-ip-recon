@@ -41,14 +41,14 @@ cat recon/ips/scope-ips.gnmap \
 > scope-ips-generated-pinged.txt
 
 ## maybe this should be in the IPs?
-cat scope-ips* | as-prune-blacklisted-ips | cat - scope-ips.txt | sort -h | uniq > scope-ips-generated-combined.txt
+cat scope-ips* | as-prune-blacklisted-ips | cat - scope-ips.txt | sort -d | uniq > scope-ips-generated-combined.txt
 
 # Create IP Scope files for public and private addresses
-cat scope-ips-generated-combined.txt | grep -vP "^$PRIVATE_IP_REGEX\$" | grep -v ":" | sort -h | uniq > scope-ips-generated-public-ipv4.txt
+cat scope-ips-generated-combined.txt | grep -vP "^$PRIVATE_IP_REGEX\$" | grep -v ":" | sort -d | uniq > scope-ips-generated-public-ipv4.txt
 
 # there has to be a better way. we dont want the scrip to exit if there are no matches
-cat scope-ips-generated-combined.txt | grep -vP "^$PRIVATE_IP_REGEX\$" | grep ":" | sort -h | uniq > scope-ips-generated-public-ipv6.txt
-cat scope-ips-generated-combined.txt | grep -P "^$PRIVATE_IP_REGEX\$" | sort -h | uniq > scope-ips-generated-private-ipv4.txt
+cat scope-ips-generated-combined.txt | grep -vP "^$PRIVATE_IP_REGEX\$" | grep ":" | sort -d | uniq > scope-ips-generated-public-ipv6.txt
+cat scope-ips-generated-combined.txt | grep -P "^$PRIVATE_IP_REGEX\$" | sort -d | uniq > scope-ips-generated-private-ipv4.txt
 
 RECON_FILE="recon/discover/amass-intel-active-asn.txt"
 if [ ! -f "$RECON_FILE" ] ; then
@@ -67,7 +67,7 @@ fi
 if [ -f "$RECON_FILE" ] ; then
   _ "saving scope from amass intel active"
   cat "$RECON_FILE" \
-  | sort -h \
+  | sort -d \
   | uniq \
   | tee scope-domains-generated-amass-intel-active.txt
 fi

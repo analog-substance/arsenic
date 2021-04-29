@@ -41,7 +41,7 @@ if compgen -G "recon/domains/*/resolv-domains.txt" ; then
   cat recon/domains/*/resolv-domains.txt \
   | grep -P "has address|an alias" \
   | awk '{print $1}' \
-  | sort -h \
+  | sort -d \
   | uniq \
   | tee scope-domains-generated-resolved.txt
 fi

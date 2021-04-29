@@ -43,7 +43,7 @@ mkdir -p recon/analyze-hosts/services hosts
 # determine what ips have the same domains
 # isolate by service
 
-cat recon/domains/*/resolv-domains.txt | grep "address" | sort -h | uniq | while read line; do
+cat recon/domains/*/resolv-domains.txt | grep "address" | sort -d | uniq | while read line; do
   tick "Reviewing resolved domains"
 
   domain=$(echo "$line" | awk '{print $1}')
@@ -70,7 +70,7 @@ cat recon/domains/*/resolv-domains.txt | grep "address" | sort -h | uniq | while
       echo $ip_resolv_domain
     fi
     echo "$domain"
-  } | sort -h | uniq > "$ip_file.new"
+  } | sort -d | uniq > "$ip_file.new"
   mv "$ip_file.new" "$ip_file"
 
   {
@@ -78,7 +78,7 @@ cat recon/domains/*/resolv-domains.txt | grep "address" | sort -h | uniq | while
       cat "$domain_file"
     fi
     echo "$ip"
-  } | sort -h | uniq > "$domain_file.new"
+  } | sort -d | uniq > "$domain_file.new"
   mv "$domain_file.new" "$domain_file"
 
 
@@ -88,7 +88,7 @@ cat recon/domains/*/resolv-domains.txt | grep "address" | sort -h | uniq | while
         cat "$ip_resolv_domain_file"
       fi
       echo "$ip"
-    } | sort -h | uniq > "$ip_resolv_domain_file.new"
+    } | sort -d | uniq > "$ip_resolv_domain_file.new"
     mv "$ip_resolv_domain_file.new" "$ip_resolv_domain_file"
   fi
 done
@@ -96,14 +96,14 @@ done
 cat "recon/analyze-hosts/resolv-domain-zz-cloudfront-net-cdn.txt" 2>/dev/null | while read ip; do
   cat "recon/analyze-hosts/resolv-ip-$ip.txt"
   # rm "recon/analyze-hosts/resolv-ip-$ip.txt"
-done | sort -h | uniq > recon/analyze-hosts/cloudfront-domains.txt
+done | sort -d | uniq > recon/analyze-hosts/cloudfront-domains.txt
 
 cat recon/analyze-hosts/cloudfront-domains.txt | while read domain; do
   cat "recon/analyze-hosts/resolv-domain-$domain.txt" | while read ip; do
     {
       cat "recon/analyze-hosts/resolv-ip-$ip.txt"
       cat recon/analyze-hosts/cloudfront-domains.txt
-    } | sort -h | uniq > "recon/analyze-hosts/resolv-ip-$ip.txt.new"
+    } | sort -d | uniq > "recon/analyze-hosts/resolv-ip-$ip.txt.new"
     mv "recon/analyze-hosts/resolv-ip-$ip.txt.new" "recon/analyze-hosts/resolv-ip-$ip.txt"
   done
 done
@@ -116,7 +116,7 @@ if [ "$first_cf_domain" != "" ]; then
   {
     cat recon/analyze-hosts/cloudfront-domains.txt
     cat $first_cf_file
-  } | sort -h | uniq > "$first_cf_file.new"
+  } | sort -d | uniq > "$first_cf_file.new"
   mv "$first_cf_file.new" "$first_cf_file"
 fi
 
@@ -129,7 +129,7 @@ echo >&2
 _ "Domain review complete"
 
 PRIVATE_IP_REGEX="\b(127\.[0-9]{1,3}\.|10\.[0-9]{1,3}\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[01])\.)[0-9]{1,3}\.[0-9]{1,3}\b"
-ls recon/analyze-hosts/resolv-ip* | sort -h | uniq | grep -vP "$PRIVATE_IP_REGEX" | while read ip_file; do
+ls recon/analyze-hosts/resolv-ip* | sort -d | uniq | grep -vP "$PRIVATE_IP_REGEX" | while read ip_file; do
   cat "$ip_file" | while read domain; do
     tick "Reviewing resolved IPs"
 
@@ -147,14 +147,14 @@ ls recon/analyze-hosts/resolv-ip* | sort -h | uniq | grep -vP "$PRIVATE_IP_REGEX
             cat "$diff_file"
           fi
           echo "$domain"
-        } | sort -h | uniq > "$diff_file.new"
+        } | sort -d | uniq > "$diff_file.new"
         mv "$diff_file.new" "$diff_file"
 
 
         {
           cat "$diff_file"
           cat "recon/analyze-hosts/services/$first_domain/recon/other-hostnames.txt"
-        } | sort -h | uniq > "recon/analyze-hosts/services/$first_domain/recon/other-hostnames.txt.new"
+        } | sort -d | uniq > "recon/analyze-hosts/services/$first_domain/recon/other-hostnames.txt.new"
         mv "recon/analyze-hosts/services/$first_domain/recon/other-hostnames.txt.new" "recon/analyze-hosts/services/$first_domain/recon/other-hostnames.txt"
 
       fi
@@ -185,7 +185,7 @@ ls -d recon/analyze-hosts/services/* | cut -d/ -f4 | while read service ; do
       {
         cat "hosts/$service/recon/hostnames.txt"
         cat "recon/analyze-hosts/services/$service/recon/other-hostnames.txt"
-      } | sort -h | uniq > "hosts/$service/recon/hostnames.txt.new"
+      } | sort -d | uniq > "hosts/$service/recon/hostnames.txt.new"
       mv "hosts/$service/recon/hostnames.txt.new" "hosts/$service/recon/hostnames.txt"
     fi
   else
@@ -193,14 +193,14 @@ ls -d recon/analyze-hosts/services/* | cut -d/ -f4 | while read service ; do
     if grep -P "^($(echo $(cat "recon/analyze-hosts/services/$service/recon/other-hostnames.txt") | sed 's/\./\\./g;s/ /|/g'))\$" hosts/*/recon/*hostnames.txt > /dev/null 2>&1 ; then
 
       exsting_service=$(grep -P "^($(echo $(cat "recon/analyze-hosts/services/$service/recon/other-hostnames.txt") | sed 's/\./\\./g;s/ /|/g'))\$" hosts/*/recon/*hostnames.txt \
-      | cut -d/ -f2 | sort -h | uniq | head -n1)
+      | cut -d/ -f2 | sort -d | uniq | head -n1)
       _ "Adding domains to $exsting_service from $service"
 
       if [ "$MODE" == "create" ]; then
         {
           cat "hosts/$exsting_service/recon/hostnames.txt"
           cat "recon/analyze-hosts/services/$service/recon/other-hostnames.txt"
-        } | sort -h | uniq > "hosts/$exsting_service/recon/hostnames.txt.new"
+        } | sort -d | uniq > "hosts/$exsting_service/recon/hostnames.txt.new"
         mv "hosts/$exsting_service/recon/hostnames.txt.new" "hosts/$exsting_service/recon/hostnames.txt"
       fi
     else
@@ -218,7 +218,7 @@ done
 # remove blacklisted things and cidrs `/`
 cat scope-ips* | as-prune-blacklisted-ips | grep -vP "/" |while read ip; do
   grep "$(echo $ip | sed 's/\./\\./g')" recon/analyze-hosts/*.txt > /dev/null || echo $ip
-done | sort -h | uniq | while read ip; do
+done | sort -d | uniq | while read ip; do
   _ "Creating new service $ip"
 
   if [ "$MODE" == "create" ]; then
