@@ -53,5 +53,5 @@ if compgen -G "recon/domains/*/ssl-cert-domains.txt" ; then
   | ensureDomainInScope \
   | sort -d \
   | uniq \
-  | tee -a scope-domains-generated-ssl-certs.txt
+  | tee scope-domains-generated-ssl-certs-domains.txt
 fi

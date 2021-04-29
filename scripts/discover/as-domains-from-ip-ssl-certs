@@ -39,10 +39,12 @@ if [ ! -f $recon_dir/ssl-cert-domains.txt ]; then
     | sort -d | uniq > $recon_dir/ssl-cert-domains.txt
 fi
 
-_ "Saving domains to scope"
-cat $recon_dir/ssl-cert-domains.txt \
-| removeInvalidDomains \
-| ensureDomainInScope \
-| sort -d \
-| uniq \
-| tee -a scope-domains-generated-ssl-certs.txt
+if [ -f "$recon_dir/ssl-cert-domains.txt" ]; then
+  _ "Saving domains to scope"
+  cat "$recon_dir/ssl-cert-domains.txt" \
+  | removeInvalidDomains \
+  | ensureDomainInScope \
+  | sort -d \
+  | uniq \
+  | tee scope-domains-generated-ssl-certs-ips.txt
+fi
