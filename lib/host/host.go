@@ -317,7 +317,7 @@ func (host Host) flags() []string {
 
 func (host Host) ports() []Port {
 	portMap := make(map[string]Port)
-	globbed, _ := filepath.Glob(fmt.Sprintf("%s/recon/%s", host.dir, "nmap-punched-*.xml"))
+	globbed, _ := filepath.Glob(fmt.Sprintf("%s/recon/%s", host.dir, "nmap-punched-??p.xml"))
 
 	for _, file := range globbed {
 		data, err := ioutil.ReadFile(file)
