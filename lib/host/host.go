@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 
@@ -181,6 +182,42 @@ func (host Host) Hostnames() []string {
 	}
 	sort.Strings(hostnames)
 	return hostnames
+}
+
+func (host Host) URLs() []string {
+	URLMap := map[string]bool{}
+	httpProtocolRe := regexp.MustCompile(`^https?`)
+	for _, port := range host.Metadata.Ports {
+		proto := port.Service
+
+		if port.ID == 443 {
+			proto = "https"
+		} else if port.ID == 80 {
+			proto = "http"
+		} else if httpProtocolRe.MatchString(port.Service) {
+			proto = httpProtocolRe.FindString(port.Service)
+		}
+
+		URLPort := fmt.Sprintf(":%d", port.ID)
+		if proto == "http" && port.ID == 80 || proto == "https" && port.ID == 443 {
+			URLPort = ""
+		}
+
+		URLMap[fmt.Sprintf("%s://%s%s", proto, host.Metadata.Name, URLPort)] = true
+
+		if strings.HasPrefix(proto, "http") {
+			// we have an http or https port, we should llo through hostnames
+			for _, hostname := range host.Metadata.Hostnames {
+				URLMap[fmt.Sprintf("%s://%s%s", proto, hostname, URLPort)] = true
+			}
+		}
+	}
+
+	URLs := []string{}
+	for URL, _ := range URLMap {
+		URLs = append(URLs, URL)
+	}
+	return URLs
 }
 
 func (host Host) IPAddresses() []string {
