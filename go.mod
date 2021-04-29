@@ -4,6 +4,7 @@ go 1.13
 
 require (
 	github.com/ahmetb/go-linq/v3 v3.2.0
+	github.com/lair-framework/go-nmap v0.0.0-20191202052157-3507e0b03523
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/ryanuber/columnize v0.0.0-20160712163229-9b3edd62028f
 	github.com/spf13/cobra v1.1.3

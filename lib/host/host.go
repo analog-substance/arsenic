@@ -3,18 +3,23 @@ package host
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/lair-framework/go-nmap"
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"regexp"
 	"sort"
-	"strconv"
 	"strings"
 
 	// "strings"
 	"github.com/ahmetb/go-linq/v3"
 	"github.com/defektive/arsenic/lib/util"
 )
+
+type Port struct {
+	ID int
+	Protocol string
+	Service string
+}
 
 type Metadata struct {
 	Name        string
@@ -25,6 +30,7 @@ type Metadata struct {
 	UserFlags   []string
 	TCPPorts    []int
 	UDPPorts    []int
+	Ports       []Port
 	ReviewedBy  string
 	existing    string
 	changed     bool
@@ -121,11 +127,14 @@ func InitHost(dir string) Host {
 	}
 
 	flags := host.flags()
-	tcpPorts := host.tcpPorts()
-	udpPorts := host.udpPorts()
+	ports := host.ports()
+
+	tcpPorts := protoPorts(ports, "tcp")
+	udpPorts := protoPorts(ports, "udp")
+	fmt.Println(udpPorts)
 
 	reviewStatus := "Reviewed"
-	if len(tcpPorts)+len(udpPorts) > 0 {
+	if len(ports) > 0 {
 		flags = append(flags, "OpenPorts")
 		if metadata.ReviewedBy == "" {
 			reviewStatus = "Unreviewed"
@@ -136,8 +145,9 @@ func InitHost(dir string) Host {
 	metadata.Hostnames = hostnames
 	metadata.RootDomains = util.GetRootDomains(hostnames)
 	metadata.IPAddresses = ipAddresses
-	metadata.TCPPorts = host.tcpPorts()
-	metadata.UDPPorts = host.udpPorts()
+	metadata.TCPPorts = tcpPorts
+	metadata.UDPPorts = udpPorts
+	metadata.Ports = ports
 	metadata.Flags = flags
 
 	host.Metadata = &metadata
@@ -269,30 +279,50 @@ func (host Host) flags() []string {
 	return flags
 }
 
-func (host Host) tcpPorts() []int {
-	re := regexp.MustCompile(`([0-9]+)(/tcp\s+open)`)
-	return ports(re, fmt.Sprintf("%s/recon/%s", host.dir, "nmap-punched-tcp.nmap"))
-}
+func (host Host) ports() []Port {
+	portMap := make(map[string]Port)
+	globbed, _ := filepath.Glob(fmt.Sprintf("%s/recon/%s", host.dir, "nmap-*.xml"))
 
-func (host Host) udpPorts() []int {
-	re := regexp.MustCompile(`([0-9]+)(/udp\s+open)`)
-	return ports(re, fmt.Sprintf("%s/recon/%s", host.dir, "nmap-punched-udp.nmap"))
-}
+	for _, file := range globbed {
+		data, err := ioutil.ReadFile(file)
+		if err != nil {
+			continue
+		}
 
-func ports(re *regexp.Regexp, nmapFilePath string) []int {
-	pre := regexp.MustCompile(`[0-9]+`)
-	content, err := ioutil.ReadFile(nmapFilePath)
-	if err != nil {
-		return []int{}
+		nmapRun, err := nmap.Parse(data)
+		if err != nil {
+			continue
+		}
+
+		for _, host := range nmapRun.Hosts {
+			for _, port := range host.Ports {
+				if port.Service.Name != "tcpwrapped" {
+					portMap[fmt.Sprintf("%s/%d", port.Protocol, port.PortId)] = Port{port.PortId, port.Protocol, port.Service.Name}
+				}
+			}
+		}
 	}
-	portMatches := re.FindAll(content, -1)
 
-	ports := []int{}
-	for _, portMatch := range portMatches {
-		port, _ := strconv.Atoi(string(pre.Find(portMatch)))
+	ports := []Port{}
+	for _, port := range portMap {
 		ports = append(ports, port)
 	}
+
+	sort.SliceStable(ports, func(i, j int) bool {
+		return ports[i].ID < ports[j].ID
+	})
+
 	return ports
+}
+
+func protoPorts(ports []Port, proto string) []int {
+	retPorts := []int{}
+	for _, port := range ports {
+		if port.Protocol == proto {
+			retPorts = append(retPorts, port.ID)
+		}
+	}
+	return retPorts
 }
 
 func defaultMetadata() Metadata {
@@ -304,6 +334,7 @@ func defaultMetadata() Metadata {
 		UserFlags:   []string{},
 		TCPPorts:    []int{},
 		UDPPorts:    []int{},
+		Ports:       []Port{},
 		ReviewedBy:  "",
 	}
 }
