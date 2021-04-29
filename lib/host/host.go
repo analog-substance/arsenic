@@ -317,7 +317,7 @@ func (host Host) flags() []string {
 
 func (host Host) ports() []Port {
 	portMap := make(map[string]Port)
-	globbed, _ := filepath.Glob(fmt.Sprintf("%s/recon/%s", host.dir, "nmap-*.xml"))
+	globbed, _ := filepath.Glob(fmt.Sprintf("%s/recon/%s", host.dir, "nmap-punched-*.xml"))
 
 	for _, file := range globbed {
 		data, err := ioutil.ReadFile(file)
@@ -333,7 +333,16 @@ func (host Host) ports() []Port {
 		for _, host := range nmapRun.Hosts {
 			for _, port := range host.Ports {
 				if port.Service.Name != "tcpwrapped" {
-					portMap[fmt.Sprintf("%s/%d", port.Protocol, port.PortId)] = Port{port.PortId, port.Protocol, port.Service.Name}
+					service := port.Service.Name
+
+					if strings.HasPrefix(service, "http") && port.Service.Tunnel == "ssl" || port.PortId == 443 {
+						service = "https"
+					}
+
+					if port.PortId == 80 {
+						service = "http"
+					}
+					portMap[fmt.Sprintf("%s/%d", port.Protocol, port.PortId)] = Port{port.PortId, port.Protocol, service}
 				}
 			}
 		}
