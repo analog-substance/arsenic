@@ -6,6 +6,7 @@ import (
 	"os"
 	"reflect"
 	"sort"
+	"strings"
 	"text/template"
 
 	"github.com/ahmetb/go-linq/v3"
@@ -122,7 +123,21 @@ Currently Metadata has the following methods:
 			}
 		}
 
-		if jsonOut {
+		protocols, _ := cmd.Flags().GetStringSlice("protocols")
+		if len(protocols) > 0 {
+			var hostURLs []string
+			for _, host := range hosts {
+				hostURLs = append(hostURLs, host.URLs()...)
+			}
+
+			for _, hostURL := range hostURLs {
+				for _, proto := range protocols {
+					if strings.HasPrefix(hostURL, proto) || proto == "all" {
+						fmt.Println(hostURL)
+					}
+				}
+			}
+		} else if jsonOut {
 			json, err := json.MarshalIndent(hosts, "", "  ")
 			if err != nil {
 				fmt.Println(err)
@@ -157,6 +172,7 @@ func init() {
 	rootCmd.AddCommand(hostsCmd)
 	hostsCmd.Flags().StringSliceP("add-flags", "a", []string{}, "flag(s) to add")
 	hostsCmd.Flags().StringSliceP("remove-flags", "r", []string{}, "flag(s) to remove")
+	hostsCmd.Flags().StringSliceP("protocols", "p", []string{}, "print protocol strings")
 	hostsCmd.Flags().BoolP("update", "u", false, "Update arsenic flags")
 	hostsCmd.Flags().BoolP("json", "j", false, "Return JSON")
 	hostsCmd.Flags().StringSliceP("host", "H", []string{}, "host(s) to add/remove/update flags")

@@ -17,12 +17,22 @@ function _info {
 }
 
 function ensureDomainInScope {
-  in_scope=$(echo $(cat scope-domains.txt | sed 's/\./\\./g;s/^/(.+\\.)?/g') | sed 's/ /|/g')
-  if [[ -n "$in_scope" ]]; then
-    grep -P "^$in_scope\$"
-  else
-    grep -P '.*'
-  fi
+  while read potentialDomain ; do
+    if grep -F "$potentialDomain" scope-domains.txt >/dev/null ; then
+      echo "$potentialDomain"
+    else
+
+      trim=$(echo "$potentialDomain" | sed 's/[^\.]\+\.//g')
+      pieces=$(echo "$trim" | sed 's/\./\n/g' | wc -l)
+
+      if [ "$pieces" -gt 2 ]; then
+        if grep -P "$(echo "$trim" | sed 's/\./\\./g')\$" scope-domains.txt >/dev/null ; then
+          echo "$potentialDomain"
+          contine
+        fi
+      fi
+    fi
+  done
 }
 
 function removeInvalidDomains {
@@ -39,7 +49,7 @@ function removeInvalidDomains {
   | grep -vP "$REMOVE_DOMAIN_REGEX" \
   | grep -P '^[a-z0-9_\-\.]+$' \
   | as-prune-blacklisted-domains \
-  | sort -h | uniq
+  | sort -d | uniq
 }
 
 function gitPull {
@@ -102,7 +112,7 @@ function getRootDomains {
   | removeInvalidDomains \
   | awk -F. '{print $(NF-1) "." $NF}' \
   | grep -vP "$NON_ROOT_DOMAIN_REGEX" \
-  | sort -h | uniq \
+  | sort -d | uniq \
   | tee scope-domains-generated-root.txt
 }
 
@@ -111,7 +121,7 @@ function getAllDomains {
     cat scope-domains* \
     | removeInvalidDomains \
     | cat - scope-domains.txt \
-    | sort -h |  uniq \
+    | sort -d | uniq \
     | tee scope-domains-generated-combined.txt
 }
 

@@ -196,7 +196,7 @@ func GetRootDomains(domains []string) []string {
 
 	blacklistedRootDomains := viper.GetStringSlice("blacklist.root-domains")
 	rootDomainMap := map[string]int{}
-	var rootDomains []string
+	rootDomains := []string{}
 	for _, domain := range domains {
 		rootDomain, _ := publicsuffix.EffectiveTLDPlusOne(domain)
 

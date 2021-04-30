@@ -44,15 +44,15 @@ function getURLs {
     set -o pipefail
   } \
   | awk '{print $1}' \
-  | sort -h | uniq
+  | sort -d | uniq
 }
 
 function getHosts {
   gitPull
 
    {
-     find hosts -name 'gobuster.*.wordlist-content-discover.txt' -size +0 | cut -d/ -f2 | sort -h | uniq
-     find hosts -name 'wordlist-content-discover.txt' | cut -d/ -f2 | sort -h | uniq
+     find hosts -name 'gobuster.*.wordlist-content-discover.txt' -size +0 | cut -d/ -f2 | sort -d | uniq
+     find hosts -name 'wordlist-content-discover.txt' | cut -d/ -f2 | sort -d | uniq
    } | sort | uniq -c | grep "1 " | awk '{print $2}' | while read host; do
    cd hosts/$host
     urls=$(getURLs | wc -l)
@@ -60,7 +60,7 @@ function getHosts {
       echo $host
     fi
     cd - > /dev/null
-  done | sort -h | uniq
+  done | sort -d | uniq
 }
 
 function scanHost {

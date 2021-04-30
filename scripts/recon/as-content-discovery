@@ -63,7 +63,7 @@ function newGetHostUrls {
     if [ "$draft" == "nope" ]; then
 
       if grep -P "$WEB_PORT_REGEX" hosts/$host/recon/nmap-* > /dev/null 2>&1; then
-        grep -P "$WEB_PORT_REGEX" hosts/$host/recon/nmap-* | grep -hoP "$WEB_PORTS" | sort -h | uniq | while read port; do
+        grep -P "$WEB_PORT_REGEX" hosts/$host/recon/nmap-* | grep -hoP "$WEB_PORTS" | sort -d | uniq | while read port; do
           SHOULD_ECHO=1
           proto="http://"
           if echo $port | grep 443 > /dev/null 2>&1; then
@@ -90,7 +90,7 @@ function newGetHostUrls {
         done
       fi
     fi
-  done | sort -h | uniq
+  done | sort -d | uniq
 }
 
 function getHostnames {
@@ -107,7 +107,7 @@ function getHostnames {
     if [ -f "$file" ]; then
       cat "$file"
     fi
-  done | sort -h | uniq |  while read domain; do
+  done | sort -d | uniq |  while read domain; do
     if ! echo $domain | grep -P "\.amazonaws\.com|\.windows\.net$" > /dev/null; then
       echo $domain
     fi

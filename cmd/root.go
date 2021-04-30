@@ -109,7 +109,7 @@ func initConfig() {
 		"Discovery/Web-Content/websphere.txt",
 	}
 
-	blackistedRootDomains := []string{
+	blacklistedRootDomains := []string{
 		"1e100.net",
 		"akamaitechnologies.com",
 		"amazonaws.com",
@@ -127,7 +127,7 @@ func initConfig() {
 		"sites.hubspot.net",
 	}
 
-	setConfigDefault("blacklist.root-domains", blackistedRootDomains)
+	setConfigDefault("blacklist.root-domains", blacklistedRootDomains)
 	setConfigDefault("scripts", defaultScripts)
 	setConfigDefault("wordlists", wordlists)
 	setConfigDefault("wordlist-paths", []string{"/opt/SecLists"})

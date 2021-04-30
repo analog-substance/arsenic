@@ -74,7 +74,7 @@ while [[ "$1" =~ ^- && ! "$1" == "--" ]]; do
             if [[ -z "$domains" ]]; then
                 domains="$domain"
             else
-                domains=`echo -e "$2\n$domains" | sort -h | uniq`
+                domains=`echo -e "$2\n$domains" | sort -d | uniq`
             fi
             shift
             ;;
@@ -83,7 +83,7 @@ while [[ "$1" =~ ^- && ! "$1" == "--" ]]; do
             if [[ -z "$domains" ]]; then
                 domains="$contents"
             else
-                domains=`echo -e "$contents\n$domains" | sort -h | uniq`
+                domains=`echo -e "$contents\n$domains" | sort -d | uniq`
             fi
             shift
             ;;
