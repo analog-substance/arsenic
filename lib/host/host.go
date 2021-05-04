@@ -94,7 +94,6 @@ type Host struct {
 
 func InitHost(dir string) Host {
 	host := Host{dir: dir}
-
 	var metadata Metadata
 	if _, err := os.Stat(host.metadataFile()); !os.IsNotExist(err) {
 		jsonFile, err := os.Open(host.metadataFile())
@@ -332,7 +331,7 @@ func (host Host) ports() []Port {
 
 		for _, host := range nmapRun.Hosts {
 			for _, port := range host.Ports {
-				if port.Service.Name != "tcpwrapped" {
+				if port.Service.Name != "tcpwrapped" && port.State.State != "closed" && port.State.State != "filtered" {
 					service := port.Service.Name
 
 					if strings.HasPrefix(service, "http") && port.Service.Tunnel == "ssl" || port.PortId == 443 {
@@ -354,6 +353,10 @@ func (host Host) ports() []Port {
 	}
 
 	sort.SliceStable(ports, func(i, j int) bool {
+		if ports[i].ID == ports[j].ID {
+			return ports[i].Protocol == "tcp"
+		}
+
 		return ports[i].ID < ports[j].ID
 	})
 
