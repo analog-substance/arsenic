@@ -30,8 +30,14 @@ find recon/domains/ -maxdepth 1 -type d  | tail -n +2 | while read domain_path; 
   RECON_FILE="$domain_path/resolv-domains.txt"
   if [ ! -f "$RECON_FILE" ] ; then
     mkdir -p "$(dirname $RECON_FILE)"
-    _ 'Resoving domains'
-    fast-resolv -c $FR_THREADS -d scope-domains-generated-combined.txt | tee "$RECON_FILE"
+
+    root_domain=$(basename "$domain_path")
+    _ 'Resoving domains for "'$root_domain'"'
+    root_domain=$(echo "$root_domain" | sed 's/\./\\./g')
+    
+    cat scope-domains-generated-combined.txt | grep -P "$root_domain$" > "$domain_path/generated-combined.txt"
+
+    fast-resolv -c $FR_THREADS -d "$domain_path/generated-combined.txt" | tee "$RECON_FILE"
     cat "$RECON_FILE" | sort > sorted
     mv sorted "$RECON_FILE"
   fi
