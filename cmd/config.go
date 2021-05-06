@@ -5,10 +5,9 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"reflect"
 	"strconv"
 	"strings"
-
-	// "github.com/pelletier/go-toml"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -121,7 +120,7 @@ func overwriteInMemConfig(configMap map[string]interface{}) error {
 
 // Based on the current value of the config, attempts to return the user's value as the right type
 func matchConfigType(currentValue interface{}, userValue string) (interface{}, error) {
-	// Currently our config values are either bool, int, or string
+	// Currently our config values are either bool, int, string, or []string
 	if _, ok := currentValue.(bool); ok {
 		value, err := strconv.ParseBool(userValue)
 		if err != nil {
@@ -136,8 +135,16 @@ func matchConfigType(currentValue interface{}, userValue string) (interface{}, e
 		return value, nil
 	} else if _, ok := currentValue.(string); ok {
 		return userValue, nil
-	} else if stringSlice, ok := currentValue.([]string); ok {
-		return append(stringSlice, userValue), nil
+	} else if slice, ok := currentValue.([]interface{}); ok {
+		// If the slice is a string slice or is empty, we can append to it
+		if (len(slice) > 0 && reflect.TypeOf(slice[0]).String() == "string") ||
+			len(slice) == 0 {
+			userValues := strings.Split(userValue, ",")
+			for _, value := range userValues {
+				slice = append(slice, value)
+			}
+			return slice, nil
+		}
 	} else if currentValue == nil { // If currentValue is nil, we are setting a new key and we must guess the value type
 		intValue, err := strconv.Atoi(userValue)
 		if err == nil {
@@ -151,7 +158,7 @@ func matchConfigType(currentValue interface{}, userValue string) (interface{}, e
 
 		return userValue, nil
 	}
-	return nil, fmt.Errorf("cannot set keys that are not of type int, string or bool")
+	return nil, fmt.Errorf("cannot set keys that are not of type int, string, []string or bool")
 }
 
 func createConfigIfNotExist() {
