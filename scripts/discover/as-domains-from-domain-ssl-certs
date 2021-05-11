@@ -23,14 +23,13 @@ find recon/domains/ -maxdepth 1 -type d  | tail -n +2 | while read domain_path; 
   if [ -f "$domain_path/ssl-cert-domains.txt" ]; then
     continue
   fi
-  domain=$(echo "$domain_path" | cut -d/ -f3)
+  root_domain=$(basename "$domain_path")
 
-  cat scope-domains* \
-  | grep -P "$(echo $domain| sed 's/\./\\./g')$" \
-  | as-prune-blacklisted-domains > "$domain_path/combined-domains.txt"
+  cat scope-domains-generated-combined.txt | grep -P "$root_domain$" > "$domain_path/generated-combined.txt"
+
   if [ ! -f "$domain_path/nmap-https-check-combined-domains.gnmap" ]; then
-    _ "Running nmap for ports 443,8443 on sub-domains for $domain"
-    nmap -p443,8443 -sV -sC -iL "$domain_path/combined-domains.txt" -oA $domain_path/nmap-https-check-combined-domains --open
+    _ "Running nmap for ports 443,8443 on sub-domains for $root_domain"
+    nmap -p443,8443 -sV -sC -iL "$domain_path/generated-combined.txt" -oA $domain_path/nmap-https-check-combined-domains --open
   fi
 
   _ "Getting domains from certs"
