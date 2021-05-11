@@ -3,12 +3,13 @@ package cmd
 import (
 	"bufio"
 	"fmt"
-	"github.com/defektive/arsenic/lib/util"
-	"github.com/spf13/cobra"
 	"os"
 	"path/filepath"
 	"regexp"
 	"sort"
+
+	"github.com/defektive/arsenic/lib/util"
+	"github.com/spf13/cobra"
 )
 
 // scopeCmd represents the scope command
@@ -33,7 +34,7 @@ func init() {
 
 func getScope(scopeType string) ([]string, error) {
 
-	glob := fmt.Sprintf("scope-%s-", scopeType)
+	glob := fmt.Sprintf("scope-%s-*", scopeType)
 	actualFile := fmt.Sprintf("scope-%s.txt", scopeType)
 	blacklistFile := fmt.Sprintf("blacklist-%s.txt", scopeType)
 
@@ -41,6 +42,9 @@ func getScope(scopeType string) ([]string, error) {
 	if util.FileExists(blacklistFile) {
 		lines, _ := util.ReadLines(blacklistFile)
 		for _, line := range lines {
+			if line == "" {
+				continue
+			}
 			blacklistRegexp = append(blacklistRegexp, regexp.MustCompile(regexp.QuoteMeta(line)))
 		}
 	}
@@ -57,11 +61,16 @@ func getScope(scopeType string) ([]string, error) {
 
 		scanner := bufio.NewScanner(file)
 		for scanner.Scan() {
+			line := normalizeScope(scanner.Text(), scopeType)
+			valid := true
 			for _, re := range blacklistRegexp {
-				line := normalizeScope(scanner.Text(), scopeType)
-				if !re.MatchString(line) {
-					scope[line] = true
+				if re.MatchString(line) {
+					valid = false
+					break
 				}
+			}
+			if valid {
+				scope[line] = true
 			}
 		}
 	}
