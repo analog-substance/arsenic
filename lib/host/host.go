@@ -17,9 +17,9 @@ import (
 )
 
 type Port struct {
-	ID int
+	ID       int
 	Protocol string
-	Service string
+	Service  string
 }
 
 type Metadata struct {
