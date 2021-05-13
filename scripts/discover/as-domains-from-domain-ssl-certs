@@ -25,18 +25,16 @@ find recon/domains/ -maxdepth 1 -type d  | tail -n +2 | while read domain_path; 
   fi
   root_domain=$(basename "$domain_path")
 
-  cat scope-domains-generated-combined.txt | grep -P "$root_domain$" > "$domain_path/generated-combined.txt"
-
-  if [ ! -f "$domain_path/nmap-https-check-combined-domains.gnmap" ]; then
-    _ "Running nmap for ports 443,8443 on sub-domains for $root_domain"
-    nmap -p443,8443 -sV -sC -iL "$domain_path/generated-combined.txt" -oA $domain_path/nmap-https-check-combined-domains --open
+  if [ ! -f "$domain_path/nmap-https-check-subdomains.gnmap" ]; then
+    _ "Running nmap for ports 443,8443 on subdomains for $root_domain"
+    nmap -p443,8443 -sV -sC -iL "$domain_path/subdomains.txt" -oA $domain_path/nmap-https-check-subdomains --open
   fi
 
   _ "Getting domains from certs"
   {
-    grep -ohP 'commonName=.+' $domain_path/nmap-https-check-combined-domains.nmap \
+    grep -ohP 'commonName=.+' $domain_path/nmap-https-check-subdomains.nmap \
     | sed 's/^commonName=//;s/^\*\.//'
-    grep -ohP 'Subject Alternative Name: DNS:.+' $domain_path/nmap-https-check-combined-domains.nmap \
+    grep -ohP 'Subject Alternative Name: DNS:.+' $domain_path/nmap-https-check-subdomains.nmap \
     | sed 's/^Subject Alternative Name://;s/ DNS://g;s/^\*\.//;s/,/\n/g'
   } \
     | grep "\." \

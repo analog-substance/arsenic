@@ -16,7 +16,7 @@ fi
 ## END: Load common functions
 ####
 
-FR_THREADS=100
+FR_THREADS=50
 
 if [ ! -z "$1" ]; then
   FR_THREADS="$1"
@@ -30,14 +30,9 @@ find recon/domains/ -maxdepth 1 -type d  | tail -n +2 | while read domain_path; 
   RECON_FILE="$domain_path/resolv-domains.txt"
   if [ ! -f "$RECON_FILE" ] ; then
     mkdir -p "$(dirname $RECON_FILE)"
-
     root_domain=$(basename "$domain_path")
     _ 'Resoving domains for "'$root_domain'"'
-    root_domain=$(echo "$root_domain" | sed 's/\./\\./g')
-    
-    cat scope-domains-generated-combined.txt | grep -P "$root_domain$" > "$domain_path/generated-combined.txt"
-
-    fast-resolv -c $FR_THREADS -d "$domain_path/generated-combined.txt" | tee "$RECON_FILE"
+    fast-resolv -c $FR_THREADS -d "$domain_path/subdomains.txt" | tee "$RECON_FILE"
     cat "$RECON_FILE" | sort > sorted
     mv sorted "$RECON_FILE"
   fi

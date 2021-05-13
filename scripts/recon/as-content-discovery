@@ -100,7 +100,11 @@ function getHostnames {
   fi
 
   if [ ! -z $SKIP_IP ] ; then
-    rhost
+    if [ -f recon/ip-addresses.txt ]; then
+      cat recon/ip-addresses.txt | head -n1
+    else
+      rhost
+    fi
   fi
 
   for file in hostname recon/hostnames.txt; do

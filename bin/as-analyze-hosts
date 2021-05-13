@@ -195,6 +195,7 @@ ls -d recon/analyze-hosts/services/* | cut -d/ -f4 | while read service ; do
       exsting_service=$(grep -P "^($(echo $(cat "recon/analyze-hosts/services/$service/recon/other-hostnames.txt") | sed 's/\./\\./g;s/ /|/g'))\$" hosts/*/recon/*hostnames.txt \
       | cut -d/ -f2 | sort -d | uniq | head -n1)
       _ "Adding domains to $exsting_service from $service"
+      cat "recon/analyze-hosts/services/$service/recon/other-hostnames.txt"
 
       if [ "$MODE" == "create" ]; then
         {
@@ -206,12 +207,12 @@ ls -d recon/analyze-hosts/services/* | cut -d/ -f4 | while read service ; do
     else
       # no existing domains found lets create a new service
       _ "Creating new service $service"
+      cat "recon/analyze-hosts/services/$service/recon/other-hostnames.txt"
       if [ "$MODE" == "create" ]; then
         mv "recon/analyze-hosts/services/$service/" "hosts/$service"
-        cp "hosts/$service/recon/other-hostnames.txt" "hosts/$service/recon/hostnames.txt"
+        cat "hosts/$service/recon/other-hostnames.txt" > "hosts/$service/recon/hostnames.txt"
       fi
     fi
-
   fi
 done
 
@@ -219,12 +220,16 @@ done
 cat scope-ips* | as-prune-blacklisted-ips | grep -vP "/" |while read ip; do
   grep "$(echo $ip | sed 's/\./\\./g')" recon/analyze-hosts/*.txt > /dev/null || echo $ip
 done | sort -d | uniq | while read ip; do
-  _ "Creating new service $ip"
+  if ! grep -rP "^$(echo $ip | sed 's/\./\\./g')\$" hosts/*/recon/ip-addresses.txt > /dev/null ; then
+    if [ ! -d "hosts/$ip" ]; then
+      _ "Creating new service $ip"
 
-  if [ "$MODE" == "create" ]; then
-    mkdir -p "hosts/$ip/recon"
-    echo "$ip" > hosts/$ip/recon/ip-addresses.txt
-    touch "hosts/$ip/README.md"
-    touch "hosts/$ip/00_metadata.md"
+      if [ "$MODE" == "create" ]; then
+        mkdir -p "hosts/$ip/recon"
+        echo "$ip" > hosts/$ip/recon/ip-addresses.txt
+        touch "hosts/$ip/README.md"
+        touch "hosts/$ip/00_metadata.md"
+      fi
+    fi
   fi
 done

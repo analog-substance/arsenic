@@ -28,19 +28,31 @@ function root_domain_recon {
   else
     mkdir -p "recon/domains/$domain"
 
-    RECON_FILE="recon/domains/$domain/amass-enum-active.txt"
-    if [ ! -f "$RECON_FILE" ] ; then
-      _ "amass enum active $domain"
+    if [ ! -f "recon/domains/$domain/subdomains.txt" ] ; then
 
-      amass enum -src -active -d "$domain" \
-      | tee "$RECON_FILE"
-    fi
+      RECON_FILE="recon/domains/$domain/amass-enum-active.txt"
+      if [ ! -f "$RECON_FILE" ] ; then
+        _ "amass enum active $domain"
 
-    RECON_FILE="recon/domains/$domain/amass-intel.txt"
-    if [ ! -f "$RECON_FILE" ] ; then
-      _ "amass intel whois $domain"
-      amass intel -d "$domain" -whois \
-      | tee "$RECON_FILE"
+        amass enum -src -active -d "$domain" \
+        | tee "$RECON_FILE"
+      fi
+
+      RECON_FILE="recon/domains/$domain/amass-intel.txt"
+      if [ ! -f "$RECON_FILE" ] ; then
+        _ "amass intel whois $domain"
+        amass intel -d "$domain" -whois \
+        | tee "$RECON_FILE"
+      fi
+
+      {
+        cat "recon/domains/$domain/amass-enum-active.txt" 2>/dev/null | awk '{print $2}'
+        cat "recon/domains/$domain/amass-intel.txt"
+      } \
+      | sort -d \
+      | uniq \
+      | ensureDomainInScope \
+      | tee "recon/domains/$domain/subdomains.txt"
     fi
 
     for cmd in "${root_domain_commands[@]}";  do
@@ -56,7 +68,6 @@ function root_domain_recon {
     for cmd in "${dig_commands[@]}";  do
       if [ ! -f "recon/domains/$domain/dig-$cmd.txt" ]; then
         _ "running dig $domain $cmd"
-
         dig $cmd $domain | tr 'A-Z' 'a-z' > "recon/domains/$domain/dig-$cmd.txt" &
       else
         _warn "skipping dig $domain $cmd"
@@ -72,23 +83,22 @@ getRootDomains | while read domain; do
   root_domain_recon "$domain"
 done
 
-
-if compgen -G "recon/domains/*/amass-enum-active.txt" ; then
+if compgen -G "recon/domains/*/amass-enum-active.txt" > /dev/null 2>&1; then
   _ "saving scope from amass enum active"
   cat recon/domains/*/amass-enum-active.txt 2>/dev/null \
   | awk '{print $2}' \
-  | ensureDomainInScope \
   | sort -d \
   | uniq \
+  | ensureDomainInScope \
   | tee scope-domains-generated-amass-enum-active.txt
 fi
 
-if compgen -G "recon/domains/*/amass-intel.txt" ; then
+if compgen -G "recon/domains/*/amass-intel.txt" > /dev/null 2>&1; then
   _ "saving scope from amass intel whois"
   cat recon/domains/*/amass-intel.txt 2>/dev/null \
-  | ensureDomainInScope \
   | sort -d \
   | uniq \
+  | ensureDomainInScope \
   | tee scope-domains-generated-amass-intel-whois.txt
 fi
 _ "Combine all discovered domains"

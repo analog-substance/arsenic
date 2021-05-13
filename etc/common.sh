@@ -21,16 +21,20 @@ function ensureDomainInScope {
     if grep -F "$potentialDomain" scope-domains.txt >/dev/null ; then
       echo "$potentialDomain"
     else
+      trim="$potentialDomain"
+      while true; do
+        trim=$(echo "$trim" | sed 's/^[^\.]\+\.//g')
+        pieces=$(echo "$trim" | sed 's/\./\n/g' | wc -l)
 
-      trim=$(echo "$potentialDomain" | sed 's/[^\.]\+\.//g')
-      pieces=$(echo "$trim" | sed 's/\./\n/g' | wc -l)
-
-      if [ "$pieces" -gt 2 ]; then
-        if grep -P "$(echo "$trim" | sed 's/\./\\./g')\$" scope-domains.txt >/dev/null ; then
-          echo "$potentialDomain"
-          contine
+        if [ "$pieces" -ge 2 ]; then
+          if grep -P "$(echo "$trim" | sed 's/\./\\./g')\$" scope-domains.txt >/dev/null ; then
+            echo "$potentialDomain"
+            continue
+          fi
+        else
+          break
         fi
-      fi
+      done
     fi
   done
 }
@@ -76,6 +80,7 @@ function gitCommit {
           echo '[!] pull rebase failed'
           if [ "$mode" == "reset" ] ; then
             echo '[!] reset to origin'
+            git rebase --abort
             git reset --hard origin/master
           fi
           exit 2
@@ -102,27 +107,16 @@ function gitLock {
 
 function getRootDomains {
   ## Lets get a unique list of root domains
-  # cat all domains
-  # remove *. prefix
-  # remove email addr prefixes
-  # remove problematic domains
-  # print last 2 octets in the domain
-  # remove things like co.uk, com.uk
-  cat scope-domains* \
-  | removeInvalidDomains \
-  | awk -F. '{print $(NF-1) "." $NF}' \
-  | grep -vP "$NON_ROOT_DOMAIN_REGEX" \
-  | sort -d | uniq \
-  | tee scope-domains-generated-root.txt
+  arsenic scope domains -r \
+  | tee scope-domains-generated-root.txt.new
+  mv scope-domains-generated-root.txt.new scope-domains-generated-root.txt
 }
 
 function getAllDomains {
   # create a combined scope file
-    cat scope-domains* \
-    | removeInvalidDomains \
-    | cat - scope-domains.txt \
-    | sort -d | uniq \
-    | tee scope-domains-generated-combined.txt
+    arsenic scope domains \
+    | tee scope-domains-generated-combined.txt.new
+    mv scope-domains-generated-combined.txt.new scope-domains-generated-combined.txt
 }
 
 export GIT=1
