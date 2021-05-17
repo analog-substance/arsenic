@@ -18,9 +18,6 @@ fi
 
 mkdir -p recon/domains recon/discover recon/ips
 
-declare -a root_domain_commands=("whois")
-declare -a dig_commands=("TXT" "NS" "MX" "SOA" "A")
-
 function root_domain_recon {
   domain=$(echo $1 | tr 'A-Z' 'a-z')
   if ! echo "$domain" | as-prune-blacklisted-domains | grep "$domain" > /dev/null ; then
@@ -28,57 +25,38 @@ function root_domain_recon {
   else
     mkdir -p "recon/domains/$domain"
 
-    if [ ! -f "recon/domains/$domain/subdomains.txt" ] ; then
+    RECON_FILE="recon/domains/$domain/amass-enum-active.txt"
+    if [ ! -f "$RECON_FILE" ] ; then
+      _ "amass enum active $domain"
 
-      RECON_FILE="recon/domains/$domain/amass-enum-active.txt"
-      if [ ! -f "$RECON_FILE" ] ; then
-        _ "amass enum active $domain"
-
-        amass enum -src -active -d "$domain" \
-        | tee "$RECON_FILE"
-      fi
-
-      RECON_FILE="recon/domains/$domain/amass-intel.txt"
-      if [ ! -f "$RECON_FILE" ] ; then
-        _ "amass intel whois $domain"
-        amass intel -d "$domain" -whois \
-        | tee "$RECON_FILE"
-      fi
-
-      {
-        cat "recon/domains/$domain/amass-enum-active.txt" 2>/dev/null | awk '{print $2}'
-        cat "recon/domains/$domain/amass-intel.txt"
-      } \
-      | sort -d \
-      | uniq \
-      | ensureDomainInScope \
-      | tee "recon/domains/$domain/subdomains.txt"
+      amass enum -src -active -d "$domain" \
+      | tee "$RECON_FILE"
     fi
 
-    for cmd in "${root_domain_commands[@]}";  do
-      if [ ! -f "recon/domains/$domain/$cmd.txt" ]; then
-        _ "running $domain $cmd"
+    RECON_FILE="recon/domains/$domain/amass-intel.txt"
+    if [ ! -f "$RECON_FILE" ] ; then
+      _ "amass intel whois $domain"
+      amass intel -d "$domain" -whois \
+      | tee "$RECON_FILE"
+    fi
 
-        $cmd $domain | tr 'A-Z' 'a-z' > "recon/domains/$domain/$cmd.txt" &
-      else
-        _warn "skipping $domain $cmd"
+    {
+      if [ -f "recon/domains/$domain/amass-enum-active.txt" ]; then
+        cat "recon/domains/$domain/amass-enum-active.txt" 2>/dev/null | awk '{print $2}'
       fi
-    done
 
-    for cmd in "${dig_commands[@]}";  do
-      if [ ! -f "recon/domains/$domain/dig-$cmd.txt" ]; then
-        _ "running dig $domain $cmd"
-        dig $cmd $domain | tr 'A-Z' 'a-z' > "recon/domains/$domain/dig-$cmd.txt" &
-      else
-        _warn "skipping dig $domain $cmd"
+      if [ -f "recon/domains/$domain/amass-intel.txt" ]; then
+        cat "recon/domains/$domain/amass-intel.txt"
       fi
-    done
-    wait
+    } \
+    | grep -P "$(echo "$domain" | sed 's/\./\\./g')\$" \
+    | sort -d \
+    | uniq > "recon/domains/$domain/subdomains-amass.txt"
   fi
 }
 
 # Recon root domains
-_ "Recon on root domains"
+_ "Checking for subdomains on root domains"
 getRootDomains | while read domain; do
   root_domain_recon "$domain"
 done

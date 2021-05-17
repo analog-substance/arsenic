@@ -1,0 +1,46 @@
+#! /bin/bash
+
+####
+## BEGIN: Load common functions
+
+if [ -z "$ARSENIC_PATH" ]; then
+  pushd $(dirname $(dirname $(dirname ${BASH_SOURCE[0]}))) > /dev/null
+  export ARSENIC_PATH=`pwd`
+  popd > /dev/null
+fi
+
+if [ -f "$ARSENIC_PATH/etc/common.sh" ]; then
+  source "$ARSENIC_PATH/etc/common.sh"
+fi
+
+## END: Load common functions
+####
+
+mkdir -p recon/domains recon/discover recon/ips
+
+function root_domain_recon {
+  domain=$(echo $1 | tr 'A-Z' 'a-z')
+  if ! echo "$domain" | as-prune-blacklisted-domains | grep "$domain" > /dev/null ; then
+    _warn "Skipping common domain: $domain"
+  else
+    mkdir -p "recon/domains/$domain"
+
+    if compgen -G "recon/domains/$domain/subdomains-*.txt" > /dev/null 2>&1; then
+      _ "Combining discovered subdomains"
+      cat "recon/domains/$domain/"subdomains-*.txt 2>/dev/null \
+      | sort -d \
+      | uniq \
+      | ensureDomainInScope \
+      | tee "recon/domains/$domain/subdomains.txt"
+    fi
+  fi
+}
+
+# Recon root domains
+_ "Getting subdomains for root domains"
+getRootDomains | while read domain; do
+  root_domain_recon "$domain"
+done
+
+_ "Combine all discovered domains"
+getAllDomains

@@ -1,0 +1,58 @@
+#! /bin/bash
+
+####
+## BEGIN: Load common functions
+
+if [ -z "$ARSENIC_PATH" ]; then
+  pushd $(dirname $(dirname $(dirname ${BASH_SOURCE[0]}))) > /dev/null
+  export ARSENIC_PATH=`pwd`
+  popd > /dev/null
+fi
+
+if [ -f "$ARSENIC_PATH/etc/common.sh" ]; then
+  source "$ARSENIC_PATH/etc/common.sh"
+fi
+
+## END: Load common functions
+####
+
+mkdir -p recon/domains recon/discover recon/ips
+
+declare -a root_domain_commands=("whois")
+declare -a dig_commands=("TXT" "NS" "MX" "SOA" "A")
+
+function root_domain_recon {
+  domain=$(echo $1 | tr 'A-Z' 'a-z')
+  if ! echo "$domain" | as-prune-blacklisted-domains | grep "$domain" > /dev/null ; then
+    _warn "Skipping common domain: $domain"
+  else
+    mkdir -p "recon/domains/$domain"
+
+    for cmd in "${root_domain_commands[@]}";  do
+      if [ ! -f "recon/domains/$domain/$cmd.txt" ]; then
+        _ "running $domain $cmd"
+
+        $cmd $domain | tr 'A-Z' 'a-z' > "recon/domains/$domain/$cmd.txt" &
+      else
+        _warn "skipping $domain $cmd"
+      fi
+    done
+
+    for cmd in "${dig_commands[@]}";  do
+      if [ ! -f "recon/domains/$domain/dig-$cmd.txt" ]; then
+        _ "running dig $domain $cmd"
+        dig $cmd $domain | tr 'A-Z' 'a-z' > "recon/domains/$domain/dig-$cmd.txt" &
+      else
+        _warn "skipping dig $domain $cmd"
+      fi
+    done
+    wait
+  fi
+}
+
+# Recon root domains
+_ "Recon on root domains"
+getRootDomains | while read domain; do
+  root_domain_recon "$domain"
+done
+
