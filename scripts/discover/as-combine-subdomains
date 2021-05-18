@@ -25,14 +25,20 @@ function root_domain_recon {
   else
     mkdir -p "recon/domains/$domain"
 
-    if compgen -G "recon/domains/$domain/subdomains-*.txt" > /dev/null 2>&1; then
-      _ "Combining discovered subdomains"
-      cat "recon/domains/$domain/"subdomains-*.txt 2>/dev/null \
-      | sort -d \
-      | uniq \
-      | ensureDomainInScope \
-      | tee "recon/domains/$domain/subdomains.txt"
-    fi
+    {
+      if compgen -G "recon/domains/$domain/subdomains-*.txt" > /dev/null 2>&1; then
+        _ "Combining discovered subdomains"
+        cat "recon/domains/$domain/"subdomains-*.txt 2>/dev/null
+      fi
+
+      cat scope-domains*
+
+    } \
+    | grep -P "$(echo "$domain" | sed 's/\./\\./g')\$" \
+    | sort -d \
+    | uniq \
+    | ensureDomainInScope \
+    | tee "recon/domains/$domain/subdomains.txt"
   fi
 }
 
