@@ -47,6 +47,11 @@ function root_domain_recon {
       fi
     done
     wait
+
+    cat scope-domains*.txt 2>/dev/null \
+    | grep -P "$(echo "$domain" | sed 's/\./\\./g')\$" \
+    | sort -d \
+    | uniq > "recon/domains/$domain/subdomains-scope.txt"
   fi
 }
 

@@ -30,11 +30,7 @@ function root_domain_recon {
         _ "Combining discovered subdomains"
         cat "recon/domains/$domain/"subdomains-*.txt 2>/dev/null
       fi
-
-      cat scope-domains*
-
     } \
-    | grep -P "$(echo "$domain" | sed 's/\./\\./g')\$" \
     | sort -d \
     | uniq \
     | ensureDomainInScope \
