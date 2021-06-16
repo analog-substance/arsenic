@@ -22,7 +22,7 @@ OP_NAME=$(basename $(pwd))
 
 _ "Creating op: $OP_NAME"
 
-mkdir -p apps bin report/{findings,sections,static} hosts recon/domains
+mkdir -p apps bin report/{findings,sections,static,social} hosts recon/domains
 touch {apps,bin,recon}/.keep report/static/.keep
 
 if [ -f "/usr/share/nmap/nmap.xsl" ]; then
