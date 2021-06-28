@@ -11,6 +11,6 @@ func init() {
 	moduleMap = stdlib.GetModuleMap(stdlib.AllModuleNames()...)
 
 	moduleMap.AddBuiltinModule("filepath", filepathModule)
-	moduleMap.AddBuiltinModule("git", gitModule)
+	moduleMap.AddBuiltinModule("git", gitModule.ModuleMap())
 	moduleMap.AddBuiltinModule("log", logModule)
 }

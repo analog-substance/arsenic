@@ -1,18 +1,17 @@
 package script
 
 import (
-	"fmt"
-
 	"github.com/d5/tengo/v2"
+	"github.com/defektive/arsenic/lib/util"
 )
 
 var logModule = map[string]tengo.Object{
-	"log":  &tengo.UserFunction{Name: "log", Value: logLog},
+	"msg":  &tengo.UserFunction{Name: "msg", Value: logMsg},
 	"warn": &tengo.UserFunction{Name: "warn", Value: logWarn},
 	"info": &tengo.UserFunction{Name: "info", Value: logInfo},
 }
 
-func logLog(args ...tengo.Object) (tengo.Object, error) {
+func logMsg(args ...tengo.Object) (tengo.Object, error) {
 	err := log("[+]", args...)
 	if err != nil {
 		return nil, err
@@ -45,9 +44,7 @@ func log(prefix string, args ...tengo.Object) error {
 		return err
 	}
 
-	fmt.Printf("%s ", prefix)
-	fmt.Print(logArgs...)
-	fmt.Println()
+	util.Log(prefix, logArgs...)
 
 	return nil
 }
