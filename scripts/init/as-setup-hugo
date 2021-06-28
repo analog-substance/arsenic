@@ -36,6 +36,7 @@ if [ ! -d ".hugo" ]; then
   mv config.toml ../
   ln -s ../config.toml
   mv sample-finding ../report/findings/first-finding
+  mv sample-campaign.md ../report/social
 
   cd content
   ln -srf ../../recon
