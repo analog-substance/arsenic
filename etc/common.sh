@@ -107,9 +107,7 @@ function gitLock {
 
 function getRootDomains {
   ## Lets get a unique list of root domains
-  arsenic scope domains -r \
-  | tee scope-domains-generated-root.txt.new
-  mv scope-domains-generated-root.txt.new scope-domains-generated-root.txt
+  arsenic scope domains -r
 }
 
 function getAllDomains {
