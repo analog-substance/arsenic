@@ -80,6 +80,8 @@ func initConfig() {
 
 	defaultHuntScripts["as-takeover-aquatone"] = util.NewScriptConfig("as-takeover-aquatone", 0, 1, true)
 	defaultHuntScripts["as-searchsploit"] = util.NewScriptConfig("as-searchsploit", 100, 1, true)
+	defaultHuntScripts["as-nuclei-technologies"] = util.NewScriptConfig("as-nuclei-technologies", 200, 1, true)
+	defaultHuntScripts["as-nuclei-cves"] = util.NewScriptConfig("as-nuclei-cves", 300, 1, true)
 
 	defaultScripts := make(map[string]map[string]util.ScriptConfig)
 	defaultScripts["init"] = defaultInitScripts
