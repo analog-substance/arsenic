@@ -14,7 +14,7 @@ accurate_punch(){
 
   echo "[+] Version scanning $ports"
 
-  nmap -oA recon/nmap-punched-tcp -n -A -p$ports $1
+  sudo nmap -oA recon/nmap-punched-tcp -n -A -p$ports $1
 }
 
 try_punch(){
