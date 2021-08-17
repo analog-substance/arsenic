@@ -42,6 +42,7 @@ if [ ! -d ".hugo" ]; then
   ln -srf ../../recon
   ln -srf ../../hosts
   ls -d ../../report/* | xargs -n 1 ln -srf
+  mkdir notes
 
   _ "Hugo Setup complete"
   cd ../../
