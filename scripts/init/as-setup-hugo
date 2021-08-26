@@ -52,7 +52,7 @@ if [ ! -d ".hugo" ]; then
       echo -e "report::\n\tcd .hugo; \\"
       echo -e "\thugo server"
       echo -e "addnote::\n\tcd .hugo; \\"
-      echo -e "\thugo new \"content/notes/\$\$(date +'%c')-\$\$(whoami).md\" --kind note"
+      echo -e "\thugo new \"content/notes/\$\$(date +'%Y-%m-%d_%H%M%S')__\$\$(whoami).md\" --kind note"
     } >> Makefile
   fi
   _ "Setup Hugo complete"
