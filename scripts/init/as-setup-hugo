@@ -42,6 +42,7 @@ if [ ! -d ".hugo" ]; then
   ln -srf ../../recon
   ln -srf ../../hosts
   ls -d ../../report/* | xargs -n 1 ln -srf
+  mkdir notes
 
   _ "Hugo Setup complete"
   cd ../../
@@ -50,6 +51,8 @@ if [ ! -d ".hugo" ]; then
     {
       echo -e "report::\n\tcd .hugo; \\"
       echo -e "\thugo server"
+      echo -e "addnote::\n\tcd .hugo; \\"
+      echo -e "\thugo new \"content/notes/\$\$(date +'%Y-%m-%d_%H%M%S')__\$\$(whoami).md\" --kind note"
     } >> Makefile
   fi
   _ "Setup Hugo complete"
