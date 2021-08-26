@@ -14,7 +14,8 @@ accurate_punch(){
 
   echo "[+] Version scanning $ports"
 
-  nmap -oA recon/nmap-punched-tcp -n -A -p$ports $1
+  sudo nmap -oA recon/nmap-punched-tcp -n -A -p$ports $1
+  find recon -name "*nmap*.xml" -exec sed -i 's|"[^"]*nmap\.xsl"|"/static/nmap.xsl"|g' {} \;
 }
 
 try_punch(){
@@ -23,7 +24,6 @@ try_punch(){
   if [ ! -f "$base_dir/recon/nmap-punched-quick-tcp.gnmap" ] ; then
     cd $base_dir
     accurate_punch $ip
-    find recon -name "*nmap*.xml" -exec sed -i 's|"[^"]*nmap\.xsl|/static/nmap.xsl|g' {} \;
     cd - 2>/dev/null
   else
     echo "[!] Skipping since it was already done"
