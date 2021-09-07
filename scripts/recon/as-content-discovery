@@ -44,13 +44,18 @@ WEB_PORTS="(80|443|3000|8000|8001|8080|8443)"
 WEB_PORT_REGEX="portid=\"$WEB_PORTS\"|tcp/$WEB_PORTS"
 
 function newGetHostUrls {
-  cat hosts/*/recon/*hostnames.txt \
-  | sort -u \
+  for host in hosts/*; do
+    if compgen -G "$host/recon/*hostnames.txt" > /dev/null 2>&1; then
+      cat $host/recon/*hostnames.txt
+    elif compgen -G "$host/recon/*ip-addresses.txt" > /dev/null 2>&1; then
+      cat $host/recon/*ip-addresses.txt
+    fi
+  done | sort -u \
   | as-prune-blacklisted-domains \
   | grep -vP "(//((sso\.|scm\.)?azurewebsites\.net|(sso\.|scm\.)?azure\-mobile\.net|s3\.amazonaws\.com)$)|((\.secureserver\.net|\.microsoftonline\.com|windows\.net|amazonaws\.com|hscoscdn)$)"  \
   | while read hostname; do
 
-    host=$(grep -rP "^$(echo $hostname | sed 's/\./\\./g')$" hosts/*/recon/*hostnames.txt | head -n1 | cut -d/ -f2)
+    host=$(grep -rP "^$(echo $hostname | sed 's/\./\\./g')$" hosts/*/recon/*{hostnames,ip-addresses}.txt 2>/dev/null | head -n1 | cut -d/ -f2)
 
     if [ -z "$host" ]; then
       _warn "no host found for hostname: $hostname"
@@ -91,31 +96,6 @@ function newGetHostUrls {
       fi
     fi
   done | sort -d | uniq
-}
-
-function getHostnames {
-  SKIP_IP=0
-  if ! grep -rP "\.amazonaws\.com|\.windows\.net" . > /dev/null 2>&1 ; then
-    SKIP_IP=1
-  fi
-
-  if [ ! -z $SKIP_IP ] ; then
-    if [ -f recon/ip-addresses.txt ]; then
-      cat recon/ip-addresses.txt | head -n1
-    else
-      rhost
-    fi
-  fi
-
-  for file in hostname recon/hostnames.txt; do
-    if [ -f "$file" ]; then
-      cat "$file"
-    fi
-  done | sort -d | uniq |  while read domain; do
-    if ! echo $domain | grep -P "\.amazonaws\.com|\.windows\.net$" > /dev/null; then
-      echo $domain
-    fi
-  done
 }
 
 function scanHost {
