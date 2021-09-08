@@ -3,13 +3,14 @@ package host
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/lair-framework/go-nmap"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
 	"sort"
 	"strings"
+
+	"github.com/lair-framework/go-nmap"
 
 	// "strings"
 	"github.com/ahmetb/go-linq/v3"
@@ -88,12 +89,12 @@ func (md Metadata) Columnize() string {
 }
 
 type Host struct {
-	dir      string
+	Dir      string
 	Metadata *Metadata
 }
 
 func InitHost(dir string) Host {
-	host := Host{dir: dir}
+	host := Host{Dir: dir}
 	var metadata Metadata
 	if _, err := os.Stat(host.metadataFile()); !os.IsNotExist(err) {
 		jsonFile, err := os.Open(host.metadataFile())
@@ -173,7 +174,7 @@ func (host Host) SaveMetadata() {
 }
 
 func (host Host) Hostnames() []string {
-	hostnamesFile := fmt.Sprintf("%s/%s", host.dir, "/recon/hostnames.txt")
+	hostnamesFile := fmt.Sprintf("%s/%s", host.Dir, "/recon/hostnames.txt")
 	hostnames, err := util.ReadLines(hostnamesFile)
 
 	if err != nil {
@@ -220,7 +221,7 @@ func (host Host) URLs() []string {
 }
 
 func (host Host) IPAddresses() []string {
-	IPAddressesFile := fmt.Sprintf("%s/%s", host.dir, "/recon/ip-addresses.txt")
+	IPAddressesFile := fmt.Sprintf("%s/%s", host.Dir, "/recon/ip-addresses.txt")
 	IPAddresses, err := util.ReadLines(IPAddressesFile)
 
 	if err != nil {
@@ -285,28 +286,28 @@ func getHostDirs() []string {
 }
 
 func (host Host) metadataFile() string {
-	return filepath.Join(host.dir, "00_metadata.md")
+	return filepath.Join(host.Dir, "00_metadata.md")
 }
 
 func (host Host) flags() []string {
 	flags := []string{}
 
-	globbed, _ := filepath.Glob(fmt.Sprintf("%s/recon/%s", host.dir, "nmap-punched-tcp.*"))
+	globbed, _ := filepath.Glob(fmt.Sprintf("%s/recon/%s", host.Dir, "nmap-punched-tcp.*"))
 	if len(globbed) > 0 {
 		flags = append(flags, "nmap-tcp")
 	}
 
-	globbed, _ = filepath.Glob(fmt.Sprintf("%s/recon/%s", host.dir, "nmap-punched-udp.*"))
+	globbed, _ = filepath.Glob(fmt.Sprintf("%s/recon/%s", host.Dir, "nmap-punched-udp.*"))
 	if len(globbed) > 0 {
 		flags = append(flags, "nmap-udp")
 	}
 
-	globbed, _ = filepath.Glob(fmt.Sprintf("%s/recon/%s", host.dir, "gobuster.*"))
+	globbed, _ = filepath.Glob(fmt.Sprintf("%s/recon/%s", host.Dir, "gobuster.*"))
 	if len(globbed) > 0 {
 		flags = append(flags, "Gobuster")
 	}
 
-	globbed, _ = filepath.Glob(fmt.Sprintf("%s/recon/%s", host.dir, "aquatone-*"))
+	globbed, _ = filepath.Glob(fmt.Sprintf("%s/recon/%s", host.Dir, "aquatone-*"))
 	if len(globbed) > 0 {
 		flags = append(flags, "Aquatone")
 	}
@@ -316,7 +317,7 @@ func (host Host) flags() []string {
 
 func (host Host) ports() []Port {
 	portMap := make(map[string]Port)
-	globbed, _ := filepath.Glob(fmt.Sprintf("%s/recon/%s", host.dir, "nmap-punched-??p.xml"))
+	globbed, _ := filepath.Glob(fmt.Sprintf("%s/recon/%s", host.Dir, "nmap-punched-??p.xml"))
 
 	for _, file := range globbed {
 		data, err := ioutil.ReadFile(file)

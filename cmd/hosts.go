@@ -101,6 +101,7 @@ Currently Metadata has the following methods:
 		userFlagsToRemove, _ := cmd.Flags().GetStringSlice("remove-flags")
 		updateArsenicFlags, _ := cmd.Flags().GetBool("update")
 		jsonOut, _ := cmd.Flags().GetBool("json")
+		pathsOut, _ := cmd.Flags().GetBool("paths")
 
 		shouldSave := len(userFlagsToRemove) > 0 || len(userFlagsToAdd) > 0 || updateArsenicFlags || addReviewedBy
 
@@ -144,6 +145,10 @@ Currently Metadata has the following methods:
 				return
 			}
 			fmt.Println(string(json))
+		} else if pathsOut {
+			for _, host := range hosts {
+				fmt.Println(host.Dir)
+			}
 		} else {
 			var lines []string
 			linq.From(hosts).SelectT(func(host host.Host) string {
@@ -175,6 +180,7 @@ func init() {
 	hostsCmd.Flags().StringSliceP("protocols", "p", []string{}, "print protocol strings")
 	hostsCmd.Flags().BoolP("update", "u", false, "Update arsenic flags")
 	hostsCmd.Flags().BoolP("json", "j", false, "Return JSON")
+	hostsCmd.Flags().Bool("paths", false, "Return only the path to each hosts directory")
 	hostsCmd.Flags().StringSliceP("host", "H", []string{}, "host(s) to add/remove/update flags")
 	hostsCmd.RegisterFlagCompletionFunc("host", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		return host.AllDirNames(), cobra.ShellCompDirectiveDefault
