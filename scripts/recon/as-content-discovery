@@ -43,56 +43,25 @@ set -eu
 WEB_PORTS="(80|443|3000|8000|8001|8080|8443)"
 WEB_PORT_REGEX="portid=\"$WEB_PORTS\"|tcp/$WEB_PORTS"
 
+function genOutputFileName {
+  echo "gobuster.$(echo "$1" | sed "s/:\/\//./" | sed 's/\//\./g').$wordlist_name.txt"
+}
+
 function newGetHostUrls {
-  for host in hosts/*; do
-    if compgen -G "$host/recon/*hostnames.txt" > /dev/null 2>&1; then
-      cat $host/recon/*hostnames.txt
-    elif compgen -G "$host/recon/*ip-addresses.txt" > /dev/null 2>&1; then
-      cat $host/recon/*ip-addresses.txt
-    fi
-  done | sort -u \
-  | as-prune-blacklisted-domains \
-  | grep -vP "(//((sso\.|scm\.)?azurewebsites\.net|(sso\.|scm\.)?azure\-mobile\.net|s3\.amazonaws\.com)$)|((\.secureserver\.net|\.microsoftonline\.com|windows\.net|amazonaws\.com|hscoscdn)$)"  \
-  | while read hostname; do
+  arsenic hosts -p http  | while read url; do
 
-    host=$(grep -rP "^$(echo $hostname | sed 's/\./\\./g')$" hosts/*/recon/*{hostnames,ip-addresses}.txt 2>/dev/null | head -n1 | cut -d/ -f2)
-
-    if [ -z "$host" ]; then
-      _warn "no host found for hostname: $hostname"
-    fi
+    hostname=$(echo "$url" | sed 's|https\?://||g' | awk -F ':' '{print $1}')
+    hostPath=$(arsenic hosts -H "$hostname" --paths)
+    host=$(echo "$hostPath" | awk -F '/' '{print $2}')
 
     draft="nope"
-    if [ -f "hosts/$host/00_metadata.md" ] ; then
-      draft=$(grep draft "hosts/$host/00_metadata.md" || echo "nope")
+    if [ -f "$hostPath/00_metadata.md" ] ; then
+      draft=$(grep draft "$hostPath/00_metadata.md" || echo "nope")
     fi
     if [ "$draft" == "nope" ]; then
-
-      if grep -P "$WEB_PORT_REGEX" hosts/$host/recon/nmap-* > /dev/null 2>&1; then
-        grep -P "$WEB_PORT_REGEX" hosts/$host/recon/nmap-* | grep -hoP "$WEB_PORTS" | sort -d | uniq | while read port; do
-          SHOULD_ECHO=1
-          proto="http://"
-          if echo $port | grep 443 > /dev/null 2>&1; then
-             proto="https://"
-          fi
-          if [ "$port" == "80" ] || [ "$port" == "443" ] ; then
-            url="${proto}${hostname}"
-            if [ "$port" == "80" ] ; then
-              if grep -P "\b443\b" hosts/$host/recon/nmap-* >/dev/null 2>&1 ; then
-                # this is port 80, but 443 is listening. lets use that instead
-                SHOULD_ECHO=0
-              fi
-            fi
-          else
-            url="${proto}${hostname}:$port"
-          fi
-
-          if [ $SHOULD_ECHO -eq 1 ]; then
-            output_file="gobuster.$(echo "$url" | sed "s/:\/\//./" | sed 's/\//\./g').$wordlist_name.txt"
-            if [ ! -f "hosts/$host/recon/$output_file" ] ; then
-              echo $host $url
-            fi
-          fi
-        done
+      output_file=$(genOutputFileName "$url")
+      if [ ! -f "$hostPath/recon/$output_file" ] ; then
+        echo $host $url
       fi
     fi
   done | sort -d | uniq
@@ -114,7 +83,7 @@ function scanHost {
   if [ "$draft" == "nope" ]; then
     _info "Content Discovery / $host / $url / preparing"
     cd "hosts/$host"
-    output_file="gobuster.$(echo "$url" | sed "s/:\/\//./" | sed 's/\//\./g').$wordlist_name.txt"
+    output_file=$(genOutputFileName "$url")
 
     gitPull
     if [ ! -f "recon/$output_file" ] ; then
