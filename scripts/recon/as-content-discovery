@@ -114,7 +114,7 @@ function scanHost {
   if [ "$draft" == "nope" ]; then
     _info "Content Discovery / $host / $url / preparing"
     cd "hosts/$host"
-    output_file="gobuster.$(echo "$url" | sed "s/:\/\//./" | sed 's/\//\./g').$wordlist_name.txt"
+    output_file="gobuster.GET.$(echo "$url" | sed "s/:\/\//./" | sed 's/\//\./g').$wordlist_name.txt"
 
     gitPull
     if [ ! -f "recon/$output_file" ] ; then
