@@ -1,7 +1,7 @@
 #! /bin/bash
 
 quick_scan() {
-  nmap --open -Pn -T3 -n -p- $1 -oA recon/nmap-punched-quick-tcp
+  nmap --open -Pn -T3 --host-timeout 30m -n -p- $1 -oA recon/nmap-punched-quick-tcp
 }
 
 accurate_punch(){
@@ -14,7 +14,7 @@ accurate_punch(){
 
   echo "[+] Version scanning $ports"
 
-  sudo nmap -Pn -oA recon/nmap-punched-tcp -n -A -p$ports $1
+  sudo nmap -Pn -oA recon/nmap-punched-tcp --host-timeout 30m -n -A -p$ports $1
   find recon -name "*nmap*.xml" -exec sed -i 's|"[^"]*nmap\.xsl"|"/static/nmap.xsl"|g' {} \;
 }
 
