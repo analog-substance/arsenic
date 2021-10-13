@@ -114,7 +114,7 @@ function scanHost {
   if [ "$draft" == "nope" ]; then
     _info "Content Discovery / $host / $url / preparing"
     cd "hosts/$host"
-    output_file="gobuster.GET.$(echo "$url" | sed "s/:\/\//./" | sed 's/\//\./g').$wordlist_name.txt"
+    output_file="gobuster.$(echo "$url" | sed "s/:\/\//./" | sed 's/\//\./g').$wordlist_name.txt"
 
     gitPull
     if [ ! -f "recon/$output_file" ] ; then
@@ -136,7 +136,7 @@ function scanHost {
           set +e
 
           _info "Content Discovery / $host / $url / running"
-          as-buster -k -e -a Firefox -u $url -w $wordlist_file
+          as-buster -k -e -a Firefox -u $url -w $wordlist_file -o "$output_file"
         fi
 
         gitCommit "." "Gobuster complete: $url"
