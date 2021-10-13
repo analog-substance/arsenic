@@ -21,9 +21,14 @@ mkdir -p recon/ips
 set -u
 
 recon_dir="recon/ips"
-if [ ! -f "$recon_dir/nmap-https-check-scope-ips-generated-combined.gnmap" ]; then
-  _ "Running nmap for ports 443,8443 on ips"
-  nmap -p443,8443 -sV -sC -iL scope-ips-generated-combined.txt -oA $recon_dir/nmap-https-check-scope-ips-generated-combined --open
+if [ ! -f "$recon_dir/nmap-https-check-scope-ips-generated-public-ipv4.gnmap" ]; then
+  _ "Running nmap for ports 443,8443 on IPv4 ips"
+  nmap -p443,8443 -sV -sC -iL scope-ips-generated-public-ipv4.txt -oA $recon_dir/nmap-https-check-scope-ips-generated-public-ipv4 --open
+fi
+
+if [ ! -f "$recon_dir/nmap-https-check-scope-ips-generated-public-ipv6.gnmap" ]; then
+  _ "Running nmap for ports 443,8443 on IPv6 ips"
+  nmap -p443,8443 -sV -sC -iL scope-ips-generated-public-ipv6.txt -6 -oA $recon_dir/nmap-https-check-scope-ips-generated-public-ipv6 --open
 fi
 
 if [ ! -f $recon_dir/ssl-cert-domains.txt ]; then
