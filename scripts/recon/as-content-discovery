@@ -40,8 +40,6 @@ fi
 #set -euo pipefail
 set -eu
 # set -x
-WEB_PORTS="(80|443|3000|8000|8001|8080|8443)"
-WEB_PORT_REGEX="portid=\"$WEB_PORTS\"|tcp/$WEB_PORTS"
 
 function genOutputFileName {
   echo "gobuster.$(echo "$1" | sed "s/:\/\//./" | sed 's/\//\./g').$wordlist_name.txt"
