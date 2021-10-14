@@ -1,0 +1,271 @@
+#!/bin/bash
+
+######################################################################
+##|An ffuf helper script
+##|Usage:
+##| as-ffuf [options]
+##|
+##|Options:
+##|  -H                                     Header `"Name: Value"`, separated by colon. Multiple -H flags are accepted.
+##|  -recursion-depth                       Maximum recursion depth. (default: 3)
+##|  -p                                     Seconds of `delay` between requests, or a range of random delay. For example "0.1" or "0.1-2.0"
+##|  -e                                     Comma separated list of extensions. Extends FUZZ keyword.
+##|  -mc                                    Match HTTP status codes, or "all" for everything. (default: all)
+##|  -ml                                    Match amount of lines in response
+##|  -ms                                    Match HTTP response size
+##|  -mw                                    Match amount of words in response
+##|  -mr                                    Match regexp
+##|  -fc                                    Comma delimited list of HTTP status codes to filter from response.
+##|                                         Format: [+|-]code[,code]
+##|                                             +   Filter status code in addition to the default
+##|                                             -   Don't filter status code from the default
+##|                                         Note: If no status codes are prepended with + or -
+##|                                               the provided list will override the default
+##|
+##|                                         Default: 404
+##|  -fl                                    Filter by amount of lines in response. Comma separated list of line counts and ranges
+##|  -fs                                    Filter HTTP response size. Comma separated list of sizes and ranges
+##|  -fw                                    Filter by amount of words in response. Comma separated list of word counts and ranges
+##|  -fr                                    Filter regexp
+##|  -X                                     HTTP method to use
+##|  -x                                     Proxy URL (SOCKS5 or HTTP). For example: http://127.0.0.1:8080 or socks5://127.0.0.1:8080
+##|  --auth string                          Authorization header value
+##|                                             Authorization: <value>
+##|  
+##|  -h, --help                             Help for as-ffuf
+##|  -o, --output string                    Name of the file to write the results to
+##|                                         Default: ffuf.{HTTP_METHOD}.{URL}.{WORDLIST}.txt
+##|  -t, --token string                     Access token to be put in the Authorization header
+##|                                             Authorization: Bearer <token>
+##|  -u, --url string                       The target URL. Can be used multiple times to specify more target URLs
+##|  -uf, --url-file string                 The path to a file containing the target URLs
+##|  -a, --useragent [preset, custom]       The user agent string to use. Use supplied presets or a custom string
+##|                                         Presets
+##|                                             Firefox = Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101 Firefox/68.0
+##|                                             Chrome = Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36
+##|                                             Safari = Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_2) AppleWebKit/601.3.9 (KHTML, like Gecko) Version/9.0.2 Safari/601.3.9
+##|  -w, --wordlist string                  Path to the wordlist
+##|  --                                     Pass the rest of the arguments to ffuf
+######################################################################
+
+ffuf_args=()
+ffuf_args_count=0
+add_ffuf_args() {
+    while [[ $# -gt 0 ]]; do
+        ffuf_args[$ffuf_args_count]="$1"
+        ffuf_args_count=$(($ffuf_args_count + 1))
+        shift
+    done
+}
+
+show_usage() {
+    cat $0 | grep -a "^##[\|]" | sed "s/##[|]//g"
+}
+get_as_sorted_list() {
+    # replace commas with new line and sort
+    echo "$1" | sed 's/,/\n/g' | sort -d | uniq
+}
+get_difference() {
+    comm -23 <(get_as_sorted_list $1) <(get_as_sorted_list $2) | combine_lines
+}
+combine_lines() {
+    echo $(cat -) | sed 's/\s/,/g'
+}
+list_by_prefix() {
+    sed 's/,/\n/g' | grep $1 | cut -d$1 -f2
+}
+run(){
+    # Get hostname from URL
+    # Remove URL scheme (http:// or https://) and remove port (:port)
+    local hostname=$(echo "$url" | sed 's|http\(s\)\?://||;s/:[0-9]\+//' | awk -F '/' '{print $1}')
+    if [[ -z "$output_file" ]]; then
+        output_file="ffuf.$method.$(echo "$url" | sed 's|://|.|;s|/$||;s|/|.|g').$wordlist_name.json"
+    fi
+    local output_path="recon/$output_file"
+
+    # if host dir exists we are in the op root.
+    if [ -d hosts ]; then
+        host_dir=$(arsenic hosts -H "$hostname" --paths | head -n 1)
+        if [[ -n "$host_dir" ]]; then
+            output_path="$host_dir/$output_path"
+        else
+            mkdir -p hosts/$hostname/recon
+            output_path="hosts/$hostname/$output_path"
+        fi
+    fi
+
+    if [[ -n "$hostname" ]]; then
+        # Check if hostname is an IP
+        if ! echo $hostname | grep -qP "(?:(?:2(?:[0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9])\.){3}(?:(?:2([0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9]))"; then
+            echo "$hostname" >> "$host_dir/recon/hostnames.txt"
+            cat $host_dir/recon/hostnames.txt | sed 's/^\*\.//g' | sed 's/:[0-9]*//g' | sed 's/\.$//g' | tr 'A-Z' 'a-z' | sort -d |  uniq > $host_dir/recon/hostnames.txt.new
+            mv $host_dir/recon/hostnames.txt.new "$host_dir/recon/hostnames.txt"
+        else
+            echo "$hostname" >> $host_dir/recon/ip-addresses.txt
+            cat $host_dir/recon/ip-addresses.txt | sed 's/^\*\.//g' | sed 's/:[0-9]*//g' | sort -d |  uniq > $host_dir/recon/ip-addresses.txt.new
+            mv $host_dir/recon/ip-addresses.txt.new "$host_dir/recon/ip-addresses.txt"
+        fi
+    fi
+
+    # tee to output_path instead of using ffufs output. this way the ffuf header gets saved and error message
+    # -z to prevent progress updates, since we are redirecting stderr to stdout
+    # redirect stderr to stdout so we can see what went wrong during the run
+    # since we have lots of extra info in the file, we'll have to grep instead of cat the file
+    # grep -P "^https?:" $output_path
+    url=$(echo "$url" | sed 's|/$||') # Remove trailing /
+    if [[ ! "$url" =~ .*FUZZ.* ]]; then
+        url="$url/FUZZ"
+    fi
+
+    ffuf -recursion -recursion-depth $recursion_depth -ac -v -mc $match_codes -fc $filter_codes -o $output_path -of json -u $url -w "$wordlist_file" "${ffuf_args[@]}" $@
+    cleanup
+}
+cleanup() {
+    find "$host_dir/" -name "*ffuf*" -type f -size 0 -exec rm "{}" ";"
+}
+graceful_exit() {
+    echo
+    echo "Exiting"
+    exit 0
+}
+
+trap graceful_exit SIGINT
+
+if [[ $# -eq 0 ]]; then
+    show_usage
+    exit 0
+fi
+
+host_dir="."
+output_file=""
+method="GET"
+recursion_depth=3
+match_codes="all"
+filter_codes="404"
+while [[ "$1" =~ ^- && ! "$1" == "--" ]]; do
+    case $1 in
+        -H)
+            add_ffuf_args $1 "$2"
+            shift
+            ;;
+        -recursion-depth)
+            recursion_depth=$2
+            shift
+            ;;
+        -p)
+            add_ffuf_args $1 "$2"
+            shift
+            ;;
+        -e)
+            add_ffuf_args $1 "$2"
+            shift
+            ;;
+        -mc)
+            if [[ "$match_codes" == "all" ]]; then
+                match_codes="$2"
+            else
+                match_codes+="$2"
+            fi
+            shift
+            ;;
+        -ml|-ms|-mw|-mr)
+            add_ffuf_args $1 "$2"
+            shift
+            ;;
+        -fc)
+            # Split by comma, get all codes to remove, and combine back into comma separated list
+            local remove_codes=`echo "$2" | list_by_prefix - | combine_lines`
+
+            # Split by comma, get all codes to add, and combine back into comma separated list
+            local add_codes=`echo "$2" | list_by_prefix + | combine_lines`
+            if [[ -z $remove_codes && -z $add_codes ]]; then
+                filter_codes=`echo "$2" | sed 's/ //g'`
+            else
+                if [[ -n "$add_codes" ]]; then
+                    filter_codes="$filter_codes,$add_codes"
+                fi
+
+                filter_codes=`get_difference $filter_codes $remove_codes`
+            fi
+            shift
+            ;;
+        -fl|-fs|-fw|-fr)
+            add_ffuf_args $1 "$2"
+            shift
+            ;;
+        -X)
+            method=$(echo "$2" | tr 'a-z' 'A-Z')
+            add_ffuf_args $1 "$method"
+            shift
+            ;;
+        -t|--token) # access token for authorization
+            add_ffuf_args -H "Authorization: Bearer $2"
+            shift
+            ;;
+        --auth)
+            add_ffuf_args -H "Authorization: $2"
+            shift
+            ;;
+        -w|--wordlist)
+            wordlist_file=$(realpath "$2")
+            wordlist_name=`basename $wordlist_file`
+            wordlist_name="${wordlist_name%.*}"
+            shift
+            ;;
+        -u|--url)
+            url="$2"
+            if [[ -z "$urls" ]]; then
+                urls="$url"
+            else
+                urls=`echo -e "$2\n$urls" | sort -d | uniq`
+            fi
+            shift
+            ;;
+        -uf|--url-file)
+            contents=`cat "$2" | grep -v "^#"`
+            if [[ -z "$urls" ]]; then
+                urls="$contents"
+            else
+                urls=`echo -e "$contents\n$urls" | sort -d | uniq`
+            fi
+            shift
+            ;;
+        -a|--useragent)
+            agent="$2"
+
+            case "$agent" in
+                Firefox|firefox)
+                    agent='Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101 Firefox/68.0'
+                    ;;
+                Safari|safari)
+                    agent='Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_2) AppleWebKit/601.3.9 (KHTML, like Gecko) Version/9.0.2 Safari/601.3.9'
+                    ;;
+                Chrome|chrome)
+                    agent='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36'
+                    ;;
+            esac
+            add_ffuf_args -H "User-Agent: $agent"
+            shift
+            ;;
+        -x)
+            add_ffuf_args -x "$2"
+            shift
+            ;;
+        -o|--output)
+            output_file="$2"
+            shift
+            ;;
+        -h|--help)
+            show_usage
+            exit 0
+            ;;
+    esac;
+    shift;
+done
+if [[ "$1" == '--' ]]; then
+    shift
+fi
+
+for url in $urls; do
+    run $@
+done
