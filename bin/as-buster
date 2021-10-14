@@ -15,8 +15,8 @@
 ##|  -h, --help                             Help for arbuster
 ##|  -m, --method                           Use the following HTTP method (default "GET")
 ##|  -k, --no-tls-validation                Skip SSL certificate verification
-##|  -o, --output-dir string                Host specific output directory to write results to
-##|                                         Default: recon
+##|  -o, --output string                    Name of the file to write the results to
+##|                                         Default: gobuster.{HTTP_METHOD}.{URL}.{WORDLIST}.txt
 ##|  --proxy string                         Proxy to use for requests [[http(s)|socks(4|5)]://host:port]
 ##|  -b, --status-codes-blacklist string    Comma delimited list of blacklisted status codes
 ##|                                         Format: [+|-]code[,code]
@@ -76,7 +76,9 @@ run(){
     # Get hostname from URL
     # Remove URL scheme (http:// or https://) and remove port (:port)
     hostname=$(echo "$url" | sed 's|http\(s\)\?://||;s/:[0-9]\+//' | awk -F '/' '{print $1}')
-    output_file="gobuster.$(echo "$url" | sed 's|://|.|;s|/$||;s|/|.|g').$wordlist_name.txt"
+    if [[ -z "$output_file" ]]; then
+        output_file="gobuster.$method.$(echo "$url" | sed 's|://|.|;s|/$||;s|/|.|g').$wordlist_name.txt"
+    fi
     output_path="$output_dir/$output_file"
 
     # if host dir exists we are in the op root.
@@ -95,10 +97,6 @@ run(){
     fi
 
     if [[ -n "$hostname" ]]; then
-        if [ ! -f hostname ]; then
-            echo "$hostname" > hostname
-        fi
-
         # Check if hostname is an IP
         if ! echo $hostname | grep -qP "(?:(?:2(?:[0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9])\.){3}(?:(?:2([0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9]))"; then
           echo "$hostname" >> recon/hostnames.txt
@@ -143,6 +141,8 @@ if [[ $# -eq 0 ]]; then
     exit 0
 fi
 
+output_file=""
+method="GET"
 output_dir="recon"
 status_codes="404"
 while [[ "$1" =~ ^- && ! "$1" == "--" ]]; do
@@ -155,6 +155,11 @@ while [[ "$1" =~ ^- && ! "$1" == "--" ]]; do
             ;;
         -x|--extensions)
             add_gb_args $1 "$2"
+            shift
+            ;;
+        -m|--method)
+            method=$(echo "$2" | tr 'a-z' 'A-Z')
+            add_gb_args $1 "$method"
             shift
             ;;
         -k|--no-tls-validation)
@@ -220,8 +225,8 @@ while [[ "$1" =~ ^- && ! "$1" == "--" ]]; do
             add_gb_args --exclude-length "$2"
             shift
             ;;
-        -o|--output-dir)
-            output_dir="$2"
+        -o|--output)
+            output_file="$2"
             shift
             ;;
         -h|--help)
