@@ -107,11 +107,6 @@ run(){
         fi
     fi
 
-    # tee to output_path instead of using ffufs output. this way the ffuf header gets saved and error message
-    # -z to prevent progress updates, since we are redirecting stderr to stdout
-    # redirect stderr to stdout so we can see what went wrong during the run
-    # since we have lots of extra info in the file, we'll have to grep instead of cat the file
-    # grep -P "^https?:" $output_path
     url=$(echo "$url" | sed 's|/$||') # Remove trailing /
     if [[ ! "$url" =~ .*FUZZ.* ]]; then
         url="$url/FUZZ"
