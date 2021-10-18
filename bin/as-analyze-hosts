@@ -47,6 +47,12 @@ cat recon/domains/*/resolv-domains.txt | grep "address" | sort -d | uniq | while
   tick "Reviewing resolved domains"
 
   domain=$(echo "$line" | awk '{print $1}')
+  safe=$(echo "$domain" | as-prune-blacklisted-domains| ensureDomainInScope )
+  if [ -z "$safe" ]; then
+    _ "Ignoring $domain"
+    continue
+  fi
+
   ip=$(echo "$line" | awk '{print $NF}')
   ip_resolv_domain=$(grep -P "^$(echo "$ip" | sed 's/\./\\./g') " recon/ips/resolv-ips.txt 2>/dev/null | awk '{print $NF}' | sed 's/\.$//g')
 
@@ -171,12 +177,6 @@ echo >&2
 _ "Updating existing hosts"
 
 ls -d recon/analyze-hosts/services/* | cut -d/ -f4 | while read service ; do
-
-  safe=$(echo "$service" | as-prune-blacklisted-domains| ensureDomainInScope )
-  if [ -z "$safe" ]; then
-    _ "Ignoring $service"
-    continue
-  fi
 
   if [ -e "hosts/$service" ]; then
     _ "Updating existing $service"
