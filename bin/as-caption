@@ -1,0 +1,72 @@
+#! /bin/bash
+
+if ! ps aux | grep gromit | grep mpx ; then
+	echo starting gromit
+	gromit-mpx &
+fi
+
+
+mouse="1"
+extra_start=""
+extra_end=""
+
+if [ ! -z "$1" ]; then
+  case $1 in
+    blue)
+      extra_start="xdotool keydown shift"
+      extra_end="xdotool keyup shift"
+      ;;
+    yellow)
+      extra_start="xdotool keydown control"
+      extra_end="xdotool keyup control"
+      ;;
+    green)
+      mouse="2"
+      ;;
+  esac
+fi
+
+slop=$(slop -f "%x,%y,%w,%h")
+
+
+xinput set-int-prop 6 "Device Enabled" 8 0
+
+X=$(echo $slop | cut -d "," -f1)
+Y=$(echo $slop | cut -d "," -f2)
+W=$(echo $slop | cut -d "," -f3)
+H=$(echo $slop | cut -d "," -f4)
+SLEEP="0.05"
+
+
+cat <<Endofmessage | bash
+xdotool key F9;
+$extra_start
+xdotool mousemove $X $Y;
+sleep "$SLEEP";
+
+xdotool mousedown $mouse;
+sleep "$SLEEP";
+
+xdotool mousemove_relative $W 0;
+sleep "$SLEEP";
+
+xdotool mousemove_relative 0 $H;
+sleep "$SLEEP";
+
+xdotool mousemove_relative -- -$W 0;
+sleep "$SLEEP";
+
+xdotool mousemove_relative 0 -$H;
+sleep "$SLEEP";
+
+xdotool mouseup $mouse;
+$extra_end
+sleep "$SLEEP";
+
+xdotool key F9;
+
+Endofmessage
+
+sleep 0.1
+xinput set-int-prop 6 "Device Enabled" 8 1
+
