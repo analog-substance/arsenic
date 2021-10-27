@@ -94,7 +94,15 @@ function gitCommit {
 }
 
 function gitLock {
-  gitPull
+  # gitPull
+  if [ $GIT -eq 1 ]; then
+    if ! git pull --rebase > /dev/null 2>&1 ; then
+        echo '[!] reset to origin'
+        git rebase --abort
+        git reset --hard origin/master
+        exit 1
+    fi
+  fi
 
   if [ -f "$1" ]; then
     _warn "cant lock a file that exists"
