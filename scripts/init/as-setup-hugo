@@ -20,40 +20,59 @@ set -euo pipefail
 
 OP_NAME=$(basename $(pwd))
 
-if [ ! -d ".hugo" ]; then
-  _ "Setup Hugo"
-  git clone https://github.com/defektive/arsenic-hugo.git
+NEW_OP=1
+if [ -d .hugo ]; then
+  NEW_OP=0
+  rm -rf .hugo
+fi
 
-  rm -rf arsenic-hugo/.git
-  mv arsenic-hugo/example .hugo
-  mkdir .hugo/themes
-  mv arsenic-hugo .hugo/themes/arsenic
+_ "Setup Hugo"
+git clone -b dev/local-testing https://github.com/defektive/arsenic-hugo.git
 
+rm -rf arsenic-hugo/.git
+rm arsenic-hugo/Makefile
+rm arsenic-hugo/example/themes/arsenic # remove the symlink that is used just for testing purposes
+
+mv arsenic-hugo/example .hugo
+mv arsenic-hugo .hugo/themes/arsenic
+
+if [[ "$NEW_OP" == "1" ]]; then
   mv .hugo/README.md report/sections/
   ln -s report/sections/README.md
+else
+  rm .hugo/README.md
+fi
 
-  cd .hugo
+cd .hugo
+
+if [[ "$NEW_OP" == "1" ]]; then
   mv config.toml ../
-  ln -s ../config.toml
   mv sample-finding ../report/findings/first-finding
   mv sample-campaign.md ../report/social
-
-  cd content
-  ln -srf ../../recon
-  ln -srf ../../hosts
-  ls -d ../../report/* | xargs -n 1 ln -srf
-  mkdir notes
-
-  _ "Hugo Setup complete"
-  cd ../../
-
-  if [ ! -f Makefile ]; then
-    {
-      echo -e "report::\n\tcd .hugo; \\"
-      echo -e "\thugo server"
-      echo -e "addnote::\n\tcd .hugo; \\"
-      echo -e "\thugo new \"content/notes/\$\$(date +'%Y-%m-%d_%H%M%S')__\$\$(whoami).md\" --kind note"
-    } >> Makefile
-  fi
-  _ "Setup Hugo complete"
+else
+  rm config.toml
+  rm -rf sample-finding
+  rm sample-campaign.md
 fi
+
+ln -s ../config.toml
+
+cd content
+ln -srf ../../recon
+ln -srf ../../hosts
+ln -srf ../../notes
+ls -d ../../report/* | xargs -n 1 ln -srf
+
+_ "Hugo Setup complete"
+cd ../../
+
+if [ ! -f Makefile ]; then
+  {
+    echo -e "report::\n\tcd .hugo; \\"
+    echo -e "\thugo server"
+    echo -e "addnote::\n\tcd .hugo; \\"
+    echo -e "\thugo new \"content/notes/\$\$(date +'%Y-%m-%d_%H%M%S')__\$\$(whoami).md\" --kind note"
+    echo -e "update_hugo::\n\tas-setup-hugo"
+  } >> Makefile
+fi
+_ "Setup Hugo complete"
