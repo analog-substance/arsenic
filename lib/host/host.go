@@ -14,7 +14,7 @@ import (
 
 	// "strings"
 	"github.com/ahmetb/go-linq/v3"
-	"github.com/analog-arsenic/arsenic/lib/util"
+	"github.com/analog-substance/arsenic/lib/util"
 )
 
 type Port struct {

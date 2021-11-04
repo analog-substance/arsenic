@@ -27,7 +27,7 @@ if [ -d .hugo ]; then
 fi
 
 _ "Setup Hugo"
-git clone https://github.com/analog-arsenic/arsenic-hugo.git
+git clone https://github.com/analog-substance/arsenic-hugo.git
 
 rm -rf arsenic-hugo/.git
 rm arsenic-hugo/Makefile

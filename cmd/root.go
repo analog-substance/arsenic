@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/analog-arsenic/arsenic/lib/util"
+	"github.com/analog-substance/arsenic/lib/util"
 )
 
 var cfgFile string

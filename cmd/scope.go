@@ -8,7 +8,7 @@ import (
 	"regexp"
 	"sort"
 
-	"github.com/analog-arsenic/arsenic/lib/util"
+	"github.com/analog-substance/arsenic/lib/util"
 	"github.com/spf13/cobra"
 )
 

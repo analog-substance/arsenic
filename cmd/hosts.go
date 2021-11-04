@@ -10,9 +10,9 @@ import (
 	"text/template"
 
 	"github.com/ahmetb/go-linq/v3"
-	"github.com/analog-arsenic/arsenic/lib/host"
-	"github.com/analog-arsenic/arsenic/lib/set"
-	"github.com/analog-arsenic/arsenic/lib/util"
+	"github.com/analog-substance/arsenic/lib/host"
+	"github.com/analog-substance/arsenic/lib/set"
+	"github.com/analog-substance/arsenic/lib/util"
 	"github.com/ryanuber/columnize"
 	"github.com/spf13/cobra"
 )
