@@ -1,6 +1,6 @@
 package main
 
-import "github.com/defektive/arsenic/cmd"
+import "github.com/analog-arsenic/arsenic/cmd"
 
 func main() {
 	cmd.Execute()

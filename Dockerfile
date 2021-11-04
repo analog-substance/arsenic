@@ -15,8 +15,8 @@ apt-get install -y build-essential jq curl wget rubygems gcc dnsutils netcat net
 
 RUN cd /var/opt/ && \
 git clone https://github.com/michenriksen/aquatone && \
-git clone https://github.com/defektive/arsenic && \
-git clone https://github.com/defektive/hugo && \
+git clone https://github.com/analog-arsenic/arsenic && \
+git clone https://github.com/analog-arsenic/hugo && \
 git clone https://github.com/OJ/gobuster.git
 
 RUN cd /tmp && \
@@ -28,5 +28,5 @@ echo "export GOPATH=$HOME/go" >> ~/.bashrc && \
 echo "export PATH=$GOPATH/bin:$GOROOT/bin:$PATH" >> ~/.bashrc && \
 echo "source /var/opt/arsenic/arsenic.rc" >> ~/.bashrc
 
-RUN go get github.com/defektive/fast-resolv
-RUN cp /root/go/src/github.com/defektive/fast-resolv/fast-resolv.conf /root/go/bin/
+RUN go get github.com/analog-arsenic/fast-resolv
+RUN cp /root/go/src/github.com/analog-arsenic/fast-resolv/fast-resolv.conf /root/go/bin/

@@ -1,4 +1,4 @@
-module github.com/defektive/arsenic
+module github.com/analog-arsenic/arsenic
 
 go 1.13
 
