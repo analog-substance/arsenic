@@ -7,19 +7,27 @@ fi
 
 mkdir -p "$SCREENSHOT_DIR"
 
-NAME="Screenshot"
 name="$@"
-if [ ! -z "$name" ]; then 
-echo "$name"
-NAME=$(echo "$name" | sed 's/[^A-Za-z ]//g' | sed 's/ \+/-/g')
+if [ -z "$name" ]; then
+  if which rofi > /dev/null 2>&1 ; then
+    name=$(ls $SCREENSHOT_DIR/../findings | sed 's/^[0-9\.]* //g;s/^\(.*\)$/\1\n\1 Details\n\1 Request\n\1 Response\n\1 Results/' | rofi -dmenu -p "Screenshot Caption")
+  fi
+  name="Screenshot"
 fi
+NAME=$(echo "$name" | sed 's/[^A-Za-z ]//g' | sed 's/ \+/-/g')
 
 SCREENSHOT_PATH="$SCREENSHOT_DIR/$NAME-$( date +'%Y-%m-%d_%H%M' ).png"
 
-echo "[+] Saving to $SCREENSHOT_PATH"
+set -e
 
 maim -s -u --format=png "$SCREENSHOT_PATH"
-
-echo "[+] $SCREENSHOT_PATH copied to clipboard"
 echo "![$name]($(echo -n "$SCREENSHOT_PATH" | sed 's|'"$SCREENSHOT_DIR"'|/static|'))" | xclip -selection clipboard -target text/plain -i
+
+if [ -t 1 ] ; then
+  echo "[+] Saved to $SCREENSHOT_PATH"
+  echo "[+] $SCREENSHOT_PATH copied to clipboard"
+else
+  # notify-send "Saved to $SCREENSHOT_PATH"
+  notify-send "Markdown copied to clipboard"
+fi
 
