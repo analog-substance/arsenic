@@ -10,14 +10,21 @@ mkdir -p "$SCREENSHOT_DIR"
 name="$@"
 if [ -z "$name" ]; then
   if which rofi > /dev/null 2>&1 ; then
-    name=$(ls $SCREENSHOT_DIR/../findings | sed 's/^[0-9\.]* //g;s/^\(.*\)$/\1\n\1 Details\n\1 Request\n\1 Response\n\1 Results/' | rofi -dmenu -p "Screenshot Caption")
+    name=$(
+      ls -d $SCREENSHOT_DIR/../findings/* $SCREENSHOT_DIR/../sections/* \
+      | grep -v README \
+      | awk -F'/' '{print $NF}' \
+      | sed 's/^[0-9\.]* //g;s/\.md//;s/_/ /g;s/^\(.*\)$/\1\n\1 Details\n\1 Request\n\1 Response\n\1 Results/' \
+      | awk '{for(i=0;++i<=NF;){OFS=(i==NF)?RS:FS;printf toupper(substr($i,0,1)) substr($i,2) OFS }}' \
+      | sort -u \
+      | rofi -dmenu -p "Screenshot Caption")
   fi
   name="Screenshot"
 fi
 NAME=$(echo "$name" | sed 's/[^A-Za-z ]//g' | sed 's/ \+/-/g')
 
 SCREENSHOT_PATH="$SCREENSHOT_DIR/$NAME-$( date +'%Y-%m-%d_%H%M' ).png"
-
+2
 set -e
 
 maim -s -u --format=png "$SCREENSHOT_PATH"
