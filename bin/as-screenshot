@@ -18,13 +18,13 @@ if [ -z "$name" ]; then
       | awk '{for(i=0;++i<=NF;){OFS=(i==NF)?RS:FS;printf toupper(substr($i,0,1)) substr($i,2) OFS }}' \
       | sort -u \
       | rofi -dmenu -p "Screenshot Caption")
+  else
+    name="Screenshot"
   fi
-  name="Screenshot"
 fi
 NAME=$(echo "$name" | sed 's/[^A-Za-z ]//g' | sed 's/ \+/-/g')
 
 SCREENSHOT_PATH="$SCREENSHOT_DIR/$NAME-$( date +'%Y-%m-%d_%H%M' ).png"
-2
 set -e
 
 maim -s -u --format=png "$SCREENSHOT_PATH"
@@ -37,4 +37,3 @@ else
   # notify-send "Saved to $SCREENSHOT_PATH"
   notify-send "Markdown copied to clipboard"
 fi
-

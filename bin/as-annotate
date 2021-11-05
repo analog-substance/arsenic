@@ -1,8 +1,10 @@
 #! /bin/bash
 
+GROMIT_KEY="F9"
+
 if ! ps aux | grep gromit | grep mpx ; then
 	echo starting gromit
-	gromit-mpx &
+	gromit-mpx --key "$GROMIT_KEY" &
 fi
 
 
@@ -35,11 +37,11 @@ X=$(echo $slop | cut -d "," -f1)
 Y=$(echo $slop | cut -d "," -f2)
 W=$(echo $slop | cut -d "," -f3)
 H=$(echo $slop | cut -d "," -f4)
-SLEEP="0.05"
+SLEEP="0.5"
 
 
 cat <<Endofmessage | bash
-xdotool key F9;
+xdotool key $GROMIT_KEY;
 $extra_start
 xdotool mousemove $X $Y;
 sleep "$SLEEP";
@@ -63,10 +65,9 @@ xdotool mouseup $mouse;
 $extra_end
 sleep "$SLEEP";
 
-xdotool key F9;
+xdotool key $GROMIT_KEY;
 
 Endofmessage
 
 sleep 0.1
 xinput set-int-prop 6 "Device Enabled" 8 1
-
