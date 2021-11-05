@@ -37,7 +37,7 @@ X=$(echo $slop | cut -d "," -f1)
 Y=$(echo $slop | cut -d "," -f2)
 W=$(echo $slop | cut -d "," -f3)
 H=$(echo $slop | cut -d "," -f4)
-SLEEP="0.5"
+SLEEP="0.05"
 
 
 cat <<Endofmessage | bash
