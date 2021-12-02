@@ -12,7 +12,7 @@ if [ "$ARSENIC_INIT" != 1 ]; then
   export ARSENIC_PATH=`pwd`
   popd > /dev/null
 
-  ARSENIC_OPT_PATH=$(dirname $ARSENIC_PATH)
+  export ARSENIC_OPT_PATH=$(dirname $ARSENIC_PATH)
   PATH="$(echo $(ls -d $ARSENIC_OPT_PATH/*/bin) | sed 's/ /:/g'):$PATH"
   export PATH="$ARSENIC_PATH/scripts/init:$ARSENIC_PATH/scripts/discover:$ARSENIC_PATH/scripts/recon:$ARSENIC_PATH/scripts/hunt:$PATH"
 
