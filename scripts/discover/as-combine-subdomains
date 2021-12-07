@@ -40,7 +40,7 @@ function root_domain_recon {
 
 # Recon root domains
 _ "Getting subdomains for root domains"
-getRootDomains | while read domain; do
+arsenic scope domains --all-root-domains | while read domain; do
   root_domain_recon "$domain"
 done
 

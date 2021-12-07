@@ -23,11 +23,16 @@ declare -a dig_commands=("TXT" "NS" "MX" "SOA" "A")
 
 function root_domain_recon {
   domain=$(echo $1 | tr 'A-Z' 'a-z')
-  if ! echo "$domain" | as-prune-blacklisted-domains | grep "$domain" > /dev/null ; then
+  mkdir -p "recon/domains/$domain"
+
+  cat scope-domains*.txt 2>/dev/null \
+    | grep -P "$(echo "$domain" | sed 's/\./\\./g')\$" \
+    | sort -d \
+    | uniq > "recon/domains/$domain/subdomains-scope.txt"
+
+  if ! arsenic scope domains -r | grep -q "$domain"; then
     _warn "Skipping common domain: $domain"
   else
-    mkdir -p "recon/domains/$domain"
-
     for cmd in "${root_domain_commands[@]}";  do
       if [ ! -f "recon/domains/$domain/$cmd.txt" ]; then
         _ "running $domain $cmd"
@@ -47,17 +52,12 @@ function root_domain_recon {
       fi
     done
     wait
-
-    cat scope-domains*.txt 2>/dev/null \
-    | grep -P "$(echo "$domain" | sed 's/\./\\./g')\$" \
-    | sort -d \
-    | uniq > "recon/domains/$domain/subdomains-scope.txt"
   fi
 }
 
 # Recon root domains
 _ "Recon on root domains"
-getRootDomains | while read domain; do
+arsenic scope domains --all-root-domains | while read domain; do
   root_domain_recon "$domain"
 done
 
