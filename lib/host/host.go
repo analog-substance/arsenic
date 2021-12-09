@@ -319,7 +319,6 @@ func (host Host) ports() []Port {
 	portMap := make(map[string]Port)
 	globbed, _ := filepath.Glob(fmt.Sprintf("%s/recon/%s", host.Dir, "nmap-punched-??p.xml"))
 
-	//	fmt.Println(host.Hostnames, globbed)
 	for _, file := range globbed {
 		data, err := ioutil.ReadFile(file)
 		if err != nil {
@@ -333,7 +332,6 @@ func (host Host) ports() []Port {
 
 		for _, host := range nmapRun.Hosts {
 			for _, port := range host.Ports {
-				//				fmt.Println(host.Hostnames, port)
 
 				if port.State.State != "closed" && port.State.State != "filtered" {
 					service := port.Service.Name

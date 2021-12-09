@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"math/rand"
+	"strings"
 	"time"
 
 	"golang.org/x/net/publicsuffix"
@@ -193,8 +194,7 @@ func (w NoopWriter) Write(bytes []byte) (int, error) {
 	return 0, nil
 }
 
-func GetRootDomains(domains []string, blacklist bool) []string {
-
+func GetRootDomains(domains []string, pruneBlacklisted bool) []string {
 	blacklistedRootDomains := viper.GetStringSlice("blacklist.root-domains")
 	rootDomainMap := map[string]int{}
 	rootDomains := []string{}
@@ -207,11 +207,10 @@ func GetRootDomains(domains []string, blacklist bool) []string {
 	}
 
 	for rootDomain := range rootDomainMap {
-
 		addRootDomain := true
-		if blacklist {
+		if pruneBlacklisted {
 			for _, badRootDomain := range blacklistedRootDomains {
-				if badRootDomain == rootDomain {
+				if strings.EqualFold(badRootDomain, rootDomain) {
 					addRootDomain = false
 					break
 				}
