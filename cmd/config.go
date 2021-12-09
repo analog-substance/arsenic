@@ -26,6 +26,11 @@ Helpful to see what scripts would be executed.`,
 		count := len(args)
 		switch count {
 		case 0:
+			save, _ := cmd.Flags().GetBool("save")
+			if save {
+				saveConfig()
+				return
+			}
 			subKeysOnly, _ := cmd.Flags().GetBool("sub-keys")
 			if subKeysOnly {
 				printKeys(viper.AllSettings())
@@ -208,6 +213,7 @@ func splitIntoParentChild(key string) (string, string) {
 
 func init() {
 	rootCmd.AddCommand(configCmd)
+	configCmd.Flags().BoolP("save", "s", false, "save the current configuration")
 	configCmd.Flags().BoolP("sub-keys", "k", false, "display only the sub-keys")
 	configCmd.Flags().BoolP("remove-reset", "r", false, "remove key from the config or reset to default")
 }

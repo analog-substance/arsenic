@@ -3,9 +3,11 @@ package util
 import (
 	"bufio"
 	"fmt"
-	"golang.org/x/net/publicsuffix"
 	"math/rand"
+	"strings"
 	"time"
+
+	"golang.org/x/net/publicsuffix"
 
 	// "io/ioutil"
 	"log"
@@ -192,8 +194,7 @@ func (w NoopWriter) Write(bytes []byte) (int, error) {
 	return 0, nil
 }
 
-func GetRootDomains(domains []string) []string {
-
+func GetRootDomains(domains []string, pruneBlacklisted bool) []string {
 	blacklistedRootDomains := viper.GetStringSlice("blacklist.root-domains")
 	rootDomainMap := map[string]int{}
 	rootDomains := []string{}
@@ -206,12 +207,13 @@ func GetRootDomains(domains []string) []string {
 	}
 
 	for rootDomain := range rootDomainMap {
-
 		addRootDomain := true
-		for _, badRootDomain := range blacklistedRootDomains {
-			if badRootDomain == rootDomain {
-				addRootDomain = false
-				break
+		if pruneBlacklisted {
+			for _, badRootDomain := range blacklistedRootDomains {
+				if strings.EqualFold(badRootDomain, rootDomain) {
+					addRootDomain = false
+					break
+				}
 			}
 		}
 

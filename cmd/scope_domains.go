@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+
 	"github.com/analog-substance/arsenic/lib/util"
 	"github.com/spf13/cobra"
 )
@@ -18,8 +19,9 @@ This will prune blacklisted domains, and blacklisted root domains.
 		domains, _ := getScope("domains")
 
 		rootDomains, _ := cmd.Flags().GetBool("root-domains")
-		if rootDomains {
-			domains = util.GetRootDomains(domains)
+		allRootDomains, _ := cmd.Flags().GetBool("all-root-domains")
+		if rootDomains || allRootDomains {
+			domains = util.GetRootDomains(domains, rootDomains)
 		}
 
 		for _, scope := range domains {
@@ -31,5 +33,6 @@ This will prune blacklisted domains, and blacklisted root domains.
 func init() {
 	scopeCmd.AddCommand(domainsCmd)
 
-	domainsCmd.Flags().BoolP("root-domains", "r", false, "show only root domains")
+	domainsCmd.Flags().BoolP("root-domains", "r", false, "show only non-blacklisted root domains")
+	domainsCmd.Flags().Bool("all-root-domains", false, "show all root domains")
 }
