@@ -181,7 +181,7 @@ func reviewDomains(resolvResults []string) {
 	}
 
 	cfIpSet := ipsByIpResolvDomain[cfIpResolvDomain]
-	if cfIpSet.Length() > 0 {
+	if cfIpSet != nil && cfIpSet.Length() > 0 {
 		cfDomainSet := set.NewStringSet()
 		cfIps := cfIpSet.StringSlice()
 		for _, ip := range cfIps {
