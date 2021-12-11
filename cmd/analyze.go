@@ -8,6 +8,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/ahmetb/go-linq/v3"
 	"github.com/analog-substance/arsenic/lib/grep"
 	"github.com/analog-substance/arsenic/lib/host"
 	"github.com/analog-substance/arsenic/lib/set"
@@ -136,7 +137,7 @@ This will create a single host for hostnames that resolve to the same IPs`,
 
 			var h host.Host
 			hosts := host.Get(domain)
-			if hosts == nil { // New service/host
+			if len(hosts) == 0 { // New service/host
 				fmt.Printf("[+] Creating new service %s\n", domain)
 
 				h = host.InitHost(filepath.Join("hosts", domain))
@@ -159,6 +160,23 @@ This will create a single host for hostnames that resolve to the same IPs`,
 				h.SaveMetadata()
 			}
 		}
+
+		scopeIps, _ := util.GetScope("ips")
+		ips := domainsByIp.keys()
+		linq.From(scopeIps).
+			Except(linq.From(ips)).
+			ForEach(func(i interface{}) {
+				ip := i.(string)
+				if len(host.GetByIp(ip)) > 0 {
+					return
+				}
+
+				fmt.Printf("[+] Creating new service %s\n", ip)
+				if create {
+					h := host.InitHost(filepath.Join("hosts", ip))
+					h.SaveMetadata()
+				}
+			})
 	},
 }
 
@@ -195,6 +213,11 @@ func reviewDomains(resolvResults []string) {
 		domain := split[0]
 		ip := split[len(split)-1]
 
+		if !util.IsDomainInScope(domain) {
+			fmt.Printf("\nIgnoring %s\n", domain)
+			continue
+		}
+
 		ipResolvDomain := ""
 		if util.FileExists(resolvIpsFile) {
 			re := regexp.MustCompile(fmt.Sprintf("^%s", regexp.QuoteMeta(ip)))
@@ -224,13 +247,17 @@ func reviewDomains(resolvResults []string) {
 
 		util.WriteLines(filepath.Join(analyzeDir, "cloudfront-domains.txt"), cfDomains)
 
-		firstCfDomain := ""
+		//firstCfDomain := ""
 		for _, cfDomain := range cfDomains {
-			if firstCfDomain == "" {
-				firstCfDomain = cfDomain
-			}
+			// if firstCfDomain == "" {
+			// 	firstCfDomain = cfDomain
+			// }
 
 			ipSet := ipsByDomain[cfDomain]
+			if ipSet == nil {
+				continue
+			}
+
 			ips := ipSet.StringSlice()
 			for _, ip := range ips {
 				domainSet := domainsByIp[ip]
@@ -252,7 +279,7 @@ func reviewDomains(resolvResults []string) {
 	}
 
 	for ipResolvDomain, ips := range ipsByIpResolvDomain {
-		ipResolvDomainFile := fmt.Sprintf("%s/resolve-domain-%s.txt", analyzeDir, ipResolvDomain)
+		ipResolvDomainFile := fmt.Sprintf("%s/resolv-domain-%s.txt", analyzeDir, ipResolvDomain)
 
 		util.WriteLines(ipResolvDomainFile, ips.SortedStringSlice())
 	}
@@ -277,7 +304,11 @@ func reviewIps() {
 			tick("Reviewing resolved IPs")
 
 			if svc != nil {
-				domainIps := ipsByDomain[domain].SortedStringSlice()
+				domainIpSet := ipsByDomain[domain]
+				if domainIpSet == nil {
+					continue
+				}
+				domainIps := domainIpSet.SortedStringSlice()
 
 				// Keep track of the domains that have differences in IPs
 				if !util.StringSliceEquals(serviceIps, domainIps) {

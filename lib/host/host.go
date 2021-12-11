@@ -281,6 +281,23 @@ func Get(hostDirsOrHostnames ...string) []Host {
 	return hosts
 }
 
+func GetByIp(ips ...string) []Host {
+	hosts := []Host{}
+	for _, hostDir := range getHostDirs() {
+		host := InitHost(hostDir)
+		hostIps := host.Metadata.IPAddresses
+
+		if linq.From(ips).AnyWith(func(ip interface{}) bool {
+			return linq.From(hostIps).AnyWith(func(hostIp interface{}) bool {
+				return ip == hostIp
+			})
+		}) {
+			hosts = append(hosts, host)
+		}
+	}
+	return hosts
+}
+
 func getHostDirs() []string {
 	filePaths := []string{}
 	if _, err := os.Stat("hosts"); !os.IsNotExist(err) {
