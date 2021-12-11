@@ -113,6 +113,9 @@ run(){
     fi
 
     ffuf -recursion -recursion-depth $recursion_depth -ac -v -mc $match_codes -fc $filter_codes -o $output_path -of json -u $url -w "$wordlist_file" "${ffuf_args[@]}" $@
+    cat $output_path | jq > $output_path.new
+    mv $output_path.new $output_path
+    
     cleanup
 }
 cleanup() {

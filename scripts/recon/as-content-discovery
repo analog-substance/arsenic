@@ -42,7 +42,7 @@ set -eu
 # set -x
 
 function genOutputFileName {
-  echo "gobuster.$(echo "$1" | sed "s/:\/\//./" | sed 's/\//\./g').$wordlist_name.txt"
+  echo "ffuf.$(echo "$1" | sed "s/:\/\//./" | sed 's/\//\./g').$wordlist_name.json"
 }
 
 function newGetHostUrls {
@@ -89,24 +89,24 @@ function scanHost {
       if [ ! -z $CHECK_ONLY ]; then
         echo "$url"
       else
-        # gobuster dir -e -k --random-agent -d -u $url -w ../../recon/gobuster-wordlist.txt -o "recon/gobuster-wordlist-$hostname-$port.txt" &
+        # ffuf dir -e -k --random-agent -d -u $url -w ../../recon/ffuf-wordlist.txt -o "recon/ffuf-wordlist-$hostname-$port.txt" &
 
-        # If the host points to an S3 bucket, we don't want to gobuster it
+        # If the host points to an S3 bucket, we don't want to ffuf it
         if curl -sIL $host | grep -q "https://aws.amazon.com/s3/"; then
           _info "Content Discovery / $host / $url / s3 detected"
           echo "s3" > $output_file
-          gitCommit "recon/$output_file" "skip gobuster $url" reset
+          gitCommit "recon/$output_file" "skip ffuf $url" reset
         else
-          gitLock "recon/$output_file" "Gobuster lock: $url"
+          gitLock "recon/$output_file" "ffuf lock: $url"
 
           set +o pipefail
           set +e
 
           _info "Content Discovery / $host / $url / running"
-          as-buster -k -e -a Firefox -u $url -w $wordlist_file -o "$output_file"
+          as-ffuf -a Firefox -u $url -w $wordlist_file -o "$output_file"
         fi
 
-        gitCommit "." "Gobuster complete: $url"
+        gitCommit "." "ffuf complete: $url"
         set -e
         set -o pipefail
         _info "Content Discovery / $host / $url / complete"
@@ -124,8 +124,8 @@ function scanHost {
     fi
 
     set +e
-    if grep lock hosts/*/recon/gobuster*.txt | grep :lock > /dev/null; then
-      _warn "other gobusters are still running... lets wait before continuing"
+    if grep lock hosts/*/recon/ffuf*.json | grep :lock > /dev/null; then
+      _warn "other ffufs are still running... lets wait before continuing"
       exit 1
     fi
   fi
@@ -161,8 +161,8 @@ if [ "$CMD" == "scan" ] ; then
     ARG_URL=$(echo "$ARGS" | awk '{print $2}')
     if [ "$ARG_HOST" == "" ]; then
       set +e
-      if grep lock hosts/*/recon/gobuster*.txt | grep :lock > /dev/null; then
-        _warn "other gobusters are still running... lets wait before continuing"
+      if grep lock hosts/*/recon/ffuf*.json | grep :lock > /dev/null; then
+        _warn "other ffufs are still running... lets wait before continuing"
         exit 1
       fi
       exit
