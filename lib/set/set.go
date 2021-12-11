@@ -15,8 +15,12 @@ type Set struct {
 func NewSet(itemType reflect.Type) *Set {
 	return &Set{itemType: itemType, Set: map[interface{}]bool{}}
 }
-func NewStringSet() *Set {
-	return NewSet(reflect.TypeOf(""))
+func NewStringSet(values ...[]string) *Set {
+	s := NewSet(reflect.TypeOf(""))
+	for _, value := range values {
+		s.AddRange(value)
+	}
+	return s
 }
 func (set *Set) Add(item interface{}) bool {
 	itemType := reflect.TypeOf(item)

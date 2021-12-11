@@ -55,7 +55,7 @@ Currently Metadata has the following methods:
 
 		var hosts []host.Host
 		if len(hostsArgs) > 0 {
-			hosts = host.Get(hostsArgs)
+			hosts = host.Get(hostsArgs...)
 		} else if query != "" {
 			hostTemplate := template.New("host")
 			funcMap := make(template.FuncMap)

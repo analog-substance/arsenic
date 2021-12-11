@@ -249,7 +249,7 @@ func AllDirNames() []string {
 	return hosts
 }
 
-func Get(hostDirsOrHostnames []string) []Host {
+func Get(hostDirsOrHostnames ...string) []Host {
 	hosts := []Host{}
 	for _, hostDir := range getHostDirs() {
 		host := InitHost(hostDir)

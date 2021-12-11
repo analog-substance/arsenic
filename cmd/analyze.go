@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/analog-substance/arsenic/lib/grep"
+	"github.com/analog-substance/arsenic/lib/host"
 	"github.com/analog-substance/arsenic/lib/set"
 	"github.com/analog-substance/arsenic/lib/util"
 	"github.com/spf13/cobra"
@@ -103,7 +104,7 @@ var analyzeCmd = &cobra.Command{
 
 This will create a single host for hostnames that resolve to the same IPs`,
 	Run: func(cmd *cobra.Command, args []string) {
-		// create, _ := cmd.Flags().GetBool("create")
+		create, _ := cmd.Flags().GetBool("create")
 
 		// mode := "dry-run"
 		// if create {
@@ -126,6 +127,38 @@ This will create a single host for hostnames that resolve to the same IPs`,
 
 		reviewIps()
 		fmt.Println("\n[+] Updating existing hosts")
+
+		domains := serviceByDomain.keys()
+		for _, domain := range domains {
+			// TODO: Run domain through blacklist and scope checks
+
+			service := serviceByDomain[domain]
+
+			var h host.Host
+			hosts := host.Get(domain)
+			if hosts == nil { // New service/host
+				fmt.Printf("[+] Creating new service %s\n", domain)
+
+				h = host.InitHost(filepath.Join("hosts", domain))
+			} else {
+				h = hosts[0]
+				if h.Metadata.Name != domain {
+					fmt.Printf("[+] Adding domains to %s from %s\n", h.Metadata.Name, domain)
+				} else {
+					fmt.Printf("[+] Updating existing %s\n", domain)
+				}
+			}
+
+			hostnameSet := set.NewStringSet(h.Metadata.Hostnames, service.hostnames.StringSlice())
+			h.Metadata.Hostnames = hostnameSet.SortedStringSlice()
+
+			ipaddressSet := set.NewStringSet(h.Metadata.IPAddresses, service.ipAddresses.StringSlice())
+			h.Metadata.IPAddresses = ipaddressSet.SortedStringSlice()
+
+			if create {
+				h.SaveMetadata()
+			}
+		}
 	},
 }
 
