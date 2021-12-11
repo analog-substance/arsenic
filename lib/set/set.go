@@ -39,13 +39,13 @@ func (set *Set) Slice() interface{} {
 	return rawValues
 }
 func (set *Set) StringSlice() []string {
-	if reflect.SliceOf(set.itemType) != reflect.TypeOf("") {
+	if set.itemType != reflect.TypeOf("") {
 		return nil
 	}
 	return set.Slice().([]string)
 }
 func (set *Set) SortedStringSlice() []string {
-	if reflect.SliceOf(set.itemType) != reflect.TypeOf("") {
+	if set.itemType != reflect.TypeOf("") {
 		return nil
 	}
 	slice := set.StringSlice()

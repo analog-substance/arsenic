@@ -2,9 +2,11 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"reflect"
 	"regexp"
+	"sort"
 	"strings"
 
 	"github.com/analog-substance/arsenic/lib/set"
@@ -34,7 +36,6 @@ var analyzeCmd = &cobra.Command{
 
 This will create a single host for hostnames that resolve to the same IPs`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("plz 2 refactor me, cause i am calling a slow shell script... k thx, bye!")
 		// create, _ := cmd.Flags().GetBool("create")
 
 		// mode := "dry-run"
@@ -44,6 +45,7 @@ This will create a single host for hostnames that resolve to the same IPs`,
 		// scriptArgs := []string{mode}
 		// util.ExecScript("as-analyze-hosts", scriptArgs)
 
+		os.RemoveAll(analyzeDir)
 		util.Mkdirs(fmt.Sprintf("%s/services", analyzeDir), "hosts")
 
 		domainLines, err := getDomainLines()
@@ -185,7 +187,15 @@ func reviewDomains(domainLines []string) {
 }
 
 func reviewIps() {
-	for ip, domains := range domainsByIp {
+	var ips []string
+	for ip := range domainsByIp {
+		ips = append(ips, ip)
+	}
+	sort.Strings(ips)
+
+	for _, ip := range ips {
+		domains := domainsByIp[ip]
+
 		// Filter out the private ips
 		if privateIpRegex.MatchString(ip) {
 			continue
@@ -210,7 +220,9 @@ func reviewIps() {
 		util.Mkdirs(domainReconDir)
 
 		diffs := diffSet.SortedStringSlice()
-		util.WriteLines(fmt.Sprintf("%s/services/%s/domains-with-resolv-differences", analyzeDir, firstDomain), diffs)
+		if len(diffs) > 0 {
+			util.WriteLines(fmt.Sprintf("%s/services/%s/domains-with-resolv-differences", analyzeDir, firstDomain), diffs)
+		}
 
 		domainSet := set.NewSet(reflect.TypeOf(""))
 		domainSet.AddRange(domains)
