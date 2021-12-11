@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"reflect"
 	"regexp"
 	"sort"
 	"strings"
 
+	"github.com/analog-substance/arsenic/lib/grep"
 	"github.com/analog-substance/arsenic/lib/set"
 	"github.com/analog-substance/arsenic/lib/util"
 	"github.com/spf13/cobra"
@@ -20,14 +20,81 @@ const (
 )
 
 var (
-	tickChars                     = []string{"-", "/", "|", "\\"}
-	nextTick       int            = 0
-	privateIpRegex *regexp.Regexp = regexp.MustCompile(`\b(127\.[0-9]{1,3}\.|10\.[0-9]{1,3}\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[01])\.)[0-9]{1,3}\.[0-9]{1,3}\b`)
+	tickChars []string = []string{"-", "/", "|", "\\"}
+	nextTick  int      = 0
 
-	ipsByDomain         map[string][]string = make(map[string][]string)
-	domainsByIp         map[string][]string = make(map[string][]string)
-	ipsByIpResolvDomain map[string][]string = make(map[string][]string)
+	ipsByDomain         stringSetMap = make(stringSetMap)
+	domainsByIp         stringSetMap = make(stringSetMap)
+	ipsByIpResolvDomain stringSetMap = make(stringSetMap)
+	serviceByDomain     serviceMap   = make(serviceMap)
 )
+
+type stringSetMap map[string]*set.Set
+
+func (ssm stringSetMap) getOrInit(key string) *set.Set {
+	strSet, found := ssm[key]
+	if !found {
+		strSet = set.NewStringSet()
+		ssm[key] = strSet
+	}
+	return strSet
+}
+func (ssm stringSetMap) addToSet(key string, value string) {
+	ssm.getOrInit(key).Add(value)
+}
+func (ssm stringSetMap) keys() []string {
+	var keys []string
+	for key := range ssm {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	return keys
+}
+
+type service struct {
+	hostnames   *set.Set
+	ipAddresses *set.Set
+	diffs       *set.Set
+}
+
+func newService() *service {
+	return &service{
+		hostnames:   set.NewStringSet(),
+		ipAddresses: set.NewStringSet(),
+		diffs:       set.NewStringSet(),
+	}
+}
+
+func (svc *service) save(baseDir string) {
+	reconDir := filepath.Join(baseDir, "recon")
+	util.Mkdir(reconDir)
+
+	if svc.diffs.Length() > 0 {
+		util.WriteLines(filepath.Join(baseDir, "domains-with-resolv-differences"), svc.diffs.SortedStringSlice())
+	}
+
+	util.WriteLines(filepath.Join(reconDir, "other-hostnames.txt"), svc.hostnames.SortedStringSlice())
+	util.WriteLines(filepath.Join(reconDir, "ip-addresses.txt"), svc.ipAddresses.SortedStringSlice())
+}
+
+type serviceMap map[string]*service
+
+func (sm serviceMap) getOrInit(key string) *service {
+	service, found := sm[key]
+	if !found {
+		service = newService()
+		sm[key] = service
+	}
+	return service
+}
+func (sm serviceMap) keys() []string {
+	var keys []string
+	for key := range sm {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	return keys
+}
 
 var analyzeCmd = &cobra.Command{
 	Use:   "analyze",
@@ -46,15 +113,15 @@ This will create a single host for hostnames that resolve to the same IPs`,
 		// util.ExecScript("as-analyze-hosts", scriptArgs)
 
 		os.RemoveAll(analyzeDir)
-		util.Mkdirs(fmt.Sprintf("%s/services", analyzeDir), "hosts")
+		util.Mkdir(filepath.Join(analyzeDir, "services"), "hosts")
 
-		domainLines, err := getDomainLines()
+		resolvResults, err := getResolvResults()
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
 
-		reviewDomains(domainLines)
+		reviewDomains(resolvResults)
 		fmt.Println("\n[+] Domain review complete")
 
 		reviewIps()
@@ -67,14 +134,13 @@ func tick(msg string) {
 	nextTick = (nextTick + 1) % len(tickChars)
 }
 
-func getDomainLines() ([]string, error) {
-	stringSet := set.NewSet(reflect.TypeOf(""))
+func getResolvResults() ([]string, error) {
+	stringSet := set.NewStringSet()
+	addressRegex := regexp.MustCompile("address")
 	files, _ := filepath.Glob("recon/domains/*/resolv-domains.txt")
 	for _, file := range files {
-		err := util.ReadLineByLine(file, func(line string) {
-			if matched, _ := regexp.MatchString("address", line); matched {
-				stringSet.Add(line)
-			}
+		err := grep.LineByLine(file, addressRegex, func(line string) {
+			stringSet.Add(line)
 		})
 
 		if err != nil {
@@ -85,63 +151,45 @@ func getDomainLines() ([]string, error) {
 	return stringSet.SortedStringSlice(), nil
 }
 
-func reviewDomains(domainLines []string) {
+func reviewDomains(resolvResults []string) {
 	spaceRegex := regexp.MustCompile(`\s`)
 
-	domainSetByIp := make(map[string]set.Set)
-	ipSetByDomain := make(map[string]set.Set)
-	ipSetByIpResolvDomain := make(map[string]set.Set)
 	resolvIpsFile := "recon/ips/resolv-ips.txt"
-	for _, line := range domainLines {
+	for _, result := range resolvResults {
 		tick("Reviewing resolved domains")
 
-		split := spaceRegex.Split(line, -1)
+		split := spaceRegex.Split(result, -1)
 		domain := split[0]
 		ip := split[len(split)-1]
 
 		ipResolvDomain := ""
 		if util.FileExists(resolvIpsFile) {
 			re := regexp.MustCompile(fmt.Sprintf("^%s", regexp.QuoteMeta(ip)))
-			matches := util.GrepLines(resolvIpsFile, re, 1)
+			matches := grep.Matches(resolvIpsFile, re, 1)
 			if matches != nil && strings.Contains(matches[0], "cloudfront.net") {
 				ipResolvDomain = cfIpResolvDomain
 			}
 		}
 
-		if _, ok := domainSetByIp[ip]; !ok {
-			domainSetByIp[ip] = set.NewSet(reflect.TypeOf(""))
-		}
-		ipDomains := domainSetByIp[ip]
-		ipDomains.Add(domain)
-
-		if _, ok := ipSetByDomain[domain]; !ok {
-			ipSetByDomain[domain] = set.NewSet(reflect.TypeOf(""))
-		}
-		domainIps := ipSetByDomain[domain]
-		domainIps.Add(ip)
+		domainsByIp.addToSet(ip, domain)
+		ipsByDomain.addToSet(domain, ip)
 
 		if ipResolvDomain != "" {
-			ipDomains.Add(ipResolvDomain)
-
-			if _, ok := ipSetByIpResolvDomain[ipResolvDomain]; !ok {
-				ipSetByIpResolvDomain[ipResolvDomain] = set.NewSet(reflect.TypeOf(""))
-			}
-			ipResolvDomainIps := ipSetByIpResolvDomain[ipResolvDomain]
-			ipResolvDomainIps.Add(ip)
+			domainsByIp.addToSet(ip, ipResolvDomain)
+			ipsByIpResolvDomain.addToSet(ipResolvDomain, ip)
 		}
 	}
 
-	cfIpSet := ipSetByIpResolvDomain[cfIpResolvDomain]
+	cfIpSet := ipsByIpResolvDomain[cfIpResolvDomain]
 	if cfIpSet.Length() > 0 {
-		cfDomainSet := set.NewSet(reflect.TypeOf(""))
+		cfDomainSet := set.NewStringSet()
 		cfIps := cfIpSet.StringSlice()
 		for _, ip := range cfIps {
-			domainSet := domainSetByIp[ip]
-			cfDomainSet.AddRange(domainSet.StringSlice())
+			cfDomainSet.AddRange(domainsByIp[ip].StringSlice())
 		}
 		cfDomains := cfDomainSet.SortedStringSlice()
 
-		util.WriteLines(fmt.Sprintf("%s/cloudfront-domains.txt", analyzeDir), cfDomains)
+		util.WriteLines(filepath.Join(analyzeDir, "cloudfront-domains.txt"), cfDomains)
 
 		firstCfDomain := ""
 		for _, cfDomain := range cfDomains {
@@ -149,87 +197,73 @@ func reviewDomains(domainLines []string) {
 				firstCfDomain = cfDomain
 			}
 
-			ipSet := ipSetByDomain[cfDomain]
+			ipSet := ipsByDomain[cfDomain]
 			ips := ipSet.StringSlice()
 			for _, ip := range ips {
-				domainSet := domainSetByIp[ip]
+				domainSet := domainsByIp[ip]
 				domainSet.AddRange(cfDomains)
 			}
 		}
 	}
 
-	for domain, ipSet := range ipSetByDomain {
+	for domain, ips := range ipsByDomain {
 		domainFile := fmt.Sprintf("%s/resolv-domain-%s.txt", analyzeDir, domain)
 
-		ips := ipSet.SortedStringSlice()
-		ipsByDomain[domain] = ips
-
-		util.WriteLines(domainFile, ips)
+		util.WriteLines(domainFile, ips.SortedStringSlice())
 	}
 
-	for ip, domainSet := range domainSetByIp {
+	for ip, domains := range domainsByIp {
 		ipFile := fmt.Sprintf("%s/resolv-ip-%s.txt", analyzeDir, ip)
 
-		domains := domainSet.SortedStringSlice()
-		domainsByIp[ip] = domains
-
-		util.WriteLines(ipFile, domains)
+		util.WriteLines(ipFile, domains.SortedStringSlice())
 	}
 
-	for ipResolvDomain, ipSet := range ipSetByIpResolvDomain {
+	for ipResolvDomain, ips := range ipsByIpResolvDomain {
 		ipResolvDomainFile := fmt.Sprintf("%s/resolve-domain-%s.txt", analyzeDir, ipResolvDomain)
 
-		ips := ipSet.SortedStringSlice()
-		ipsByIpResolvDomain[ipResolvDomain] = ips
-
-		util.WriteLines(ipResolvDomainFile, ips)
+		util.WriteLines(ipResolvDomainFile, ips.SortedStringSlice())
 	}
 }
 
 func reviewIps() {
-	var ips []string
-	for ip := range domainsByIp {
-		ips = append(ips, ip)
-	}
-	sort.Strings(ips)
+	privateIpRegex := regexp.MustCompile(`\b(127\.[0-9]{1,3}\.|10\.[0-9]{1,3}\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[01])\.)[0-9]{1,3}\.[0-9]{1,3}\b`)
 
+	// Start grouping domains based off of their resolved IPs
+	ips := domainsByIp.keys()
 	for _, ip := range ips {
-		domains := domainsByIp[ip]
-
 		// Filter out the private ips
 		if privateIpRegex.MatchString(ip) {
 			continue
 		}
 
-		firstDomain := ""
-		diffSet := set.NewSet(reflect.TypeOf(""))
+		domains := domainsByIp[ip].SortedStringSlice()
+
+		var svc *service
+		var serviceIps []string
 		for _, domain := range domains {
 			tick("Reviewing resolved IPs")
 
-			if firstDomain != "" {
-				firstDomainIps := ipsByDomain[firstDomain]
-				domainIps := ipsByDomain[domain]
-				if !util.StringSliceEquals(firstDomainIps, domainIps) {
-					diffSet.Add(domain)
+			if svc != nil {
+				domainIps := ipsByDomain[domain].SortedStringSlice()
+
+				// Keep track of the domains that have differences in IPs
+				if !util.StringSliceEquals(serviceIps, domainIps) {
+					svc.diffs.Add(domain)
 				}
 			} else {
-				firstDomain = domain
+				svc = serviceByDomain.getOrInit(domain)
+
+				svc.ipAddresses.AddRange(ipsByDomain[domain].StringSlice())
+				serviceIps = svc.ipAddresses.SortedStringSlice()
 			}
+
+			svc.hostnames.Add(domain)
 		}
-		domainReconDir := fmt.Sprintf("%s/services/%s/recon", analyzeDir, firstDomain)
-		util.Mkdirs(domainReconDir)
+	}
 
-		diffs := diffSet.SortedStringSlice()
-		if len(diffs) > 0 {
-			util.WriteLines(fmt.Sprintf("%s/services/%s/domains-with-resolv-differences", analyzeDir, firstDomain), diffs)
-		}
-
-		domainSet := set.NewSet(reflect.TypeOf(""))
-		domainSet.AddRange(domains)
-		domainSet.AddRange(diffs)
-
-		util.WriteLines(fmt.Sprintf("%s/other-hostnames.txt", domainReconDir), domainSet.SortedStringSlice())
-		util.WriteLines(fmt.Sprintf("%s/ip-addresses.txt", domainReconDir), ipsByDomain[firstDomain])
+	domains := serviceByDomain.keys()
+	for _, domain := range domains {
+		serviceByDomain[domain].save(filepath.Join(analyzeDir, "services", domain))
 	}
 }
 

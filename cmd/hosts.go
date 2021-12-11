@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"reflect"
 	"sort"
 	"strings"
 	"text/template"
@@ -107,7 +106,7 @@ Currently Metadata has the following methods:
 
 		if shouldSave {
 			for _, host := range hosts {
-				flagsSet := set.NewSet(reflect.TypeOf(""))
+				flagsSet := set.NewStringSet()
 				for _, flag := range host.Metadata.UserFlags {
 					if linq.From(userFlagsToRemove).AnyWith(func(item interface{}) bool { return flag == item }) {
 						continue
@@ -115,7 +114,7 @@ Currently Metadata has the following methods:
 					flagsSet.Add(flag)
 				}
 				flagsSet.AddRange(userFlagsToAdd)
-				host.Metadata.UserFlags = flagsSet.Slice().([]string)
+				host.Metadata.UserFlags = flagsSet.StringSlice()
 				sort.Strings(host.Metadata.UserFlags)
 				if addReviewedBy {
 					host.Metadata.ReviewedBy = reviewer

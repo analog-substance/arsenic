@@ -9,7 +9,6 @@ import (
 	"os"
 	"os/exec"
 	"path"
-	"regexp"
 	"sort"
 	"strings"
 	"syscall"
@@ -204,7 +203,7 @@ func FileExists(filename string) bool {
 	return !info.IsDir()
 }
 
-func Mkdirs(dirs ...string) []error {
+func Mkdir(dirs ...string) []error {
 	var errors []error
 	for _, dir := range dirs {
 		err := os.MkdirAll(dir, DefaultDirPerms)
@@ -229,58 +228,6 @@ func WriteLines(path string, lines []string) error {
 
 	writer.Flush()
 	return nil
-}
-
-func GrepLineByLine(path string, re *regexp.Regexp, action func(line string)) error {
-	err := ReadLineByLine(path, func(line string) {
-		if re.MatchString(line) {
-			action(line)
-		}
-	})
-	return err
-}
-
-func GrepLines(path string, re *regexp.Regexp, count int) []string {
-	if count == 0 {
-		return nil
-	}
-
-	file, err := os.Open(path)
-	if err != nil {
-		return nil
-	}
-	defer file.Close()
-
-	var matches []string
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		if count > 0 && len(matches) == count {
-			break
-		}
-
-		line := scanner.Text()
-		if re.MatchString(line) {
-			matches = append(matches, line)
-		}
-	}
-
-	return matches
-}
-
-func GrepMatch(path string, re *regexp.Regexp) bool {
-	file, err := os.Open(path)
-	if err != nil {
-		return false
-	}
-	defer file.Close()
-
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		if re.MatchString(scanner.Text()) {
-			return true
-		}
-	}
-	return false
 }
 
 func StringSliceEquals(a []string, b []string) bool {
