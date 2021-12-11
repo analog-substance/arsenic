@@ -1,9 +1,7 @@
 package cmd
 
 import (
-	"bufio"
 	"fmt"
-	"os"
 	"path/filepath"
 	"regexp"
 	"sort"
@@ -53,15 +51,8 @@ func getScope(scopeType string) ([]string, error) {
 	scope := make(map[string]bool)
 
 	for _, filename := range files {
-		file, err := os.Open(filename)
-		if err != nil {
-			return nil, err
-		}
-		defer file.Close()
-
-		scanner := bufio.NewScanner(file)
-		for scanner.Scan() {
-			line := normalizeScope(scanner.Text(), scopeType)
+		err := util.ReadLineByLine(filename, func(line string) {
+			line = normalizeScope(line, scopeType)
 			valid := true
 			for _, re := range blacklistRegexp {
 				if re.MatchString(line) {
@@ -72,20 +63,20 @@ func getScope(scopeType string) ([]string, error) {
 			if valid {
 				scope[line] = true
 			}
+		})
+		if err != nil {
+			return nil, err
 		}
 	}
 
 	// now lets open the actual scope file and add those. since they cant be blacklisted
-	file, err := os.Open(actualFile)
+	err := util.ReadLineByLine(actualFile, func(line string) {
+		line = normalizeScope(line, scopeType)
+		scope[line] = true
+	})
+
 	if err != nil {
 		return nil, err
-	}
-	defer file.Close()
-
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		line := normalizeScope(scanner.Text(), scopeType)
-		scope[line] = true
 	}
 
 	var scopeAr []string

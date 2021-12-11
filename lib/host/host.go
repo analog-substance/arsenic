@@ -12,7 +12,6 @@ import (
 
 	"github.com/lair-framework/go-nmap"
 
-	// "strings"
 	"github.com/ahmetb/go-linq/v3"
 	"github.com/analog-substance/arsenic/lib/util"
 )
