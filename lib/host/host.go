@@ -169,6 +169,20 @@ func (host Host) SaveMetadata() {
 		if err != nil {
 			fmt.Println(err)
 		}
+
+		if len(host.Metadata.Hostnames) > 0 {
+			err = util.WriteLines(host.hostnamesFile(), host.Metadata.Hostnames)
+			if err != nil {
+				fmt.Println(err)
+			}
+		}
+
+		if len(host.Metadata.IPAddresses) > 0 {
+			err = util.WriteLines(host.ipAddressesFile(), host.Metadata.IPAddresses)
+			if err != nil {
+				fmt.Println(err)
+			}
+		}
 	}
 }
 
@@ -286,6 +300,12 @@ func getHostDirs() []string {
 
 func (host Host) metadataFile() string {
 	return filepath.Join(host.Dir, "00_metadata.md")
+}
+func (host Host) hostnamesFile() string {
+	return filepath.Join(host.Dir, "recon", "hostnames.txt")
+}
+func (host Host) ipAddressesFile() string {
+	return filepath.Join(host.Dir, "recon", "ip-addresses.txt")
 }
 
 func (host Host) flags() []string {
