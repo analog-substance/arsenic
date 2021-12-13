@@ -313,15 +313,16 @@ func reviewIps() {
 				// Keep track of the domains that have differences in IPs
 				if !util.StringSliceEquals(serviceIps, domainIps) {
 					svc.diffs.Add(domain)
+				} else {
+					svc.hostnames.Add(domain)
 				}
 			} else {
 				svc = serviceByDomain.getOrInit(domain)
 
 				svc.ipAddresses.AddRange(ipsByDomain[domain].StringSlice())
 				serviceIps = svc.ipAddresses.SortedStringSlice()
+				svc.hostnames.Add(domain)
 			}
-
-			svc.hostnames.Add(domain)
 		}
 	}
 

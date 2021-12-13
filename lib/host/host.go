@@ -159,6 +159,9 @@ func InitHost(dir string) Host {
 }
 
 func (host Host) SaveMetadata() {
+	reconDir := filepath.Join(host.Dir, "recon")
+	util.Mkdir(reconDir)
+
 	out, err := json.MarshalIndent(host.Metadata, "", "  ")
 	if err != nil {
 		fmt.Println(err)
