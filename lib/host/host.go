@@ -16,6 +16,11 @@ import (
 	"github.com/analog-substance/arsenic/lib/util"
 )
 
+const (
+	reviewedFlag   string = "Reviewed"
+	unreviewedFlag string = "Unreviewed"
+)
+
 type Port struct {
 	ID       int
 	Protocol string
@@ -132,11 +137,11 @@ func InitHost(dir string) Host {
 	tcpPorts := protoPorts(ports, "tcp")
 	udpPorts := protoPorts(ports, "udp")
 
-	reviewStatus := "Reviewed"
+	reviewStatus := reviewedFlag
 	if len(ports) > 0 {
 		flags = append(flags, "OpenPorts")
 		if metadata.ReviewedBy == "" {
-			reviewStatus = "Unreviewed"
+			reviewStatus = unreviewedFlag
 		}
 	}
 	flags = append(flags, reviewStatus)
@@ -227,7 +232,7 @@ func (host Host) URLs() []string {
 	}
 
 	URLs := []string{}
-	for URL, _ := range URLMap {
+	for URL := range URLMap {
 		URLs = append(URLs, URL)
 	}
 	return URLs
@@ -241,6 +246,27 @@ func (host Host) IPAddresses() []string {
 		return []string{}
 	}
 	return IPAddresses
+}
+
+func (host Host) isReviewed() bool {
+	return host.Metadata.ReviewedBy != "" &&
+		linq.From(host.Metadata.Flags).Contains(reviewedFlag)
+}
+
+func (host Host) SetReviewedBy(reviewer string) {
+	if reviewer == "" {
+		return
+	}
+
+	host.Metadata.ReviewedBy = reviewer
+	if !host.isReviewed() {
+		linq.From(host.Metadata.Flags).
+			Where(func(i interface{}) bool {
+				return i != unreviewedFlag
+			}).
+			Append(reviewedFlag).
+			ToSlice(&host.Metadata.Flags)
+	}
 }
 
 func All() []Host {
@@ -328,23 +354,28 @@ func (host Host) ipAddressesFile() string {
 func (host Host) flags() []string {
 	flags := []string{}
 
-	globbed, _ := filepath.Glob(fmt.Sprintf("%s/recon/%s", host.Dir, "nmap-punched-tcp.*"))
-	if len(globbed) > 0 {
+	checkGlob := func(glob string) bool {
+		globbed, _ := filepath.Glob(filepath.Join(host.Dir, "recon", glob))
+		return len(globbed) > 0
+	}
+
+	if checkGlob("nmap-punched-tcp.*") {
 		flags = append(flags, "nmap-tcp")
 	}
 
-	globbed, _ = filepath.Glob(fmt.Sprintf("%s/recon/%s", host.Dir, "nmap-punched-udp.*"))
-	if len(globbed) > 0 {
+	if checkGlob("nmap-punched-udp.*") {
 		flags = append(flags, "nmap-udp")
 	}
 
-	globbed, _ = filepath.Glob(fmt.Sprintf("%s/recon/%s", host.Dir, "gobuster.*"))
-	if len(globbed) > 0 {
+	if checkGlob("gobuster.*") {
 		flags = append(flags, "Gobuster")
 	}
 
-	globbed, _ = filepath.Glob(fmt.Sprintf("%s/recon/%s", host.Dir, "aquatone-*"))
-	if len(globbed) > 0 {
+	if checkGlob("ffuf.*") {
+		flags = append(flags, "Ffuf")
+	}
+
+	if checkGlob("aquatone-*") {
 		flags = append(flags, "Aquatone")
 	}
 

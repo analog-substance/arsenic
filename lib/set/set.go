@@ -12,15 +12,11 @@ type Set struct {
 	itemType reflect.Type
 }
 
-func NewSet(itemType reflect.Type) *Set {
-	return &Set{itemType: itemType, Set: map[interface{}]bool{}}
-}
-func NewStringSet(values ...[]string) *Set {
-	s := NewSet(reflect.TypeOf(""))
-	for _, value := range values {
-		s.AddRange(value)
+func NewSet(itemType interface{}) Set {
+	return Set{
+		itemType: reflect.TypeOf(itemType),
+		Set:      map[interface{}]bool{},
 	}
-	return s
 }
 func (set *Set) Add(item interface{}) bool {
 	itemType := reflect.TypeOf(item)
@@ -33,7 +29,7 @@ func (set *Set) Add(item interface{}) bool {
 	return !found
 }
 func (set *Set) AddRange(items interface{}) {
-	linq.From(items).ForEach(func(i interface{}) { set.Set[i] = true })
+	linq.From(items).ForEach(func(i interface{}) { set.Add(i) })
 }
 func (set *Set) Slice() interface{} {
 	sliceType := reflect.SliceOf(set.itemType)
