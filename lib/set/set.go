@@ -18,6 +18,14 @@ func NewSet(itemType interface{}) Set {
 		Set:      map[interface{}]bool{},
 	}
 }
+
+func NewStringSet(values ...[]string) *Set {
+	s := NewSet(reflect.TypeOf(""))
+	for _, value := range values {
+		s.AddRange(value)
+	}
+	return &s
+}
 func (set *Set) Add(item interface{}) bool {
 	itemType := reflect.TypeOf(item)
 	if itemType.Name() != set.itemType.Name() {
