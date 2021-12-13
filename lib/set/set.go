@@ -20,7 +20,7 @@ func NewSet(itemType interface{}) Set {
 }
 
 func NewStringSet(values ...[]string) *Set {
-	s := NewSet(reflect.TypeOf(""))
+	s := NewSet("")
 	for _, value := range values {
 		s.AddRange(value)
 	}
