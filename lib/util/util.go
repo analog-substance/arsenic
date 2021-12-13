@@ -3,22 +3,27 @@ package util
 import (
 	"bufio"
 	"fmt"
-	"math/rand"
-	"strings"
-	"time"
-
-	"golang.org/x/net/publicsuffix"
-
-	// "io/ioutil"
+	"io/fs"
 	"log"
+	"math/rand"
 	"os"
 	"os/exec"
 	"path"
+	"path/filepath"
+	"regexp"
 	"sort"
-
-	"github.com/spf13/viper"
-	// "strings"
+	"strings"
 	"syscall"
+	"time"
+
+	"github.com/ahmetb/go-linq/v3"
+	"github.com/spf13/viper"
+	"golang.org/x/net/publicsuffix"
+)
+
+const (
+	DefaultDirPerms  fs.FileMode = 0755
+	DefaultFilePerms fs.FileMode = 0644
 )
 
 type ScriptConfig struct {
@@ -179,12 +184,66 @@ func ReadLines(path string) ([]string, error) {
 	return lines, scanner.Err()
 }
 
+func ReadLineByLine(path string, action func(line string)) error {
+	file, err := os.Open(path)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		action(scanner.Text())
+	}
+	return nil
+}
+
 func FileExists(filename string) bool {
 	info, err := os.Stat(filename)
 	if os.IsNotExist(err) {
 		return false
 	}
 	return !info.IsDir()
+}
+
+func Mkdir(dirs ...string) []error {
+	var errors []error
+	for _, dir := range dirs {
+		err := os.MkdirAll(dir, DefaultDirPerms)
+		if err != nil {
+			errors = append(errors, err)
+		}
+	}
+	return errors
+}
+
+func WriteLines(path string, lines []string) error {
+	file, err := os.OpenFile(path, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, DefaultFilePerms)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	writer := bufio.NewWriter(file)
+	for _, data := range lines {
+		_, _ = writer.WriteString(data + "\n")
+	}
+
+	writer.Flush()
+	return nil
+}
+
+func StringSliceEquals(a []string, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
 }
 
 type NoopWriter struct {
@@ -223,4 +282,94 @@ func GetRootDomains(domains []string, pruneBlacklisted bool) []string {
 	}
 	sort.Strings(rootDomains)
 	return rootDomains
+}
+
+func IsDomainInScope(domain string) bool {
+	scope, err := GetScope("domains")
+	if err != nil {
+		return false
+	}
+
+	return linq.From(scope).AnyWith(func(i interface{}) bool {
+		return strings.EqualFold(i.(string), domain)
+	})
+}
+
+func IsIpInScope(ip string) bool {
+	scope, err := GetScope("ips")
+	if err != nil {
+		return false
+	}
+
+	return linq.From(scope).AnyWith(func(i interface{}) bool {
+		return strings.EqualFold(i.(string), ip)
+	})
+}
+
+func GetScope(scopeType string) ([]string, error) {
+
+	glob := fmt.Sprintf("scope-%s-*", scopeType)
+	actualFile := fmt.Sprintf("scope-%s.txt", scopeType)
+	blacklistFile := fmt.Sprintf("blacklist-%s.txt", scopeType)
+
+	var blacklistRegexp []*regexp.Regexp
+	if FileExists(blacklistFile) {
+		lines, _ := ReadLines(blacklistFile)
+		for _, line := range lines {
+			if line == "" {
+				continue
+			}
+			blacklistRegexp = append(blacklistRegexp, regexp.MustCompile(regexp.QuoteMeta(line)))
+		}
+	}
+
+	files, _ := filepath.Glob(glob)
+	scope := make(map[string]bool)
+
+	for _, filename := range files {
+		err := ReadLineByLine(filename, func(line string) {
+			line = normalizeScope(line, scopeType)
+			valid := true
+			for _, re := range blacklistRegexp {
+				if re.MatchString(line) {
+					valid = false
+					break
+				}
+			}
+			if valid {
+				scope[line] = true
+			}
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// now lets open the actual scope file and add those. since they cant be blacklisted
+	err := ReadLineByLine(actualFile, func(line string) {
+		line = normalizeScope(line, scopeType)
+		scope[line] = true
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	var scopeAr []string
+	for scopeItem, _ := range scope {
+		scopeAr = append(scopeAr, scopeItem)
+	}
+
+	sort.Strings(scopeAr)
+	return scopeAr, nil
+}
+
+func normalizeScope(scopeItem, scopeType string) string {
+
+	if scopeType == "domains" {
+		re := regexp.MustCompile(`^\*\.`)
+		scopeItem = re.ReplaceAllString(scopeItem, "")
+	}
+
+	return scopeItem
 }

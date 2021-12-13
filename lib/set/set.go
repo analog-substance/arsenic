@@ -2,6 +2,7 @@ package set
 
 import (
 	"reflect"
+	"sort"
 
 	"github.com/ahmetb/go-linq/v3"
 )
@@ -16,6 +17,14 @@ func NewSet(itemType interface{}) Set {
 		itemType: reflect.TypeOf(itemType),
 		Set:      map[interface{}]bool{},
 	}
+}
+
+func NewStringSet(values ...[]string) *Set {
+	s := NewSet("")
+	for _, value := range values {
+		s.AddRange(value)
+	}
+	return &s
 }
 func (set *Set) Add(item interface{}) bool {
 	itemType := reflect.TypeOf(item)
@@ -39,4 +48,21 @@ func (set *Set) Slice() interface{} {
 	}
 	rawValues := values.Interface()
 	return rawValues
+}
+func (set *Set) StringSlice() []string {
+	if set.itemType != reflect.TypeOf("") {
+		return nil
+	}
+	return set.Slice().([]string)
+}
+func (set *Set) SortedStringSlice() []string {
+	if set.itemType != reflect.TypeOf("") {
+		return nil
+	}
+	slice := set.StringSlice()
+	sort.Strings(slice)
+	return slice
+}
+func (set *Set) Length() int {
+	return len(set.Set)
 }

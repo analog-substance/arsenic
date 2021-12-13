@@ -12,7 +12,6 @@ import (
 
 	"github.com/lair-framework/go-nmap"
 
-	// "strings"
 	"github.com/ahmetb/go-linq/v3"
 	"github.com/analog-substance/arsenic/lib/util"
 )
@@ -175,6 +174,20 @@ func (host Host) SaveMetadata() {
 		if err != nil {
 			fmt.Println(err)
 		}
+
+		if len(host.Metadata.Hostnames) > 0 {
+			err = util.WriteLines(host.hostnamesFile(), host.Metadata.Hostnames)
+			if err != nil {
+				fmt.Println(err)
+			}
+		}
+
+		if len(host.Metadata.IPAddresses) > 0 {
+			err = util.WriteLines(host.ipAddressesFile(), host.Metadata.IPAddresses)
+			if err != nil {
+				fmt.Println(err)
+			}
+		}
 	}
 }
 
@@ -276,7 +289,7 @@ func AllDirNames() []string {
 	return hosts
 }
 
-func Get(hostDirsOrHostnames []string) []Host {
+func Get(hostDirsOrHostnames ...string) []Host {
 	hosts := []Host{}
 	for _, hostDir := range getHostDirs() {
 		host := InitHost(hostDir)
@@ -286,6 +299,23 @@ func Get(hostDirsOrHostnames []string) []Host {
 		if linq.From(hostDirsOrHostnames).AnyWith(func(hostDirOrHostname interface{}) bool {
 			return linq.From(hostnames).AnyWith(func(hostname interface{}) bool {
 				return hostDirOrHostname == hostname
+			})
+		}) {
+			hosts = append(hosts, host)
+		}
+	}
+	return hosts
+}
+
+func GetByIp(ips ...string) []Host {
+	hosts := []Host{}
+	for _, hostDir := range getHostDirs() {
+		host := InitHost(hostDir)
+		hostIps := host.Metadata.IPAddresses
+
+		if linq.From(ips).AnyWith(func(ip interface{}) bool {
+			return linq.From(hostIps).AnyWith(func(hostIp interface{}) bool {
+				return ip == hostIp
 			})
 		}) {
 			hosts = append(hosts, host)
@@ -313,6 +343,12 @@ func getHostDirs() []string {
 
 func (host Host) metadataFile() string {
 	return filepath.Join(host.Dir, "00_metadata.md")
+}
+func (host Host) hostnamesFile() string {
+	return filepath.Join(host.Dir, "recon", "hostnames.txt")
+}
+func (host Host) ipAddressesFile() string {
+	return filepath.Join(host.Dir, "recon", "ip-addresses.txt")
 }
 
 func (host Host) flags() []string {
