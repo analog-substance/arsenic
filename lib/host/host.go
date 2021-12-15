@@ -128,6 +128,10 @@ func InitHost(dir string) Host {
 			metadata.Name = hostnames[0]
 		} else if len(ipAddresses) == 1 {
 			metadata.Name = ipAddresses[0]
+		} else {
+			// If the host doesn't have hostnames.txt or ip-addresses.txt, lets use the name of the host directory
+			metadata.Name = filepath.Base(dir)
+			hostnames = append(hostnames, metadata.Name)
 		}
 	}
 
