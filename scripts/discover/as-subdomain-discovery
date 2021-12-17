@@ -24,7 +24,6 @@ function root_domain_recon {
     _warn "Skipping common domain: $domain"
   else
     mkdir -p "recon/domains/$domain"
-
     RECON_FILE="recon/domains/$domain/amass-enum-active.txt"
     if [ ! -f "$RECON_FILE" ] ; then
       _ "amass enum active $domain"
@@ -40,6 +39,17 @@ function root_domain_recon {
       | tee "$RECON_FILE"
     fi
 
+    RECON_FILE="recon/domains/$domain/crtsh.txt"
+    if [ ! -f "$RECON_FILE" ] ; then
+      _ "crtsh $domain"
+      as-crtsh-slurp "$domain" \
+      | tee "$RECON_FILE"
+    fi
+
+    cat "$RECON_FILE" \
+      | ensureDomainInScope \
+      | uniq > "recon/domains/$domain/subdomains-crtsh.txt"
+
     {
       if [ -f "recon/domains/$domain/amass-enum-active.txt" ]; then
         cat "recon/domains/$domain/amass-enum-active.txt" 2>/dev/null | awk '{print $2}'
@@ -51,6 +61,7 @@ function root_domain_recon {
     } \
     | grep -P "$(echo "$domain" | sed 's/\./\\./g')\$" \
     | sort -d \
+    | ensureDomainInScope \
     | uniq > "recon/domains/$domain/subdomains-amass.txt"
   fi
 }

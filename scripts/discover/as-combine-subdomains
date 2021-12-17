@@ -20,22 +20,22 @@ mkdir -p recon/domains recon/discover recon/ips
 
 function root_domain_recon {
   domain=$(echo $1 | tr 'A-Z' 'a-z')
-  if ! echo "$domain" | as-prune-blacklisted-domains | grep "$domain" > /dev/null ; then
-    _warn "Skipping common domain: $domain"
-  else
-    mkdir -p "recon/domains/$domain"
+  mkdir -p "recon/domains/$domain"
+  # always right in scope subdomains to a txt file
+  grep -P "$(echo "$domain" |  sed 's/\([\.\-]\)/\\\1/g' )\$" scope-domains.txt > "recon/domains/$domain/subdomains-scope.txt"
 
-    {
-      if compgen -G "recon/domains/$domain/subdomains-*.txt" > /dev/null 2>&1; then
-        _ "Combining discovered subdomains"
-        cat "recon/domains/$domain/"subdomains-*.txt 2>/dev/null
-      fi
-    } \
-    | sort -d \
-    | uniq \
-    | ensureDomainInScope \
-    | tee "recon/domains/$domain/subdomains.txt"
-  fi
+  # we do not need to skip out of scope root domains here, since we are combining what was generated
+  # whatever is generating the subdomains-*.txt files will need to ensure they only add in scope domains.
+  {
+    if compgen -G "recon/domains/$domain/subdomains-*.txt" > /dev/null 2>&1; then
+      _ "Combining discovered subdomains"
+      cat "recon/domains/$domain/"subdomains-*.txt 2>/dev/null
+    fi
+  } \
+  | sort -d \
+  | uniq \
+  | ensureDomainInScope \
+  | tee "recon/domains/$domain/subdomains.txt"
 }
 
 # Recon root domains
