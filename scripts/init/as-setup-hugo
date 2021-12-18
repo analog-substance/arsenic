@@ -23,7 +23,6 @@ OP_NAME=$(basename $(pwd))
 NEW_OP=1
 if [ -d .hugo ]; then
   NEW_OP=0
-  mv .hugo/content/notes ./tmp-notes
   rm -rf .hugo
 fi
 
@@ -48,13 +47,13 @@ cd .hugo
 
 if [[ "$NEW_OP" == "1" ]]; then
   mv config.toml ../
-  mv sample-finding ../report/findings/first-finding
+  mv content/findings/sample-finding ../report/findings/first-finding
   mv sample-campaign.md ../report/social
+  rm -rf content/findings content/sections content/hosts content/notes
 else
   rm config.toml
-  rm -rf sample-finding
+  rm -rf content/findings content/sections content/hosts content/notes
   rm sample-campaign.md
-  mv ../tmp-notes content/notes
 fi
 
 ln -s ../config.toml
@@ -62,12 +61,10 @@ ln -s ../config.toml
 cd content
 ln -srf ../../recon
 ln -srf ../../hosts
+ln -srf ../../notes
 ls -d ../../report/* | xargs -n 1 ln -srf
-mkdir -p notes
 
 cd ../../
-
-ln -sf .hugo/content/notes
 
 _ "Hugo Setup complete"
 
