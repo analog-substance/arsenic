@@ -37,11 +37,11 @@ fi
 cat recon/ips/scope-ips.gnmap \
 | grep Host: \
 | awk '{print $2}' \
-| as-prune-blacklisted-ips \
+| arsenic scope prune \
 > scope-ips-generated-pinged.txt
 
 ## maybe this should be in the IPs?
-cat scope-ips* | as-prune-blacklisted-ips | cat - scope-ips.txt | sort -d | uniq > scope-ips-generated-combined.txt
+cat scope-ips* | arsenic scope prune | cat - scope-ips.txt | sort -d | uniq > scope-ips-generated-combined.txt
 
 # Create IP Scope files for public and private addresses
 cat scope-ips-generated-combined.txt | grep -vP "^$PRIVATE_IP_REGEX\$" | grep -v ":" | sort -d | uniq > scope-ips-generated-public-ipv4.txt

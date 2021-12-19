@@ -28,7 +28,7 @@ RECON_FILE="recon/ips/resolv-ips.txt"
 if [ ! -f "$RECON_FILE" ] ; then
   mkdir -p "$(dirname $RECON_FILE)"
 
-  _ 'Resoving IP Addresses'
+  _ 'Resolving IP Addresses'
   fast-resolv -c $FR_THREADS -d scope-ips-generated-public*.txt | tee "$RECON_FILE"
   cat "$RECON_FILE" | sort > sorted
   mv sorted "$RECON_FILE"
@@ -39,4 +39,5 @@ cat "$RECON_FILE" \
 | grep "domain name pointer" \
 | awk '{print $NF}' \
 | removeInvalidDomains \
+| arsenic scope prune
 | tee scope-domains-generated-resolv-ips.txt

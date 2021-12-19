@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/analog-substance/arsenic/lib/scope"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -161,7 +162,7 @@ This will create a single host for hostnames that resolve to the same IPs`,
 			}
 		}
 
-		scopeIps, _ := util.GetScope("ips")
+		scopeIps, _ := scope.GetScope("ips")
 		ips := domainsByIp.keys()
 		linq.From(scopeIps).
 			Except(linq.From(ips)).
@@ -213,7 +214,7 @@ func reviewDomains(resolvResults []string) {
 		domain := split[0]
 		ip := split[len(split)-1]
 
-		if !util.IsDomainInScope(domain) {
+		if !scope.IsInScope(domain, false) {
 			fmt.Printf("\nIgnoring %s\n", domain)
 			continue
 		}

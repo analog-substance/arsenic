@@ -1,8 +1,6 @@
 
 
 export REMOVE_DOMAIN_REGEX="(\._domainkey\.|hscoscdn10\.net|sites\.hubspot\.net|amazonaws\.com|azurewebsites\.net|cloudfront\.net|azurewebsites\.windows\.net|azure\.com|cloudapp\.net|readthedocs\.io|my\.jobs|1e100\.net|googlehosted\.com|readthedocs\.org|c7dc\.com|akamaitechnologies\.com)\$"
-# Right now just gonna ignore these.
-export NON_ROOT_DOMAIN_REGEX="co\.|com\.|herokuapp\."
 
 function _ {
   echo  "[+] $@"
@@ -14,29 +12,6 @@ function _warn {
 
 function _info {
   echo "[-] $@"
-}
-
-function ensureDomainInScope {
-  while read potentialDomain ; do
-    if grep -F "$potentialDomain" scope-domains.txt >/dev/null ; then
-      echo "$potentialDomain"
-    else
-      trim="$potentialDomain"
-      while true; do
-        trim=$(echo "$trim" | sed 's/^[^\.]\+\.//g')
-        pieces=$(echo "$trim" | sed 's/\./\n/g' | wc -l)
-
-        if [ "$pieces" -ge 2 ]; then
-          if grep -P "$(echo "$trim" | sed 's/\./\\./g')\$" scope-domains.txt >/dev/null ; then
-            echo "$potentialDomain"
-            continue
-          fi
-        else
-          break
-        fi
-      done
-    fi
-  done
 }
 
 function removeInvalidDomains {
@@ -52,7 +27,7 @@ function removeInvalidDomains {
   | grep -vP "^([0-9]{1,3}\.){3}[0-9]{1,3}\$" \
   | grep -vP "$REMOVE_DOMAIN_REGEX" \
   | grep -P '^[a-z0-9_\-\.]+$' \
-  | as-prune-blacklisted-domains \
+  | arsenic scope prune \
   | sort -d | uniq
 }
 
@@ -111,11 +86,6 @@ function gitLock {
 
   echo "lock::$(openssl rand 100 | base64 | tr -cd 'A-Za-z0-9' | cut -b1-16)" > "$1"
   gitCommit "$1" "$2" reset
-}
-
-function getRootDomains {
-  ## Lets get a unique list of root domains
-  arsenic scope domains -r
 }
 
 function getAllDomains {

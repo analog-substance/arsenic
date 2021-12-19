@@ -43,7 +43,7 @@ if [ -f "$recon_dir/ssl-cert-domains.txt" ]; then
   _ "Saving domains to scope"
   cat "$recon_dir/ssl-cert-domains.txt" \
   | removeInvalidDomains \
-  | ensureDomainInScope \
+  | arsenic scope prune \
   | sort -d \
   | uniq \
   | tee scope-domains-generated-ssl-certs-ips.txt
