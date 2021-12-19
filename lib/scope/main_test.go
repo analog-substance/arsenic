@@ -54,6 +54,7 @@ func TestGetRootDomains(t *testing.T) {
 }
 
 //func TestGetScope(t *testing.T) {
+//	asScope = getTestScope()
 //	type args struct {
 //		scopeType string
 //	}

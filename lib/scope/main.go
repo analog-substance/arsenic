@@ -59,18 +59,6 @@ func GetScope(scopeType string) ([]string, error) {
 
 	glob := fmt.Sprintf("scope-%s-*", scopeType)
 	actualFile := fmt.Sprintf("scope-%s.txt", scopeType)
-	blacklistFile := fmt.Sprintf("blacklist-%s.txt", scopeType)
-
-	var blacklistRegexp []*regexp.Regexp
-	if util.FileExists(blacklistFile) {
-		lines, _ := util.ReadLines(blacklistFile)
-		for _, line := range lines {
-			if line == "" {
-				continue
-			}
-			blacklistRegexp = append(blacklistRegexp, regexp.MustCompile(regexp.QuoteMeta(line)))
-		}
-	}
 
 	files, _ := filepath.Glob(glob)
 	scope := make(map[string]bool)
@@ -78,14 +66,7 @@ func GetScope(scopeType string) ([]string, error) {
 	for _, filename := range files {
 		err := util.ReadLineByLine(filename, func(line string) {
 			line = normalizeScope(line, scopeType)
-			valid := true
-			for _, re := range blacklistRegexp {
-				if re.MatchString(line) {
-					valid = false
-					break
-				}
-			}
-			if valid {
+			if getScope().IsDomainInScope(line, false) {
 				scope[line] = true
 			}
 		})
