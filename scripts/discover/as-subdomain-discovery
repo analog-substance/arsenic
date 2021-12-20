@@ -20,10 +20,29 @@ mkdir -p recon/domains recon/discover recon/ips
 
 function root_domain_recon {
   domain=$(echo $1 | tr 'A-Z' 'a-z')
-  if ! echo "$domain" | as-prune-blacklisted-domains | grep "$domain" > /dev/null ; then
-    _warn "Skipping common domain: $domain"
+  mkdir -p "recon/domains/$domain"
+
+#  if ! echo "$domain" | arsenic scope prune | grep "$domain" > /dev/null ; then
+#    _warn "Skipping domain for crtsh: $domain"
+#  else
+#  fi
+
+  # only amass domains that are not a part of blacklisted root domains
+  if ! echo "$domain" | arsenic scope prune -r | grep "$domain" > /dev/null ; then
+    _warn "Skipping domain for amass: $domain"
   else
-    mkdir -p "recon/domains/$domain"
+
+    RECON_FILE="recon/domains/$domain/crtsh.txt"
+    if [ ! -f "$RECON_FILE" ] ; then
+      _ "crtsh $domain"
+      as-crtsh-slurp "$domain" \
+      | tee "$RECON_FILE"
+    fi
+
+    cat "$RECON_FILE" \
+      | arsenic scope prune \
+      | uniq > "recon/domains/$domain/subdomains-crtsh.txt"
+
     RECON_FILE="recon/domains/$domain/amass-enum-active.txt"
     if [ ! -f "$RECON_FILE" ] ; then
       _ "amass enum active $domain"
@@ -39,17 +58,6 @@ function root_domain_recon {
       | tee "$RECON_FILE"
     fi
 
-    RECON_FILE="recon/domains/$domain/crtsh.txt"
-    if [ ! -f "$RECON_FILE" ] ; then
-      _ "crtsh $domain"
-      as-crtsh-slurp "$domain" \
-      | tee "$RECON_FILE"
-    fi
-
-    cat "$RECON_FILE" \
-      | ensureDomainInScope \
-      | uniq > "recon/domains/$domain/subdomains-crtsh.txt"
-
     {
       if [ -f "recon/domains/$domain/amass-enum-active.txt" ]; then
         cat "recon/domains/$domain/amass-enum-active.txt" 2>/dev/null | awk '{print $2}'
@@ -61,34 +69,25 @@ function root_domain_recon {
     } \
     | grep -P "$(echo "$domain" | sed 's/\./\\./g')\$" \
     | sort -d \
-    | ensureDomainInScope \
+    | arsenic scope prune \
     | uniq > "recon/domains/$domain/subdomains-amass.txt"
   fi
 }
 
 # Recon root domains
 _ "Checking for subdomains on root domains"
-getRootDomains | while read domain; do
+arsenic scope domains -r | while read domain; do
   root_domain_recon "$domain"
 done
 
-if compgen -G "recon/domains/*/amass-enum-active.txt" > /dev/null 2>&1; then
-  _ "saving scope from amass enum active"
-  cat recon/domains/*/amass-enum-active.txt 2>/dev/null \
-  | awk '{print $2}' \
+if compgen -G "recon/domains/*/subdomains-*.txt" > /dev/null 2>&1; then
+  _ "saving scope as-subdomain-discovery"
+  cat recon/domains/*/subdomains-*.txt 2>/dev/null \
   | sort -d \
   | uniq \
-  | ensureDomainInScope \
-  | tee scope-domains-generated-amass-enum-active.txt
+  | arsenic scope prune \
+  | tee scope-domains-generated-as-subdomain-discovery.txt
 fi
 
-if compgen -G "recon/domains/*/amass-intel.txt" > /dev/null 2>&1; then
-  _ "saving scope from amass intel whois"
-  cat recon/domains/*/amass-intel.txt 2>/dev/null \
-  | sort -d \
-  | uniq \
-  | ensureDomainInScope \
-  | tee scope-domains-generated-amass-intel-whois.txt
-fi
 _ "Combine all discovered domains"
 getAllDomains

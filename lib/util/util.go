@@ -9,16 +9,11 @@ import (
 	"os"
 	"os/exec"
 	"path"
-	"path/filepath"
-	"regexp"
 	"sort"
-	"strings"
 	"syscall"
 	"time"
 
-	"github.com/ahmetb/go-linq/v3"
 	"github.com/spf13/viper"
-	"golang.org/x/net/publicsuffix"
 )
 
 const (
@@ -251,125 +246,4 @@ type NoopWriter struct {
 
 func (w NoopWriter) Write(bytes []byte) (int, error) {
 	return 0, nil
-}
-
-func GetRootDomains(domains []string, pruneBlacklisted bool) []string {
-	blacklistedRootDomains := viper.GetStringSlice("blacklist.root-domains")
-	rootDomainMap := map[string]int{}
-	rootDomains := []string{}
-	for _, domain := range domains {
-		rootDomain, _ := publicsuffix.EffectiveTLDPlusOne(domain)
-
-		if len(rootDomain) > 0 {
-			rootDomainMap[rootDomain] = 1
-		}
-	}
-
-	for rootDomain := range rootDomainMap {
-		addRootDomain := true
-		if pruneBlacklisted {
-			for _, badRootDomain := range blacklistedRootDomains {
-				if strings.EqualFold(badRootDomain, rootDomain) {
-					addRootDomain = false
-					break
-				}
-			}
-		}
-
-		if addRootDomain {
-			rootDomains = append(rootDomains, rootDomain)
-		}
-	}
-	sort.Strings(rootDomains)
-	return rootDomains
-}
-
-func IsDomainInScope(domain string) bool {
-	scope, err := GetScope("domains")
-	if err != nil {
-		return false
-	}
-
-	return linq.From(scope).AnyWith(func(i interface{}) bool {
-		return strings.EqualFold(i.(string), domain)
-	})
-}
-
-func IsIpInScope(ip string) bool {
-	scope, err := GetScope("ips")
-	if err != nil {
-		return false
-	}
-
-	return linq.From(scope).AnyWith(func(i interface{}) bool {
-		return strings.EqualFold(i.(string), ip)
-	})
-}
-
-func GetScope(scopeType string) ([]string, error) {
-
-	glob := fmt.Sprintf("scope-%s-*", scopeType)
-	actualFile := fmt.Sprintf("scope-%s.txt", scopeType)
-	blacklistFile := fmt.Sprintf("blacklist-%s.txt", scopeType)
-
-	var blacklistRegexp []*regexp.Regexp
-	if FileExists(blacklistFile) {
-		lines, _ := ReadLines(blacklistFile)
-		for _, line := range lines {
-			if line == "" {
-				continue
-			}
-			blacklistRegexp = append(blacklistRegexp, regexp.MustCompile(regexp.QuoteMeta(line)))
-		}
-	}
-
-	files, _ := filepath.Glob(glob)
-	scope := make(map[string]bool)
-
-	for _, filename := range files {
-		err := ReadLineByLine(filename, func(line string) {
-			line = normalizeScope(line, scopeType)
-			valid := true
-			for _, re := range blacklistRegexp {
-				if re.MatchString(line) {
-					valid = false
-					break
-				}
-			}
-			if valid {
-				scope[line] = true
-			}
-		})
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	// now lets open the actual scope file and add those. since they cant be blacklisted
-	err := ReadLineByLine(actualFile, func(line string) {
-		line = normalizeScope(line, scopeType)
-		scope[line] = true
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	var scopeAr []string
-	for scopeItem, _ := range scope {
-		scopeAr = append(scopeAr, scopeItem)
-	}
-
-	sort.Strings(scopeAr)
-	return scopeAr, nil
-}
-
-func normalizeScope(scopeItem, scopeType string) string {
-
-	if scopeType == "domains" {
-		re := regexp.MustCompile(`^\*\.`)
-		scopeItem = re.ReplaceAllString(scopeItem, "")
-	}
-
-	return scopeItem
 }

@@ -47,7 +47,7 @@ cat recon/domains/*/resolv-domains.txt | grep "address" | sort -d | uniq | while
   tick "Reviewing resolved domains"
 
   domain=$(echo "$line" | awk '{print $1}')
-  safe=$(echo "$domain" | as-prune-blacklisted-domains| ensureDomainInScope )
+  safe=$(echo "$domain" | arsenic scope prune )
   if [ -z "$safe" ]; then
     _ "Ignoring $domain"
     continue
@@ -217,7 +217,7 @@ ls -d recon/analyze-hosts/services/* | cut -d/ -f4 | while read service ; do
 done
 
 # remove blacklisted things and cidrs `/`
-cat scope-ips* | as-prune-blacklisted-ips | grep -vP "/" |while read ip; do
+cat scope-ips* | arsenic scope prune | grep -vP "/" |while read ip; do
   grep "$(echo $ip | sed 's/\./\\./g')" recon/analyze-hosts/*.txt > /dev/null || echo $ip
 done | sort -d | uniq | while read ip; do
   if ! grep -rP "^$(echo $ip | sed 's/\./\\./g')\$" hosts/*/recon/ip-addresses.txt > /dev/null ; then

@@ -3,6 +3,7 @@ package host
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/analog-substance/arsenic/lib/scope"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -151,7 +152,7 @@ func InitHost(dir string) Host {
 	flags = append(flags, reviewStatus)
 
 	metadata.Hostnames = hostnames
-	metadata.RootDomains = util.GetRootDomains(hostnames, true)
+	metadata.RootDomains = scope.GetRootDomains(hostnames, true)
 	metadata.IPAddresses = ipAddresses
 	metadata.TCPPorts = tcpPorts
 	metadata.UDPPorts = udpPorts

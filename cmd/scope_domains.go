@@ -2,8 +2,8 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/analog-substance/arsenic/lib/scope"
 
-	"github.com/analog-substance/arsenic/lib/util"
 	"github.com/spf13/cobra"
 )
 
@@ -16,12 +16,12 @@ var domainsCmd = &cobra.Command{
 This will prune blacklisted domains, and blacklisted root domains.
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		domains, _ := util.GetScope("domains")
+		domains, _ := scope.GetScope("domains")
 
 		rootDomains, _ := cmd.Flags().GetBool("root-domains")
 		allRootDomains, _ := cmd.Flags().GetBool("all-root-domains")
 		if rootDomains || allRootDomains {
-			domains = util.GetRootDomains(domains, rootDomains)
+			domains = scope.GetRootDomains(domains, rootDomains)
 		}
 
 		for _, scope := range domains {

@@ -121,17 +121,23 @@ func initConfig() {
 		"azurewebsites.net",
 		"azurewebsites.windows.net",
 		"c7dc.com",
+		"cas.ms",
 		"cloudapp.net",
 		"cloudfront.net",
 		"googlehosted.com",
+		"googleusercontent.com",
 		"hscoscdn10.net",
 		"my.jobs",
 		"readthedocs.io",
 		"readthedocs.org",
 		"sites.hubspot.net",
+		"tds.net",
+		"wixsite.com",
 	}
 
 	setConfigDefault("blacklist.root-domains", blacklistedRootDomains)
+	setConfigDefault("blacklist.domains", []string{})
+	setConfigDefault("blacklist.ips", []string{})
 	setConfigDefault("scripts", defaultScripts)
 	setConfigDefault("wordlists", wordlists)
 	setConfigDefault("wordlist-paths", []string{"/opt/SecLists"})

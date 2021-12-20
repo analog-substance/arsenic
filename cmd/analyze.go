@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/analog-substance/arsenic/lib/scope"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -22,13 +23,13 @@ const (
 )
 
 var (
-	tickChars []string = []string{"-", "/", "|", "\\"}
-	nextTick  int      = 0
+	tickChars = []string{"-", "/", "|", "\\"}
+	nextTick  = 0
 
-	ipsByDomain         stringSetMap = make(stringSetMap)
-	domainsByIp         stringSetMap = make(stringSetMap)
-	ipsByIpResolvDomain stringSetMap = make(stringSetMap)
-	serviceByDomain     serviceMap   = make(serviceMap)
+	ipsByDomain         = make(stringSetMap)
+	domainsByIp         = make(stringSetMap)
+	ipsByIpResolvDomain = make(stringSetMap)
+	serviceByDomain     = make(serviceMap)
 )
 
 type stringSetMap map[string]*set.Set
@@ -161,7 +162,7 @@ This will create a single host for hostnames that resolve to the same IPs`,
 			}
 		}
 
-		scopeIps, _ := util.GetScope("ips")
+		scopeIps, _ := scope.GetScope("ips")
 		ips := domainsByIp.keys()
 		linq.From(scopeIps).
 			Except(linq.From(ips)).
@@ -213,7 +214,7 @@ func reviewDomains(resolvResults []string) {
 		domain := split[0]
 		ip := split[len(split)-1]
 
-		if !util.IsDomainInScope(domain) {
+		if !scope.IsInScope(domain, false) {
 			fmt.Printf("\nIgnoring %s\n", domain)
 			continue
 		}

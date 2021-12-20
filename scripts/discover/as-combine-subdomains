@@ -34,7 +34,7 @@ function root_domain_recon {
   } \
   | sort -d \
   | uniq \
-  | ensureDomainInScope \
+  | arsenic scope prune \
   | tee "recon/domains/$domain/subdomains.txt"
 }
 

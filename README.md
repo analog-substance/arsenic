@@ -2,7 +2,6 @@
 Now with moar go!!!
 *******
 
-
 Arsenic aims to set conventions around how pentest data is stored. It is nothing more than a directory structure and file naming conventions. By itself it is nothing fancy, but when combined with things like [arsenic-hugo](https://github.com/analog-substance/arsenic-hugo), it should make operations fun again!
 
 An example operation directory structure would look like.
@@ -72,8 +71,9 @@ If there is something you dont want to scan, blacklist it and re run until you h
 Now you can review things, blacklist things.
 
 ```bash
-echo bad.example.com >> blacklist-domains.txt
+arsenic config -s
 ```
+Then simply add the domain to the `blacklist.domains` array
 
 Once you have everything you want, run:
 ```bash
