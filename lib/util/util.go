@@ -51,30 +51,6 @@ func GetScripts(phase string) []ScriptConfig {
 	return phaseScripts
 }
 
-func GetWordlists(wordlistType string) []string {
-	wordlistPaths := []string{}
-
-	cwd, err := os.Getwd()
-	if err != nil {
-		log.Println(err)
-	}
-
-	dirs := append([]string{cwd}, viper.GetStringSlice("wordlist-paths")...)
-
-	wordlists := viper.GetStringSlice(fmt.Sprintf("wordlists.%s", wordlistType))
-	for _, wordlist := range wordlists {
-		for _, dir := range dirs {
-			wordlistPath := path.Join(dir, wordlist)
-			if FileExists(wordlistPath) {
-				wordlistPaths = append(wordlistPaths, wordlistPath)
-				break
-			}
-		}
-	}
-
-	return wordlistPaths
-}
-
 func ExecScript(scriptPath string, args []string) int {
 	cmd := exec.Command(scriptPath, args...)
 

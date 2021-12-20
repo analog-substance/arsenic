@@ -1,10 +1,12 @@
 package set
 
 import (
+	"bufio"
+	"github.com/ahmetb/go-linq/v3"
+	"io"
+	"os"
 	"reflect"
 	"sort"
-
-	"github.com/ahmetb/go-linq/v3"
 )
 
 type Set struct {
@@ -65,4 +67,16 @@ func (set *Set) SortedStringSlice() []string {
 }
 func (set *Set) Length() int {
 	return len(set.Set)
+}
+
+func (set *Set) WriteSorted(writer io.Writer) {
+	w := bufio.NewWriter(writer)
+
+	for _, line := range set.SortedStringSlice() {
+		_, _ = w.WriteString(line + "\n")
+	}
+}
+
+func (set *Set) PrintSorted() {
+	set.WriteSorted(os.Stdout)
 }
