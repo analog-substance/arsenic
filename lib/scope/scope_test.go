@@ -14,14 +14,14 @@ func Test_scope_IsBlacklistedDomain(t *testing.T) {
 		hostIPsExplicitlyInScope       []string
 		hostIPsExplicitlyInScopeLoaded bool
 	}
-	defaultFields := fields {
-		domainsExplicitlyInScope: []string{"www.example.com"},
+	defaultFields := fields{
+		domainsExplicitlyInScope:     []string{"www.example.com"},
 		rootDomainsExplicitlyInScope: []string{"example.com"},
-		blacklistedRootDomains: []string{"example.net"},
-		blacklistedDomains: []string{"blog.example.com"},
-		explicitDomainsLoaded: true,
+		blacklistedRootDomains:       []string{"example.net"},
+		blacklistedDomains:           []string{"blog.example.com"},
+		explicitDomainsLoaded:        true,
 
-		hostIPsExplicitlyInScope: []string{},
+		hostIPsExplicitlyInScope:       []string{},
 		hostIPsExplicitlyInScopeLoaded: true,
 	}
 	type args struct {
@@ -81,14 +81,14 @@ func Test_scope_IsBlacklistedRootDomain(t *testing.T) {
 		hostIPsExplicitlyInScopeLoaded bool
 	}
 
-	defaultFields := fields {
-		domainsExplicitlyInScope: []string{"www.example.com"},
+	defaultFields := fields{
+		domainsExplicitlyInScope:     []string{"www.example.com"},
 		rootDomainsExplicitlyInScope: []string{"example.com"},
-		blacklistedRootDomains: []string{"example.net"},
-		blacklistedDomains: []string{"blog.example.com"},
-		explicitDomainsLoaded: true,
+		blacklistedRootDomains:       []string{"example.net"},
+		blacklistedDomains:           []string{"blog.example.com"},
+		explicitDomainsLoaded:        true,
 
-		hostIPsExplicitlyInScope: []string{},
+		hostIPsExplicitlyInScope:       []string{},
 		hostIPsExplicitlyInScopeLoaded: true,
 	}
 
@@ -148,14 +148,14 @@ func Test_scope_IsDomainExplicitlyInScope(t *testing.T) {
 		hostIPsExplicitlyInScope       []string
 		hostIPsExplicitlyInScopeLoaded bool
 	}
-	defaultFields := fields {
-		domainsExplicitlyInScope: []string{"www.example.com"},
+	defaultFields := fields{
+		domainsExplicitlyInScope:     []string{"www.example.com"},
 		rootDomainsExplicitlyInScope: []string{"example.com"},
-		blacklistedRootDomains: []string{"example.net"},
-		blacklistedDomains: []string{"blog.example.com"},
-		explicitDomainsLoaded: true,
+		blacklistedRootDomains:       []string{"example.net"},
+		blacklistedDomains:           []string{"blog.example.com"},
+		explicitDomainsLoaded:        true,
 
-		hostIPsExplicitlyInScope: []string{},
+		hostIPsExplicitlyInScope:       []string{},
 		hostIPsExplicitlyInScopeLoaded: true,
 	}
 	type args struct {
@@ -208,14 +208,14 @@ func Test_scope_IsIPInScope(t *testing.T) {
 		hostIPsExplicitlyInScope       []string
 		hostIPsExplicitlyInScopeLoaded bool
 	}
-	defaultFields := fields {
-		domainsExplicitlyInScope: []string{"www.example.com"},
+	defaultFields := fields{
+		domainsExplicitlyInScope:     []string{"www.example.com"},
 		rootDomainsExplicitlyInScope: []string{"example.com"},
-		blacklistedRootDomains: []string{"example.net"},
-		blacklistedDomains: []string{"blog.example.com"},
-		explicitDomainsLoaded: true,
+		blacklistedRootDomains:       []string{"example.net"},
+		blacklistedDomains:           []string{"blog.example.com"},
+		explicitDomainsLoaded:        true,
 
-		hostIPsExplicitlyInScope: []string{"10.10.10.10"},
+		hostIPsExplicitlyInScope:       []string{"10.10.10.10"},
 		hostIPsExplicitlyInScopeLoaded: true,
 	}
 	type args struct {
@@ -268,14 +268,14 @@ func Test_scope_IsRootDomainInScope(t *testing.T) {
 		hostIPsExplicitlyInScope       []string
 		hostIPsExplicitlyInScopeLoaded bool
 	}
-	defaultFields := fields {
-		domainsExplicitlyInScope: []string{"www.example.com"},
+	defaultFields := fields{
+		domainsExplicitlyInScope:     []string{"www.example.com"},
 		rootDomainsExplicitlyInScope: []string{"example.com"},
-		blacklistedRootDomains: []string{"example.net"},
-		blacklistedDomains: []string{"blog.example.com"},
-		explicitDomainsLoaded: true,
+		blacklistedRootDomains:       []string{"example.net"},
+		blacklistedDomains:           []string{"blog.example.com"},
+		explicitDomainsLoaded:        true,
 
-		hostIPsExplicitlyInScope: []string{},
+		hostIPsExplicitlyInScope:       []string{},
 		hostIPsExplicitlyInScopeLoaded: true,
 	}
 	type args struct {
@@ -328,18 +328,18 @@ func Test_scope_IsDomainInScope(t *testing.T) {
 		hostIPsExplicitlyInScope       []string
 		hostIPsExplicitlyInScopeLoaded bool
 	}
-	defaultFields := fields {
-		domainsExplicitlyInScope: []string{"www.example.com","target.subdomain.example.net"},
+	defaultFields := fields{
+		domainsExplicitlyInScope:     []string{"www.example.com", "target.subdomain.example.net"},
 		rootDomainsExplicitlyInScope: []string{"example.com"},
-		blacklistedRootDomains: []string{"example.net"},
-		blacklistedDomains: []string{"blog.example.com"},
-		explicitDomainsLoaded: true,
+		blacklistedRootDomains:       []string{"example.net"},
+		blacklistedDomains:           []string{"blog.example.com"},
+		explicitDomainsLoaded:        true,
 
-		hostIPsExplicitlyInScope: []string{},
+		hostIPsExplicitlyInScope:       []string{},
 		hostIPsExplicitlyInScopeLoaded: true,
 	}
 	type args struct {
-		domain string
+		domain                   string
 		forceBlacklistPrecedence bool
 	}
 	tests := []struct {

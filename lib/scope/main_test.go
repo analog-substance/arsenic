@@ -5,17 +5,16 @@ import (
 	"testing"
 )
 
-
 func getTestScope() *scope {
 	asScopeInit = true
-	return &scope {
-		domainsExplicitlyInScope: []string{"www.example.com","target.subdomain.example.net"},
+	return &scope{
+		domainsExplicitlyInScope:     []string{"www.example.com", "target.subdomain.example.net"},
 		rootDomainsExplicitlyInScope: []string{"example.com"},
-		blacklistedRootDomains: []string{"example.net"},
-		blacklistedDomains: []string{"blog.example.com"},
-		explicitDomainsLoaded: true,
+		blacklistedRootDomains:       []string{"example.net"},
+		blacklistedDomains:           []string{"blog.example.com"},
+		explicitDomainsLoaded:        true,
 
-		hostIPsExplicitlyInScope: []string{"10.10.10.10"},
+		hostIPsExplicitlyInScope:       []string{"10.10.10.10"},
 		hostIPsExplicitlyInScopeLoaded: true,
 	}
 }
@@ -33,12 +32,12 @@ func TestGetRootDomains(t *testing.T) {
 	}{
 		{
 			"Should prune blacklisted",
-			args{[]string{"www.example.com","www.example.net"}, true},
+			args{[]string{"www.example.com", "www.example.net"}, true},
 			[]string{"example.com"},
 		},
 		{
 			"Should not prune blacklisted",
-			args{[]string{"www.example.com","www.example.net"}, false},
+			args{[]string{"www.example.com", "www.example.net"}, false},
 			[]string{"example.com", "example.net"},
 		},
 	}

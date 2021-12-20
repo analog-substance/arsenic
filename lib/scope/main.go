@@ -39,7 +39,6 @@ func GetRootDomains(domains []string, pruneBlacklisted bool) []string {
 	return rootDomains
 }
 
-
 func IsIp(ipOrHostname string) bool {
 	if net.ParseIP(ipOrHostname) == nil {
 		return false
@@ -93,8 +92,6 @@ func GetScope(scopeType string) ([]string, error) {
 	sort.Strings(scopeAr)
 	return scopeAr, nil
 }
-
-
 
 func normalizeScope(scopeItem, scopeType string) string {
 

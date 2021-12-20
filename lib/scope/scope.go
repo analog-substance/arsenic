@@ -8,13 +8,13 @@ import (
 )
 
 type scope struct {
-	domainsExplicitlyInScope []string
+	domainsExplicitlyInScope     []string
 	rootDomainsExplicitlyInScope []string
-	blacklistedRootDomains []string
-	blacklistedDomains []string
-	explicitDomainsLoaded bool
+	blacklistedRootDomains       []string
+	blacklistedDomains           []string
+	explicitDomainsLoaded        bool
 
-	hostIPsExplicitlyInScope []string
+	hostIPsExplicitlyInScope       []string
 	hostIPsExplicitlyInScopeLoaded bool
 }
 
@@ -25,7 +25,7 @@ func getScope() *scope {
 	return asScope
 }
 
-func (s *scope) loadExplicitDomains () {
+func (s *scope) loadExplicitDomains() {
 	if !s.explicitDomainsLoaded {
 		domainsMap := map[string]bool{}
 		rootDomainsMap := map[string]bool{}
@@ -54,7 +54,7 @@ func (s *scope) loadExplicitDomains () {
 	}
 }
 
-func (s *scope) loadExplicitScopeIPs () {
+func (s *scope) loadExplicitScopeIPs() {
 	if !s.hostIPsExplicitlyInScopeLoaded {
 		hostIPMap := map[string]bool{}
 
@@ -70,7 +70,7 @@ func (s *scope) loadExplicitScopeIPs () {
 	}
 }
 
-func (s *scope) IsBlacklistedRootDomain (rootDomain string) bool {
+func (s *scope) IsBlacklistedRootDomain(rootDomain string) bool {
 	for _, badRootDomain := range s.blacklistedRootDomains {
 		if strings.EqualFold(badRootDomain, rootDomain) {
 			return true
@@ -80,7 +80,7 @@ func (s *scope) IsBlacklistedRootDomain (rootDomain string) bool {
 	return false
 }
 
-func (s *scope) IsBlacklistedDomain (checkDomain string) bool {
+func (s *scope) IsBlacklistedDomain(checkDomain string) bool {
 	s.loadExplicitDomains()
 	for _, badDomain := range s.blacklistedDomains {
 		if strings.EqualFold(badDomain, checkDomain) {
@@ -91,7 +91,7 @@ func (s *scope) IsBlacklistedDomain (checkDomain string) bool {
 	return false
 }
 
-func (s *scope) IsDomainExplicitlyInScope (checkDomain string) bool {
+func (s *scope) IsDomainExplicitlyInScope(checkDomain string) bool {
 	s.loadExplicitDomains()
 	for _, domain := range s.domainsExplicitlyInScope {
 		if strings.EqualFold(checkDomain, domain) {
@@ -102,7 +102,7 @@ func (s *scope) IsDomainExplicitlyInScope (checkDomain string) bool {
 	return false
 }
 
-func (s *scope) IsRootDomainInScope (checkRootDomain string) bool {
+func (s *scope) IsRootDomainInScope(checkRootDomain string) bool {
 	s.loadExplicitDomains()
 	for _, domain := range s.rootDomainsExplicitlyInScope {
 		if strings.EqualFold(checkRootDomain, domain) {
@@ -113,7 +113,7 @@ func (s *scope) IsRootDomainInScope (checkRootDomain string) bool {
 	return false
 }
 
-func (s *scope)  IsIPInScope(checkHostIP string) bool {
+func (s *scope) IsIPInScope(checkHostIP string) bool {
 	s.loadExplicitScopeIPs()
 	for _, hostIP := range s.hostIPsExplicitlyInScope {
 		if checkHostIP == hostIP {

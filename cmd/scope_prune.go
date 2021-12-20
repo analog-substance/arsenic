@@ -37,5 +37,4 @@ func init() {
 
 	pruneCmd.Flags().BoolP("root-domains", "r", false, "remove domains that belong to a blacklisted root domain, even if they are in the scope-domains.txt")
 
-
 }
