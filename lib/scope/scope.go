@@ -1,9 +1,11 @@
 package scope
 
 import (
+	"github.com/analog-substance/arsenic/lib/set"
 	"github.com/analog-substance/arsenic/lib/util"
 	"github.com/spf13/viper"
 	"golang.org/x/net/publicsuffix"
+	"regexp"
 	"strings"
 )
 
@@ -12,23 +14,23 @@ type scope struct {
 	rootDomainsExplicitlyInScope []string
 	blacklistedRootDomains       []string
 	blacklistedDomains           []string
-	explicitDomainsLoaded        bool
+	blacklistedDomainRegexps     []*regexp.Regexp
+	domainInfoLoaded             bool
 
 	hostIPsExplicitlyInScope       []string
 	hostIPsExplicitlyInScopeLoaded bool
 }
 
 var asScope = &scope{}
-var asScopeInit = false
 
 func getScope() *scope {
 	return asScope
 }
 
-func (s *scope) loadExplicitDomains() {
-	if !s.explicitDomainsLoaded {
-		domainsMap := map[string]bool{}
-		rootDomainsMap := map[string]bool{}
+func (s *scope) loadDomainInfo() {
+	if !s.domainInfoLoaded {
+		domainSet := set.NewSet("")
+		rootDomainSet := set.NewSet("")
 		s.blacklistedRootDomains = viper.GetStringSlice("blacklist.root-domains")
 		s.blacklistedDomains = viper.GetStringSlice("blacklist.domains")
 
@@ -36,21 +38,19 @@ func (s *scope) loadExplicitDomains() {
 			line = normalizeScope(line, "domain")
 			rootDomain, _ := publicsuffix.EffectiveTLDPlusOne(line)
 
-			domainsMap[line] = true
-			rootDomainsMap[rootDomain] = true
+			domainSet.Add(line)
+			rootDomainSet.Add(rootDomain)
 		})
 
-		for domain, _ := range domainsMap {
-			s.domainsExplicitlyInScope = append(s.domainsExplicitlyInScope, domain)
-		}
+		s.domainsExplicitlyInScope = domainSet.StringSlice()
+		s.rootDomainsExplicitlyInScope = rootDomainSet.StringSlice()
+		s.domainInfoLoaded = true
+	}
 
-		for rootDomain, _ := range rootDomainsMap {
-			if !s.IsBlacklistedRootDomain(rootDomain) {
-				s.rootDomainsExplicitlyInScope = append(s.rootDomainsExplicitlyInScope, rootDomain)
-			}
+	if len(s.blacklistedDomains) != len(s.blacklistedDomainRegexps) {
+		for _, domain := range s.blacklistedDomains {
+			s.blacklistedDomainRegexps = append(s.blacklistedDomainRegexps, regexp.MustCompile(regexp.QuoteMeta(domain)))
 		}
-
-		s.explicitDomainsLoaded = true
 	}
 }
 
@@ -63,7 +63,7 @@ func (s *scope) loadExplicitScopeIPs() {
 			hostIPMap[line] = true
 		})
 
-		for hostIP, _ := range hostIPMap {
+		for hostIP := range hostIPMap {
 			s.hostIPsExplicitlyInScope = append(s.hostIPsExplicitlyInScope, hostIP)
 		}
 		s.hostIPsExplicitlyInScopeLoaded = true
@@ -81,9 +81,9 @@ func (s *scope) IsBlacklistedRootDomain(rootDomain string) bool {
 }
 
 func (s *scope) IsBlacklistedDomain(checkDomain string) bool {
-	s.loadExplicitDomains()
-	for _, badDomain := range s.blacklistedDomains {
-		if strings.EqualFold(badDomain, checkDomain) {
+	s.loadDomainInfo()
+	for _, re := range s.blacklistedDomainRegexps {
+		if re.MatchString(checkDomain) {
 			return true
 		}
 	}
@@ -92,7 +92,7 @@ func (s *scope) IsBlacklistedDomain(checkDomain string) bool {
 }
 
 func (s *scope) IsDomainExplicitlyInScope(checkDomain string) bool {
-	s.loadExplicitDomains()
+	s.loadDomainInfo()
 	for _, domain := range s.domainsExplicitlyInScope {
 		if strings.EqualFold(checkDomain, domain) {
 			return true
@@ -103,7 +103,7 @@ func (s *scope) IsDomainExplicitlyInScope(checkDomain string) bool {
 }
 
 func (s *scope) IsRootDomainInScope(checkRootDomain string) bool {
-	s.loadExplicitDomains()
+	s.loadDomainInfo()
 	for _, domain := range s.rootDomainsExplicitlyInScope {
 		if strings.EqualFold(checkRootDomain, domain) {
 			return true

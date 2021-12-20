@@ -59,7 +59,7 @@ func Test_scope_IsBlacklistedDomain(t *testing.T) {
 				rootDomainsExplicitlyInScope:   tt.fields.rootDomainsExplicitlyInScope,
 				blacklistedRootDomains:         tt.fields.blacklistedRootDomains,
 				blacklistedDomains:             tt.fields.blacklistedDomains,
-				explicitDomainsLoaded:          tt.fields.explicitDomainsLoaded,
+				domainInfoLoaded:               tt.fields.explicitDomainsLoaded,
 				hostIPsExplicitlyInScope:       tt.fields.hostIPsExplicitlyInScope,
 				hostIPsExplicitlyInScopeLoaded: tt.fields.hostIPsExplicitlyInScopeLoaded,
 			}
@@ -127,7 +127,7 @@ func Test_scope_IsBlacklistedRootDomain(t *testing.T) {
 				rootDomainsExplicitlyInScope:   tt.fields.rootDomainsExplicitlyInScope,
 				blacklistedRootDomains:         tt.fields.blacklistedRootDomains,
 				blacklistedDomains:             tt.fields.blacklistedDomains,
-				explicitDomainsLoaded:          tt.fields.explicitDomainsLoaded,
+				domainInfoLoaded:               tt.fields.explicitDomainsLoaded,
 				hostIPsExplicitlyInScope:       tt.fields.hostIPsExplicitlyInScope,
 				hostIPsExplicitlyInScopeLoaded: tt.fields.hostIPsExplicitlyInScopeLoaded,
 			}
@@ -187,7 +187,7 @@ func Test_scope_IsDomainExplicitlyInScope(t *testing.T) {
 				rootDomainsExplicitlyInScope:   tt.fields.rootDomainsExplicitlyInScope,
 				blacklistedRootDomains:         tt.fields.blacklistedRootDomains,
 				blacklistedDomains:             tt.fields.blacklistedDomains,
-				explicitDomainsLoaded:          tt.fields.explicitDomainsLoaded,
+				domainInfoLoaded:               tt.fields.explicitDomainsLoaded,
 				hostIPsExplicitlyInScope:       tt.fields.hostIPsExplicitlyInScope,
 				hostIPsExplicitlyInScopeLoaded: tt.fields.hostIPsExplicitlyInScopeLoaded,
 			}
@@ -247,7 +247,7 @@ func Test_scope_IsIPInScope(t *testing.T) {
 				rootDomainsExplicitlyInScope:   tt.fields.rootDomainsExplicitlyInScope,
 				blacklistedRootDomains:         tt.fields.blacklistedRootDomains,
 				blacklistedDomains:             tt.fields.blacklistedDomains,
-				explicitDomainsLoaded:          tt.fields.explicitDomainsLoaded,
+				domainInfoLoaded:               tt.fields.explicitDomainsLoaded,
 				hostIPsExplicitlyInScope:       tt.fields.hostIPsExplicitlyInScope,
 				hostIPsExplicitlyInScopeLoaded: tt.fields.hostIPsExplicitlyInScopeLoaded,
 			}
@@ -307,7 +307,7 @@ func Test_scope_IsRootDomainInScope(t *testing.T) {
 				rootDomainsExplicitlyInScope:   tt.fields.rootDomainsExplicitlyInScope,
 				blacklistedRootDomains:         tt.fields.blacklistedRootDomains,
 				blacklistedDomains:             tt.fields.blacklistedDomains,
-				explicitDomainsLoaded:          tt.fields.explicitDomainsLoaded,
+				domainInfoLoaded:               tt.fields.explicitDomainsLoaded,
 				hostIPsExplicitlyInScope:       tt.fields.hostIPsExplicitlyInScope,
 				hostIPsExplicitlyInScopeLoaded: tt.fields.hostIPsExplicitlyInScopeLoaded,
 			}
@@ -404,7 +404,7 @@ func Test_scope_IsDomainInScope(t *testing.T) {
 				rootDomainsExplicitlyInScope:   tt.fields.rootDomainsExplicitlyInScope,
 				blacklistedRootDomains:         tt.fields.blacklistedRootDomains,
 				blacklistedDomains:             tt.fields.blacklistedDomains,
-				explicitDomainsLoaded:          tt.fields.explicitDomainsLoaded,
+				domainInfoLoaded:               tt.fields.explicitDomainsLoaded,
 				hostIPsExplicitlyInScope:       tt.fields.hostIPsExplicitlyInScope,
 				hostIPsExplicitlyInScopeLoaded: tt.fields.hostIPsExplicitlyInScopeLoaded,
 			}

@@ -13,7 +13,7 @@ import (
 
 func GetRootDomains(domains []string, pruneBlacklisted bool) []string {
 	rootDomainMap := map[string]int{}
-	rootDomains := []string{}
+	var rootDomains []string
 	for _, domain := range domains {
 		rootDomain, _ := publicsuffix.EffectiveTLDPlusOne(domain)
 
@@ -74,7 +74,7 @@ func GetScope(scopeType string) ([]string, error) {
 		}
 	}
 
-	// now lets open the actual scope file and add those. since they cant be blacklisted
+	// now lets open the actual scope file and add those. since they can't be blacklisted
 	err := util.ReadLineByLine(actualFile, func(line string) {
 		line = normalizeScope(line, scopeType)
 		scope[line] = true
@@ -85,7 +85,7 @@ func GetScope(scopeType string) ([]string, error) {
 	}
 
 	var scopeAr []string
-	for scopeItem, _ := range scope {
+	for scopeItem := range scope {
 		scopeAr = append(scopeAr, scopeItem)
 	}
 

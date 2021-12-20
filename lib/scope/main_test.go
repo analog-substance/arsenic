@@ -6,13 +6,12 @@ import (
 )
 
 func getTestScope() *scope {
-	asScopeInit = true
 	return &scope{
 		domainsExplicitlyInScope:     []string{"www.example.com", "target.subdomain.example.net"},
 		rootDomainsExplicitlyInScope: []string{"example.com"},
 		blacklistedRootDomains:       []string{"example.net"},
 		blacklistedDomains:           []string{"blog.example.com"},
-		explicitDomainsLoaded:        true,
+		domainInfoLoaded:             true,
 
 		hostIPsExplicitlyInScope:       []string{"10.10.10.10"},
 		hostIPsExplicitlyInScopeLoaded: true,

@@ -23,13 +23,13 @@ const (
 )
 
 var (
-	tickChars []string = []string{"-", "/", "|", "\\"}
-	nextTick  int      = 0
+	tickChars = []string{"-", "/", "|", "\\"}
+	nextTick  = 0
 
-	ipsByDomain         stringSetMap = make(stringSetMap)
-	domainsByIp         stringSetMap = make(stringSetMap)
-	ipsByIpResolvDomain stringSetMap = make(stringSetMap)
-	serviceByDomain     serviceMap   = make(serviceMap)
+	ipsByDomain         = make(stringSetMap)
+	domainsByIp         = make(stringSetMap)
+	ipsByIpResolvDomain = make(stringSetMap)
+	serviceByDomain     = make(serviceMap)
 )
 
 type stringSetMap map[string]*set.Set
