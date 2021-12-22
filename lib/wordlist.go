@@ -6,6 +6,7 @@ import (
 	"github.com/analog-substance/arsenic/lib/set"
 	"github.com/analog-substance/arsenic/lib/util"
 	"github.com/spf13/viper"
+	"io"
 	"log"
 	"os"
 	"path"
@@ -14,30 +15,15 @@ import (
 )
 
 func GenerateWordlist(wordlistType string, lineSet *set.Set) {
-
 	for _, wordlistPath := range GetWordlists(wordlistType) {
-		file, err := os.Open(wordlistPath)
-		if err != nil {
+		if readWordlistFile(wordlistType, lineSet, wordlistPath) {
 			return
-		}
-		defer file.Close()
-
-		scanner := bufio.NewScanner(file)
-		for scanner.Scan() {
-			rawLine := scanner.Text()
-
-			if shouldIgnoreLine(wordlistType, rawLine) {
-				continue
-			}
-
-			line := cleanLine(wordlistType, rawLine)
-			lineSet.Add(line)
 		}
 	}
 }
 
 func GetWordlists(wordlistType string) []string {
-	wordlistPaths := []string{}
+	var wordlistPaths []string
 
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -58,6 +44,31 @@ func GetWordlists(wordlistType string) []string {
 	}
 
 	return wordlistPaths
+}
+
+func readWordlistFile(wordlistType string, lineSet *set.Set, wordlistPath string) bool {
+	file, err := os.Open(wordlistPath)
+	if err != nil {
+		return true
+	}
+	defer file.Close()
+
+	return readWordlist(wordlistType, lineSet, file)
+}
+
+func readWordlist(wordlistType string, lineSet *set.Set, reader io.Reader) bool {
+	scanner := bufio.NewScanner(reader)
+	for scanner.Scan() {
+		rawLine := scanner.Text()
+
+		if shouldIgnoreLine(wordlistType, rawLine) {
+			continue
+		}
+
+		line := cleanLine(wordlistType, rawLine)
+		lineSet.Add(line)
+	}
+	return false
 }
 
 func shouldIgnoreLine(wordlistType, line string) bool {
