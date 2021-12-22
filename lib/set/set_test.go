@@ -29,7 +29,7 @@ func TestSet_Add(t *testing.T) {
 		{
 			"Test add int to string set",
 			fields{map[interface{}]bool{}, reflect.TypeOf("")},
-			args{"one"},
+			args{1},
 			false,
 		},
 	}
@@ -58,8 +58,23 @@ func TestSet_AddRange(t *testing.T) {
 		name   string
 		fields fields
 		args   args
+		desiredLengthBefore int
+		desiredLengthAfter int
 	}{
-		// TODO: Add test cases.
+		{
+			"Test add string to string set",
+			fields{map[interface{}]bool{}, reflect.TypeOf("")},
+			args{[]string{"one", "two"}},
+			0,
+			2,
+		},
+		{
+			"Test add int to string set",
+			fields{map[interface{}]bool{"one": true}, reflect.TypeOf("")},
+			args{[]string{"one", "two"}},
+			1,
+			2,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -68,32 +83,16 @@ func TestSet_AddRange(t *testing.T) {
 				itemType: tt.fields.itemType,
 			}
 
-			set.AddRange([]string{"one", "two"})
-		})
-	}
-}
+			if got := set.Length(); got != tt.desiredLengthBefore {
+				t.Errorf("Before AddRange() then Length() = %v, want %v", got, tt.desiredLengthBefore)
+			}
 
-func TestSet_Length(t *testing.T) {
-	type fields struct {
-		Set      map[interface{}]bool
-		itemType reflect.Type
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		want   int
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			set := &Set{
-				Set:      tt.fields.Set,
-				itemType: tt.fields.itemType,
+			set.AddRange(tt.args.items)
+
+			if got := set.Length(); got != tt.desiredLengthAfter {
+				t.Errorf("AddRange() then Length() = %v, want %v", got, tt.desiredLengthAfter)
 			}
-			if got := set.Length(); got != tt.want {
-				t.Errorf("Length() = %v, want %v", got, tt.want)
-			}
+
 		})
 	}
 }
@@ -108,7 +107,11 @@ func TestSet_Slice(t *testing.T) {
 		fields fields
 		want   interface{}
 	}{
-		// TODO: Add test cases.
+		{
+			"Test get int slice",
+			fields{map[interface{}]bool{1: true}, reflect.TypeOf(1)},
+			[]int{1},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -133,7 +136,11 @@ func TestSet_SortedStringSlice(t *testing.T) {
 		fields fields
 		want   []string
 	}{
-		// TODO: Add test cases.
+		{
+			"Test get string slice",
+			fields{map[interface{}]bool{"ddd":true,"aaa": true}, reflect.TypeOf("")},
+			[]string{"aaa", "ddd"},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -158,7 +165,11 @@ func TestSet_StringSlice(t *testing.T) {
 		fields fields
 		want   []string
 	}{
-		// TODO: Add test cases.
+		{
+			"Test get string slice",
+			fields{map[interface{}]bool{"one": true}, reflect.TypeOf("")},
+			[]string{"one"},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -183,7 +194,11 @@ func TestSet_WriteSorted(t *testing.T) {
 		fields     fields
 		wantWriter string
 	}{
-		// TODO: Add test cases.
+		{
+			"Test writing sorted",
+			fields{map[interface{}]bool{"ddd":true,"aaa": true}, reflect.TypeOf("")},
+			"aaa\nddd\n",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

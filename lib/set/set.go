@@ -1,7 +1,7 @@
 package set
 
 import (
-	"bufio"
+	"fmt"
 	"github.com/ahmetb/go-linq/v3"
 	"io"
 	"os"
@@ -70,10 +70,8 @@ func (set *Set) Length() int {
 }
 
 func (set *Set) WriteSorted(writer io.Writer) {
-	w := bufio.NewWriter(writer)
-
 	for _, line := range set.SortedStringSlice() {
-		_, _ = w.WriteString(line + "\n")
+		fmt.Fprintln(writer, line)
 	}
 }
 

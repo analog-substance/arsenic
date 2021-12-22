@@ -8,7 +8,6 @@ import (
 	"math/rand"
 	"os"
 	"os/exec"
-	"path"
 	"sort"
 	"syscall"
 	"time"
