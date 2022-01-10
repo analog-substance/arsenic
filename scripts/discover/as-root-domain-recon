@@ -28,7 +28,7 @@ function root_domain_recon {
   cat scope-domains*.txt 2>/dev/null \
     | grep -P "$(echo "$domain" | sed 's/\./\\./g')\$" \
     | sort -d \
-    | uniq > "recon/domains/$domain/subdomains-scope.txt"
+    | uniq > "recon/domains/$domain/subdomains-discovered.txt"
 
   if ! arsenic scope domains -r | grep -q "$domain"; then
     _warn "Skipping common domain: $domain"

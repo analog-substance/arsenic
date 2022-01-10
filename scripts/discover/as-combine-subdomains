@@ -21,7 +21,8 @@ mkdir -p recon/domains recon/discover recon/ips
 function root_domain_recon {
   domain=$(echo $1 | tr 'A-Z' 'a-z')
   mkdir -p "recon/domains/$domain"
-  # always right in scope subdomains to a txt file
+
+  # always write in scope subdomains to a txt file
   grep -P "$(echo "$domain" |  sed 's/\([\.\-]\)/\\\1/g' )\$" scope-domains.txt > "recon/domains/$domain/subdomains-scope.txt"
 
   # we do not need to skip out of scope root domains here, since we are combining what was generated
