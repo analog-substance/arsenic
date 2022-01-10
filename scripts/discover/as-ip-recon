@@ -22,7 +22,7 @@ REMOVE_IP_REGEX="(104\.(1[6-9]|2[0-9]|3[01])|184\.(2[4-9]|3[01])|104\.(6[4-9]|[7
 PRIVATE_IP_REGEX="(127\.[0-9]{1,3}\.|10\.[0-9]{1,3}\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[01])\.)[0-9]{1,3}\.[0-9]{1,3}"
 
 # create scope ips from domains
-grep -riP "has (IPv6 )?address" recon/domains/  \
+grep -riP "\bhas (IPv6 )?address\b" recon/domains/  \
   | awk '{print $NF}' \
   | sort -d | uniq \
   | tee scope-ips-generated-client-domains.txt
