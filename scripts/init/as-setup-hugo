@@ -77,4 +77,9 @@ if [ ! -f Makefile ]; then
     echo -e "update_hugo::\n\tas-setup-hugo"
   } >> Makefile
 fi
+
+if ! grep -q ".hugo_build.lock" .gitignore; then
+  echo ".hugo_build.lock" >> .gitignore
+fi
+
 _ "Setup Hugo complete"
