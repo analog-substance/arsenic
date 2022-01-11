@@ -125,12 +125,12 @@ Currently Metadata has the following methods:
 
 		protocols, _ := cmd.Flags().GetStringSlice("protocols")
 		if len(protocols) > 0 {
-			var hostURLs []string
+			hostURLs := set.NewSet("")
 			for _, host := range hosts {
-				hostURLs = append(hostURLs, host.URLs()...)
+				hostURLs.AddRange(host.URLs())
 			}
 
-			for _, hostURL := range hostURLs {
+			for _, hostURL := range hostURLs.SortedStringSlice() {
 				for _, proto := range protocols {
 					if strings.HasPrefix(hostURL, proto) || proto == "all" {
 						fmt.Println(hostURL)
