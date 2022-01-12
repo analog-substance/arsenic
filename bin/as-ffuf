@@ -78,7 +78,7 @@ run(){
     # Get hostname from URL
     # Remove URL scheme (http:// or https://) and remove port (:port)
     local hostname=$(echo "$url" | sed 's|http\(s\)\?://||;s/:[0-9]\+//' | awk -F '/' '{print $1}')
-    if [[ -z "$output_file" ]]; then
+    if [[ $output_file_override -eq 0 ]]; then
         output_file="ffuf.$method.$(echo "$url" | sed 's|://|.|;s|/$||;s|/|.|g').$wordlist_name.json"
     fi
     local output_path="recon/$output_file"
@@ -123,7 +123,7 @@ run(){
     cleanup
 }
 cleanup() {
-    find "$host_dir/" -name "*ffuf*" -type f -size 0 -exec rm "{}" ";"
+    find "$host_dir/" -name "*ffuf*" -type f -empty -exec rm "{}" ";"
 }
 graceful_exit() {
     echo
@@ -144,6 +144,7 @@ method="GET"
 recursion_depth=3
 match_codes="all"
 filter_codes="404"
+output_file_override=0
 while [[ "$1" =~ ^- && ! "$1" == "--" ]]; do
     case $1 in
         -H)
@@ -255,6 +256,7 @@ while [[ "$1" =~ ^- && ! "$1" == "--" ]]; do
             ;;
         -o|--output)
             output_file="$2"
+            output_file_override=1
             shift
             ;;
         -h|--help)
