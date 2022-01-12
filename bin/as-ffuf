@@ -112,7 +112,11 @@ run(){
         url="$url/FUZZ"
     fi
 
-    ffuf -recursion -recursion-depth $recursion_depth -ac -v -mc $match_codes -fc $filter_codes -o $output_path -of json -u $url -w "$wordlist_file" "${ffuf_args[@]}" $@
+    if [ $recursion_depth -gt 0 ]; then
+        add_ffuf_args -recursion -recursion-depth $recursion_depth
+    fi
+
+    ffuf -ac -v -mc $match_codes -fc $filter_codes -o $output_path -of json -u $url -w "$wordlist_file" "${ffuf_args[@]}" $@
     cat $output_path | jq > $output_path.new
     mv $output_path.new $output_path
     
