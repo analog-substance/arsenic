@@ -20,10 +20,12 @@ var serveCmd = &cobra.Command{
 		router := mux.NewRouter().StrictSlash(true)
 		routes(router)
 
+		router.Use(mux.CORSMethodMiddleware(router))
+
 		port, _ := cmd.Flags().GetInt("port")
 		address := fmt.Sprintf("localhost:%d", port)
 
-		fmt.Printf("Listening on %s", address)
+		fmt.Printf("[+] Listening on %s\n", address)
 		http.ListenAndServe(address, router)
 	},
 }
@@ -32,9 +34,11 @@ func routes(router *mux.Router) {
 	apiRouter := router.PathPrefix("/api").Subrouter()
 
 	hostRouter := apiRouter.PathPrefix("/host").Subrouter()
-	hostRouter.Methods("POST").
+	hostRouter.Methods(http.MethodPost, http.MethodOptions).
 		Path("/review").
 		HandlerFunc(reviewHost)
+
+	hostRouter.Use(mux.CORSMethodMiddleware(hostRouter))
 }
 
 func genericError(rw http.ResponseWriter) {
@@ -53,12 +57,23 @@ func genericSuccess(rw http.ResponseWriter) {
 	})
 }
 
+func setCorsHeaders(rw http.ResponseWriter) {
+	rw.Header().Set("Access-Control-Allow-Origin", "*")
+	rw.Header().Set("Access-Control-Allow-Headers", "*")
+}
+
 type reviewHostRequest struct {
 	Host     string `json:"host"`
 	Reviewer string `json:"reviewer"`
 }
 
 func reviewHost(rw http.ResponseWriter, r *http.Request) {
+	setCorsHeaders(rw)
+
+	if r.Method == http.MethodOptions {
+		return
+	}
+
 	reqBody, _ := ioutil.ReadAll(r.Body)
 
 	var reviewRequest reviewHostRequest
