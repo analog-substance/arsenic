@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/analog-substance/arsenic/api/models"
 	"github.com/analog-substance/arsenic/lib/host"
@@ -66,7 +67,9 @@ func (api Api) reviewHost(rw http.ResponseWriter, r *http.Request) {
 
 	hosts := host.Get(reviewHost.Host)
 	if len(hosts) == 0 {
-		log.Printf("reviewHost: No hosts matched - %s\n", reviewHost.Host)
+		escaped := strings.Replace(reviewHost.Host, "\n", "", -1)
+		escaped = strings.Replace(escaped, "\r", "", -1)
+		log.Printf("reviewHost: No hosts matched - %s\n", escaped)
 		api.genericError(rw)
 		return
 	}
