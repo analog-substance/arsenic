@@ -198,6 +198,20 @@ func StringSliceEquals(a []string, b []string) bool {
 	return true
 }
 
+func GetReviewer(reviewerFlag string) string {
+	if reviewerFlag == "operator" {
+		envReviewer := os.Getenv("AS_REVIEWER")
+		envUser := os.Getenv("USER")
+		if len(envReviewer) > 0 {
+			reviewerFlag = envReviewer
+		} else if len(envUser) > 0 {
+			reviewerFlag = envUser
+		}
+	}
+
+	return reviewerFlag
+}
+
 type NoopWriter struct {
 }
 
