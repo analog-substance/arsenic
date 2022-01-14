@@ -38,9 +38,12 @@ WEB_PORTS="80,443,3000,8000,8001,8080,8443"
 function getURLs {
   {
     set +o pipefail
-    cat recon/*.wordlist-content-discover.txt \
+    cat recon/*.wordlist-content-discover.txt 2> /dev/null \
     | grep -P "Status: 2"  \
     | grep -viP "\.(png|jpe?g|ico|css|gif|js)$"
+
+    cat recon/*.wordlist-content-discover.json 2> /dev/null \
+    | jq -r '.results[] | select(.status | tostring | startswith("2")) | .url'
     set -o pipefail
   } \
   | awk '{print $1}' \
@@ -52,6 +55,7 @@ function getHosts {
 
    {
      find hosts -name 'gobuster.*.wordlist-content-discover.txt' -size +0 | cut -d/ -f2 | sort -d | uniq
+     find hosts -name 'ffuf.*.wordlist-content-discover.json' -size +0 | cut -d/ -f2 | sort -d | uniq
      find hosts -name 'wordlist-content-discover.txt' | cut -d/ -f2 | sort -d | uniq
    } | sort | uniq -c | grep "1 " | awk '{print $2}' | while read host; do
    cd hosts/$host
