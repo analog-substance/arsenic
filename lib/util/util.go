@@ -52,30 +52,12 @@ func GetScripts(phase string) []ScriptConfig {
 
 func ExecScript(scriptPath string, args []string) int {
 	cmd := exec.Command(scriptPath, args...)
+	cmd.Stderr = os.Stderr
+	cmd.Stdout = os.Stdout
 
-	stderr, _ := cmd.StderrPipe()
-	stdout, _ := cmd.StdoutPipe()
 	if err := cmd.Start(); err != nil {
 		log.Fatalf("cmd.Start: %v", err)
 	}
-
-	scannerEr := bufio.NewScanner(stderr)
-	scannerEr.Split(bufio.ScanLines)
-	go func() {
-		for scannerEr.Scan() {
-			m := scannerEr.Text()
-			fmt.Println(m)
-		}
-	}()
-
-	scanner := bufio.NewScanner(stdout)
-	scanner.Split(bufio.ScanLines)
-	go func() {
-		for scanner.Scan() {
-			m := scanner.Text()
-			fmt.Println(m)
-		}
-	}()
 
 	exitStatus := 0
 	if err := cmd.Wait(); err != nil {
