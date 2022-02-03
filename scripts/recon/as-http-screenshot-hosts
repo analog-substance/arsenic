@@ -37,14 +37,16 @@ WEB_PORTS="80,443,3000,8000,8001,8080,8443"
 
 function getURLs {
   {
-    set +o pipefail
+    set +o pipefail +e
     cat recon/*.wordlist-content-discover.txt 2> /dev/null \
     | grep -P "Status: 2"  \
     | grep -viP "\.(png|jpe?g|ico|css|gif|js)$"
 
     cat recon/*.wordlist-content-discover.json 2> /dev/null \
-    | jq -r '.results[] | select(.status | tostring | startswith("2")) | .url'
-    set -o pipefail
+    | jq -r '.results[] | select(.status | tostring | startswith("2")) | .url' \
+    | grep -viP "\.(png|jpe?g|ico|css|gif|js)$"
+    
+    set -o pipefail -e
   } \
   | awk '{print $1}' \
   | sort -d | uniq
