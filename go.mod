@@ -4,6 +4,8 @@ go 1.13
 
 require (
 	github.com/ahmetb/go-linq/v3 v3.2.0
+	github.com/gin-contrib/cors v1.3.1 // indirect
+	github.com/gin-gonic/gin v1.7.7 // indirect
 	github.com/gorilla/mux v1.8.0
 	github.com/lair-framework/go-nmap v0.0.0-20191202052157-3507e0b03523
 	github.com/mitchellh/go-homedir v1.1.0

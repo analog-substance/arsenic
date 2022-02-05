@@ -14,7 +14,7 @@ var serveCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		port, _ := cmd.Flags().GetInt("port")
 
-		err := api.NewApi().Serve(port)
+		err := api.Serve(port)
 		if err != nil {
 			fmt.Println(err)
 		}

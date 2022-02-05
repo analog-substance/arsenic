@@ -218,3 +218,17 @@ type NoopWriter struct {
 func (w NoopWriter) Write(bytes []byte) (int, error) {
 	return 0, nil
 }
+
+
+func IndexOf(data []string, item string) (int) {
+    for k, v := range data {
+        if item == v {
+            return k
+        }
+    }
+    return -1
+}
+
+func RemoveIndex(arr []string, idx int) []string {
+    return append(arr[:idx], arr[idx+1:]...)
+}

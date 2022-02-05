@@ -1,37 +1,43 @@
 package api
 
 import (
-	"fmt"
-	"net/http"
-
-	"github.com/analog-substance/arsenic/api/controller"
-	"github.com/gorilla/mux"
+    "fmt"
+    "github.com/gin-contrib/cors"
+    "github.com/gin-gonic/gin"
+    "github.com/analog-substance/arsenic/api/controller/host"
+    "github.com/analog-substance/arsenic/api/controller/lead"
 )
 
-type Api struct {
-	router         *mux.Router
-	hostController controller.HostController
+func ping(c *gin.Context) {
+    c.JSON(200, gin.H{
+        "message": "pong",
+    })
 }
 
-func NewApi() Api {
-	rootRouter := mux.NewRouter().StrictSlash(true)
+func Serve(port int) error {
 
-	apiRouter := rootRouter.PathPrefix("/api").Subrouter()
-	return Api{
-		router:         rootRouter,
-		hostController: controller.NewHostController(apiRouter),
-	}
-}
+    router := gin.Default()
 
-func (api Api) Serve(port int) error {
-	api.routes()
+    // Default Config:
+    // - No origin allowed by default
+    // - GET, POST, PUT, HEAD methods
+    // - Credentials share disabled
+    // - Preflight requests cached for 12 hours
+    config := cors.DefaultConfig()
+    config.AllowAllOrigins = true
+    config.AddAllowMethods("OPTIONS")
+    router.Use(cors.New(config))
+
+    api := router.Group("/api")
+    api.GET("/ping", ping)
+
+    api_host := api.Group("/host")
+    host.AddRoutes(api_host)
+
+    api_lead := api.Group("/lead")
+    lead.AddRoutes(api_lead)
 
 	address := fmt.Sprintf("localhost:%d", port)
-
 	fmt.Printf("[+] Listening on %s\n", address)
-	return http.ListenAndServe(address, api.router)
-}
-
-func (api Api) routes() {
-	api.hostController.Routes()
+    return router.Run(address)
 }
