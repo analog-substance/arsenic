@@ -49,12 +49,12 @@ if [[ "$NEW_OP" == "1" ]]; then
   mv config.toml ../
   mv content/findings/sample-finding ../report/findings/first-finding
   mv sample-campaign.md ../report/social
-  rm -rf content/findings content/sections content/hosts content/notes
 else
   rm config.toml
-  rm -rf content/findings content/sections content/hosts content/notes
   rm sample-campaign.md
 fi
+
+rm -rf content/findings content/sections content/hosts content/notes content/leads
 
 ln -s ../config.toml
 

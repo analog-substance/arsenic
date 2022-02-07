@@ -1,14 +1,14 @@
 package lead
 
 import (
-	"encoding/json"
-	"fmt"
-	"github.com/analog-substance/arsenic/lib/util"
+    "encoding/json"
+    "errors"
+    "fmt"
+    "github.com/analog-substance/arsenic/lib/util"
     "io"
-	"io/ioutil"
-	"os"
-	"path/filepath"
-    //"sanitize"
+    "io/ioutil"
+    "os"
+    "path/filepath"
 )
 
 const data_lead_file string = ".hugo/data/leads.json"
@@ -17,23 +17,23 @@ const report_findings_dir string = "report/findings/"
 const metadata_file string = "00-metadata.md"
 
 type HugoLeadMetadata struct {
-	Ignored  []string `json:"ignored"`
-	Copied  []string `json:"copied"`
+    Ignored  []string `json:"ignored"`
+    Copied  []string `json:"copied"`
 }
 
 type Cvss struct {
-	Severity  string `json:"severity"`
-	Score     float32 `json:"score"`
-	Vector    string `json:"vector"`
+    Severity  string `json:"severity"`
+    Score     float32 `json:"score"`
+    Vector    string `json:"vector"`
 }
 
 type LeadMetadata struct {
-	Title  string `json:"title"`
-	Cvss   Cvss   `json:"cvss"`
+    Title  string `json:"title"`
+    Cvss   Cvss   `json:"cvss"`
 }
 
 func ReadHugoLeadMetadata() (HugoLeadMetadata, error) {
-	var metadata HugoLeadMetadata
+    var metadata HugoLeadMetadata
     jsonFile, err := os.Open(filepath.FromSlash(data_lead_file))
     if err != nil {
         return metadata, err
@@ -49,10 +49,10 @@ func ReadHugoLeadMetadata() (HugoLeadMetadata, error) {
 }
 
 func (md HugoLeadMetadata) save() error {
-	out, err := json.MarshalIndent(md, "", "  ")
-	if err != nil {
-		return err
-	}
+    out, err := json.MarshalIndent(md, "", "  ")
+    if err != nil {
+        return err
+    }
 
     fp := filepath.FromSlash(data_lead_file)
     err = ioutil.WriteFile(fp, out, 0644)
@@ -64,8 +64,8 @@ func (md HugoLeadMetadata) save() error {
 }
 
 func ReadLeadMetadata(id string) (LeadMetadata, error) {
-	var metadata LeadMetadata
-    lead_metadata_file := recon_leads_dir + "/" + id + "/" + metadata_file
+    var metadata LeadMetadata
+    lead_metadata_file := recon_leads_dir + "/" + util.Sanitize(id) + "/" + metadata_file
     jsonFile, err := os.Open(filepath.FromSlash(lead_metadata_file))
     if err != nil {
         return metadata, err
@@ -85,7 +85,7 @@ func GetLeadDir(id string) string {
 }
 
 func GetLeadFiles(id string) ([]string, error) {
-	filePaths := []string{}
+    filePaths := []string{}
     lead_dir := GetLeadDir(id)
     files, err := ioutil.ReadDir(filepath.FromSlash(lead_dir))
     if err != nil {
@@ -139,15 +139,17 @@ func CopyLead(id string) error {
     }
 
     if util.IndexOf(md.Copied, id) >= 0 {
-        return nil
+        return errors.New("Lead already copied")
     }
 
     //Create the finding folder
     lead_md, err := ReadLeadMetadata(id)
+    if err != nil {
+        return err
+    }
 
     lead_dir := GetLeadDir(id)
-    //finding_dir := fmt.Sprintf("%v/%.1f %v %v", report_findings_dir, lead_md.Cvss.Score, sanitize.BaseName(lead_md.Title), id)
-    finding_dir := fmt.Sprintf("%v/%.1f %v %v", report_findings_dir, lead_md.Cvss.Score, lead_md.Title, id)
+    finding_dir := fmt.Sprintf("%v/%.1f %v %v", report_findings_dir, lead_md.Cvss.Score, util.Sanitize(lead_md.Title), util.Sanitize(id))
     err = os.Mkdir(filepath.FromSlash(finding_dir), 0750)
     if err != nil {
         return err

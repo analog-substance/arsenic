@@ -8,7 +8,9 @@ import (
 	"math/rand"
 	"os"
 	"os/exec"
+    "regexp"
 	"sort"
+    "strings"
 	"syscall"
 	"time"
 
@@ -231,4 +233,11 @@ func IndexOf(data []string, item string) (int) {
 
 func RemoveIndex(arr []string, idx int) []string {
     return append(arr[:idx], arr[idx+1:]...)
+}
+
+func Sanitize(s string) string {
+    // Windows is most restrictive
+    windows_regex := regexp.MustCompile("[<>:/\\|?*\"]+")
+    s = windows_regex.ReplaceAllString(s, "_")
+    return strings.TrimSpace(s)
 }
