@@ -2,12 +2,13 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/analog-substance/arsenic/lib/scope"
 	"os"
 	"path/filepath"
 	"regexp"
 	"sort"
 	"strings"
+
+	"github.com/analog-substance/arsenic/lib/scope"
 
 	"github.com/ahmetb/go-linq/v3"
 	"github.com/analog-substance/arsenic/lib/grep"
@@ -175,6 +176,10 @@ This will create a single host for hostnames that resolve to the same IPs`,
 				fmt.Printf("[+] Creating new service %s\n", ip)
 				if create {
 					h := host.InitHost(filepath.Join("hosts", ip))
+					h.Metadata.IPAddresses = append(h.Metadata.IPAddresses, ip)
+					h.Metadata.Hostnames = make([]string, 0)
+					h.Metadata.RootDomains = make([]string, 0)
+
 					h.SaveMetadata()
 				}
 			})
