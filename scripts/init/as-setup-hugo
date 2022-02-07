@@ -60,6 +60,7 @@ ln -s ../config.toml
 
 cd content
 ln -sf ../../recon
+ln -sf ../../recon/leads
 ln -sf ../../hosts
 ln -sf ../../notes
 ls -d ../../report/* | xargs -n 1 ln -sf
