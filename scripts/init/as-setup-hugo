@@ -59,10 +59,10 @@ fi
 ln -s ../config.toml
 
 cd content
-ln -srf ../../recon
-ln -srf ../../hosts
-ln -srf ../../notes
-ls -d ../../report/* | xargs -n 1 ln -srf
+ln -sf ../../recon
+ln -sf ../../hosts
+ln -sf ../../notes
+ls -d ../../report/* | xargs -n 1 ln -sf
 
 cd ../../
 
