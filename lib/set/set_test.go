@@ -55,11 +55,11 @@ func TestSet_AddRange(t *testing.T) {
 		items interface{}
 	}
 	tests := []struct {
-		name   string
-		fields fields
-		args   args
+		name                string
+		fields              fields
+		args                args
 		desiredLengthBefore int
-		desiredLengthAfter int
+		desiredLengthAfter  int
 	}{
 		{
 			"Test add string to string set",
@@ -138,7 +138,7 @@ func TestSet_SortedStringSlice(t *testing.T) {
 	}{
 		{
 			"Test get string slice",
-			fields{map[interface{}]bool{"ddd":true,"aaa": true}, reflect.TypeOf("")},
+			fields{map[interface{}]bool{"ddd": true, "aaa": true}, reflect.TypeOf("")},
 			[]string{"aaa", "ddd"},
 		},
 	}
@@ -196,7 +196,7 @@ func TestSet_WriteSorted(t *testing.T) {
 	}{
 		{
 			"Test writing sorted",
-			fields{map[interface{}]bool{"ddd":true,"aaa": true}, reflect.TypeOf("")},
+			fields{map[interface{}]bool{"ddd": true, "aaa": true}, reflect.TypeOf("")},
 			"aaa\nddd\n",
 		},
 	}

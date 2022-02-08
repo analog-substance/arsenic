@@ -3,7 +3,6 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 	"sort"
 	"strings"
 	"text/template"
@@ -95,7 +94,7 @@ Currently Metadata has the following methods:
 		if cmd.Flags().Lookup("reviewed-by").Changed && (len(hostsArgs) > 0 || len(query) > 0) {
 			addReviewedBy = true
 		}
-		reviewer := getReviewer(reviewerFlag)
+		reviewer := util.GetReviewer(reviewerFlag)
 		userFlagsToAdd, _ := cmd.Flags().GetStringSlice("add-flags")
 		userFlagsToRemove, _ := cmd.Flags().GetStringSlice("remove-flags")
 		updateArsenicFlags, _ := cmd.Flags().GetBool("update")
@@ -156,20 +155,6 @@ Currently Metadata has the following methods:
 			fmt.Println(columnize.SimpleFormat(lines))
 		}
 	},
-}
-
-func getReviewer(reviewerFlag string) string {
-	if reviewerFlag == "operator" {
-		envReviewer := os.Getenv("AS_REVIEWER")
-		envUser := os.Getenv("USER")
-		if len(envReviewer) > 0 {
-			reviewerFlag = envReviewer
-		} else if len(envUser) > 0 {
-			reviewerFlag = envUser
-		}
-	}
-
-	return reviewerFlag
 }
 
 func init() {

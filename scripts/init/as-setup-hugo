@@ -49,20 +49,20 @@ if [[ "$NEW_OP" == "1" ]]; then
   mv config.toml ../
   mv content/findings/sample-finding ../report/findings/first-finding
   mv sample-campaign.md ../report/social
-  rm -rf content/findings content/sections content/hosts content/notes
 else
   rm config.toml
-  rm -rf content/findings content/sections content/hosts content/notes
   rm sample-campaign.md
 fi
+
+rm -rf content/findings content/sections content/hosts content/notes content/leads
 
 ln -s ../config.toml
 
 cd content
-ln -srf ../../recon
-ln -srf ../../hosts
-ln -srf ../../notes
-ls -d ../../report/* | xargs -n 1 ln -srf
+ln -sf ../../recon/leads
+ln -sf ../../hosts
+ln -sf ../../notes
+ls -d ../../report/* | xargs -n 1 ln -sf
 
 cd ../../
 
