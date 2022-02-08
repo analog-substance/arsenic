@@ -138,7 +138,7 @@ func CopyLead(id string) error {
 	}
 
 	if util.IndexOf(md.Copied, id) >= 0 {
-		return errors.New("Lead already copied")
+		return errors.New("lead already copied")
 	}
 
 	//Create the finding folder

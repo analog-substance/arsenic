@@ -30,7 +30,7 @@ func getLeadId(c *gin.Context) (string, error) {
 	}
 
 	if l.Id == "" {
-		err = errors.New("Id is empty")
+		err = errors.New("id is empty")
 	}
 
 	return l.Id, err
