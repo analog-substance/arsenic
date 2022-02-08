@@ -10,20 +10,19 @@ import (
 	"github.com/analog-substance/arsenic/api/models"
 	"github.com/analog-substance/arsenic/lib/host"
 	"github.com/analog-substance/arsenic/lib/util"
-    "github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin"
 )
 
-
 func AddRoutes(router *gin.RouterGroup) {
-    router.POST("/review", ReviewHost)
+	router.POST("/review", ReviewHost)
 }
 
 func ReviewHost(c *gin.Context) {
 
-    reqBody, err := ioutil.ReadAll(c.Request.Body)
+	reqBody, err := ioutil.ReadAll(c.Request.Body)
 	if err != nil {
 		log.Printf("reviewHost: %v\n", err)
-        controller.Error(c, err)
+		controller.Error(c, err)
 		return
 	}
 
@@ -31,7 +30,7 @@ func ReviewHost(c *gin.Context) {
 	err = json.Unmarshal(reqBody, &reviewHost)
 	if err != nil {
 		log.Printf("reviewHost: %v\n", err)
-        controller.Error(c, err)
+		controller.Error(c, err)
 		return
 	}
 
@@ -44,7 +43,7 @@ func ReviewHost(c *gin.Context) {
 		escaped := strings.Replace(reviewHost.Host, "\n", "", -1)
 		escaped = strings.Replace(escaped, "\r", "", -1)
 		log.Printf("reviewHost: No hosts matched - %s\n", escaped)
-        controller.GenericError(c)
+		controller.GenericError(c)
 		return
 	}
 
@@ -54,5 +53,5 @@ func ReviewHost(c *gin.Context) {
 		host.SaveMetadata()
 	}
 
-    controller.Success(c)
+	controller.Success(c)
 }

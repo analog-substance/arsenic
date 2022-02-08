@@ -8,9 +8,9 @@ import (
 	"math/rand"
 	"os"
 	"os/exec"
-    "regexp"
+	"regexp"
 	"sort"
-    "strings"
+	"strings"
 	"syscall"
 	"time"
 
@@ -221,23 +221,22 @@ func (w NoopWriter) Write(bytes []byte) (int, error) {
 	return 0, nil
 }
 
-
-func IndexOf(data []string, item string) (int) {
-    for k, v := range data {
-        if item == v {
-            return k
-        }
-    }
-    return -1
+func IndexOf(data []string, item string) int {
+	for k, v := range data {
+		if item == v {
+			return k
+		}
+	}
+	return -1
 }
 
 func RemoveIndex(arr []string, idx int) []string {
-    return append(arr[:idx], arr[idx+1:]...)
+	return append(arr[:idx], arr[idx+1:]...)
 }
 
 func Sanitize(s string) string {
-    // Windows is most restrictive
-    windows_regex := regexp.MustCompile("[<>:/\\|?*\"]+")
-    s = windows_regex.ReplaceAllString(s, "_")
-    return strings.TrimSpace(s)
+	// Windows is most restrictive
+	windows_regex := regexp.MustCompile("[<>:/\\|?*\"]+")
+	s = windows_regex.ReplaceAllString(s, "_")
+	return strings.TrimSpace(s)
 }

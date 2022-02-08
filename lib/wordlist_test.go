@@ -36,7 +36,6 @@ func Test_cleanLine(t *testing.T) {
 	}
 }
 
-
 func Test_shouldIgnoreLine(t *testing.T) {
 	type args struct {
 		wordlistType string
