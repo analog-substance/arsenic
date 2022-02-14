@@ -1,4 +1,11 @@
 #! /bin/bash
+
+_add_to_path(){
+    if ! echo "$PATH" | tr : '\n' | grep -q "^$1$"; then
+        PATH="$1:$PATH"
+    fi
+}
+
 if [ "$ARSENIC_INIT" != 1 ]; then
   export ARSENIC_INIT=1
   which figlet 2>&1 > /dev/null && figlet arsenic || echo Imagine arseninc in big letters...
@@ -13,8 +20,16 @@ if [ "$ARSENIC_INIT" != 1 ]; then
   popd > /dev/null
 
   export ARSENIC_OPT_PATH=$(dirname $ARSENIC_PATH)
-  PATH="$(echo $(ls -d $ARSENIC_OPT_PATH/*/bin) | sed 's/ /:/g'):$PATH"
-  export PATH="$ARSENIC_PATH/scripts/init:$ARSENIC_PATH/scripts/discover:$ARSENIC_PATH/scripts/recon:$ARSENIC_PATH/scripts/hunt:$PATH"
+
+  ls -d $ARSENIC_OPT_PATH/*/bin | while read bin; do
+    _add_to_path "$bin"
+  done
+  
+  for bin in $ARSENIC_PATH/scripts/*; do
+    _add_to_path "$bin"
+  done
+
+  export PATH
 
   # iterate of *.arsenicrc files and source them
   setopt +o nomatch
