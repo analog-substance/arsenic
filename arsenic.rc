@@ -20,7 +20,7 @@ popd > /dev/null
 
 export ARSENIC_OPT_PATH=$(dirname $ARSENIC_PATH)
 
-ls -d $ARSENIC_OPT_PATH/*/bin | while read bin; do
+for bin in $ARSENIC_OPT_PATH/*/bin ; do
   _add_to_path "$bin"
 done
 
