@@ -3,13 +3,15 @@ package host
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/analog-substance/arsenic/lib/scope"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
+
+	"github.com/analog-substance/arsenic/lib/scope"
 
 	"github.com/lair-framework/go-nmap"
 
@@ -419,6 +421,34 @@ func (host Host) ports() []Port {
 						service = "http"
 					}
 					portMap[fmt.Sprintf("%s/%d", port.Protocol, port.PortId)] = Port{port.PortId, port.Protocol, service}
+				}
+			}
+		}
+	}
+
+	re := regexp.MustCompile(`(?m)^([0-9]+)\s*(.*)$`)
+	globbed, _ = filepath.Glob(fmt.Sprintf("%s/recon/%s", host.Dir, "??p-ports.txt"))
+	for _, file := range globbed {
+		data, err := ioutil.ReadFile(file)
+		if err != nil {
+			continue
+		}
+
+		protocol := "tcp"
+		if file == "udp-ports.txt" {
+			protocol = "udp"
+		}
+
+		dataString := string(data)
+		linesMatches := re.FindAllStringSubmatch(dataString, -1)
+		for _, matches := range linesMatches {
+			portId, _ := strconv.Atoi(matches[1])
+			key := fmt.Sprintf("%s/%d", protocol, portId)
+			if _, ok := portMap[key]; !ok {
+				portMap[key] = Port{
+					ID:       portId,
+					Protocol: protocol,
+					Service:  matches[2],
 				}
 			}
 		}
