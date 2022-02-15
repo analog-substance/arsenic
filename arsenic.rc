@@ -36,7 +36,7 @@ export PATH
 
 # iterate of *.arsenicrc files and source them
 # setopt +o nomatch
-ls -d $ARSENIC_OPT_PATH/*/*.arsenicrc 2>/dev/null | while read rcfile; do
+for rcfile in $ARSENIC_OPT_PATH/*/*.arsenicrc 2>/dev/null ; do
   echo "[+] Loading $rcfile"
   source "$rcfile"
 done
