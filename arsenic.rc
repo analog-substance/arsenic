@@ -28,6 +28,10 @@ for bin in $ARSENIC_PATH/scripts/*; do
   _add_to_path "$bin"
 done
 
+if [[ -n "$GOPATH" && -d "$GOPATH/bin" ]]; then
+  _add_to_path "$GOPATH/bin"
+fi
+
 export PATH
 
 # iterate of *.arsenicrc files and source them
