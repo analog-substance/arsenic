@@ -6,42 +6,38 @@ _add_to_path(){
     fi
 }
 
-if [ "$ARSENIC_INIT" != 1 ]; then
-  export ARSENIC_INIT=1
-  which figlet 2>&1 > /dev/null && figlet arsenic || echo Imagine arseninc in big letters...
+export ARSENIC_INIT=1
+which figlet 2>&1 > /dev/null && figlet arsenic || echo Imagine arseninc in big letters...
 
-  if [[ -n "$BASH_VERSION" ]]; then
-    pushd `dirname ${BASH_SOURCE[0]}` > /dev/null
-  else
-    pushd `dirname $0` > /dev/null
-  fi
+if [[ -n "$BASH_VERSION" ]]; then
+  pushd `dirname ${BASH_SOURCE[0]}` > /dev/null
+else
+  pushd `dirname $0` > /dev/null
+fi
 
-  export ARSENIC_PATH=`pwd`
-  popd > /dev/null
+export ARSENIC_PATH=`pwd`
+popd > /dev/null
 
-  export ARSENIC_OPT_PATH=$(dirname $ARSENIC_PATH)
+export ARSENIC_OPT_PATH=$(dirname $ARSENIC_PATH)
 
-  ls -d $ARSENIC_OPT_PATH/*/bin | while read bin; do
-    _add_to_path "$bin"
-  done
-  
-  for bin in $ARSENIC_PATH/scripts/*; do
-    _add_to_path "$bin"
-  done
+ls -d $ARSENIC_OPT_PATH/*/bin | while read bin; do
+  _add_to_path "$bin"
+done
 
-  export PATH
+for bin in $ARSENIC_PATH/scripts/*; do
+  _add_to_path "$bin"
+done
 
-  # iterate of *.arsenicrc files and source them
-  setopt +o nomatch
-  ls -d $ARSENIC_OPT_PATH/*/*.arsenicrc 2>/dev/null | while read rcfile; do
-    echo "[+] Loading $rcfile"
-    source "$rcfile"
-  done
-  setopt -o nomatch
+export PATH
 
-  if [ -e $HOME/.oprc ]; then
-    source $HOME/.oprc
-  fi
+# iterate of *.arsenicrc files and source them
+setopt +o nomatch
+ls -d $ARSENIC_OPT_PATH/*/*.arsenicrc 2>/dev/null | while read rcfile; do
+  echo "[+] Loading $rcfile"
+  source "$rcfile"
+done
+setopt -o nomatch
 
-  export RPROMPT='☠️ '"$RPROMPT"
+if [ -e $HOME/.oprc ]; then
+  source $HOME/.oprc
 fi
