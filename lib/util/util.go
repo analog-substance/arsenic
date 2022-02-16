@@ -2,12 +2,14 @@ package util
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"io/fs"
 	"log"
 	"math/rand"
 	"os"
 	"os/exec"
+	"os/signal"
 	"regexp"
 	"sort"
 	"strings"
@@ -53,9 +55,29 @@ func GetScripts(phase string) []ScriptConfig {
 }
 
 func ExecScript(scriptPath string, args []string) int {
-	cmd := exec.Command(scriptPath, args...)
+	cmdCtx, cancel := context.WithCancel(context.Background())
+	cmd := exec.CommandContext(cmdCtx, scriptPath, args...)
+
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
+
+	sigs := make(chan os.Signal)
+	signal.Notify(sigs, os.Interrupt, syscall.SIGTERM)
+
+	// relay trapped signals to the spawned process
+	terminate := false
+	go func() {
+		for sig := range sigs {
+			cmd.Process.Signal(sig)
+			cancel()
+			terminate = true
+		}
+	}()
+
+	defer func() {
+		signal.Stop(sigs)
+		close(sigs)
+	}()
 
 	if err := cmd.Start(); err != nil {
 		log.Fatalf("cmd.Start: %v", err)
@@ -70,6 +92,10 @@ func ExecScript(scriptPath string, args []string) int {
 		} else {
 			log.Fatalf("cmd.Wait: %v", err)
 		}
+	}
+
+	if terminate {
+		os.Exit(exitStatus)
 	}
 	return exitStatus
 }
