@@ -68,9 +68,9 @@ func ExecScript(scriptPath string, args []string) int {
 	terminate := false
 	go func() {
 		for sig := range sigs {
+			terminate = true
 			cmd.Process.Signal(sig)
 			cancel()
-			terminate = true
 		}
 	}()
 
@@ -87,6 +87,9 @@ func ExecScript(scriptPath string, args []string) int {
 	if err := cmd.Wait(); err != nil {
 		if exiterr, ok := err.(*exec.ExitError); ok {
 			if status, ok := exiterr.Sys().(syscall.WaitStatus); ok {
+				if status.Signaled() {
+					terminate = true
+				}
 				exitStatus = status.ExitStatus()
 			}
 		} else {
