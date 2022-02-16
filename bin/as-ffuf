@@ -117,13 +117,9 @@ run(){
     fi
 
     ffuf -ac -v -mc $match_codes -fc $filter_codes -o $output_path -of json -u $url -w "$wordlist_file" "${ffuf_args[@]}" $@
+    ffuf_exit_code=$?
     cat $output_path | jq > $output_path.new
     mv $output_path.new $output_path
-    
-    cleanup
-}
-cleanup() {
-    find "$host_dir/" -name "*ffuf*" -type f -empty -exec rm "{}" ";"
 }
 graceful_exit() {
     echo
