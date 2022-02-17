@@ -87,12 +87,14 @@ run(){
     if [ -d hosts ]; then
         host_dir=$(arsenic hosts -H "$hostname" --paths | head -n 1)
         if [[ -n "$host_dir" ]]; then
-            mkdir -p "$host_dir/recon"
+            
             output_path="$host_dir/$output_path"
         else
-            mkdir -p hosts/$hostname/recon
+            host_dir="hosts/$hostname"
             output_path="hosts/$hostname/$output_path"
         fi
+
+        mkdir -p "$host_dir/recon"
     fi
 
     if [[ -n "$hostname" ]]; then
