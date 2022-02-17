@@ -3,6 +3,7 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"sort"
 	"strings"
 	"text/template"
@@ -129,12 +130,24 @@ Currently Metadata has the following methods:
 				hostURLs.AddRange(host.URLs())
 			}
 
+			validHostURLs := set.NewSet("")
 			for _, hostURL := range hostURLs.SortedStringSlice() {
 				for _, proto := range protocols {
 					if strings.HasPrefix(hostURL, proto) || proto == "all" {
-						fmt.Println(hostURL)
+						validHostURLs.Add(hostURL)
 					}
 				}
+			}
+			if jsonOut {
+				outObj := map[string][]string{"urls":validHostURLs.SortedStringSlice()}
+				json, err := json.MarshalIndent(outObj, "", "  ")
+				if err != nil {
+					fmt.Println(err)
+					return
+				}
+				fmt.Println(string(json))
+			} else {
+				validHostURLs.WriteSorted(os.Stdout)
 			}
 		} else if jsonOut {
 			json, err := json.MarshalIndent(hosts, "", "  ")
