@@ -2,10 +2,12 @@ package host
 
 import (
 	"encoding/json"
+	"errors"
 	"io/ioutil"
 	"log"
 	"strings"
 
+	"github.com/NoF0rte/gocdp"
 	"github.com/analog-substance/arsenic/api/controller"
 	"github.com/analog-substance/arsenic/api/models"
 	"github.com/analog-substance/arsenic/lib/host"
@@ -15,6 +17,7 @@ import (
 
 func AddRoutes(router *gin.RouterGroup) {
 	router.POST("/review", ReviewHost)
+	router.POST("/content", GetContentDiscovery)
 }
 
 func ReviewHost(c *gin.Context) {
@@ -54,4 +57,45 @@ func ReviewHost(c *gin.Context) {
 	}
 
 	controller.Success(c)
+}
+
+func GetContentDiscovery(c *gin.Context) {
+	reqBody, err := ioutil.ReadAll(c.Request.Body)
+	if err != nil {
+		log.Printf("getContentDiscovery: %v\n", err)
+		controller.Error(c, err)
+		return
+	}
+
+	var request models.HostContentDiscovery
+	err = json.Unmarshal(reqBody, &request)
+	if err != nil {
+		log.Printf("getContentDiscovery: %v\n", err)
+		controller.Error(c, err)
+		return
+	}
+
+	hosts := host.Get(request.Host)
+	if len(hosts) == 0 {
+		controller.Error(c, errors.New("host not found"))
+		return
+	}
+	host := hosts[0]
+
+	files, err := host.Files("recon/ffuf*", "recon/gobuster*")
+	if err != nil {
+		log.Printf("getContentDiscovery: %v\n", err)
+		controller.Error(c, err) // return generic error? Would be more secure...
+		return
+	}
+
+	results, err := gocdp.SmartParseFiles(files)
+	if err != nil {
+		log.Printf("getContentDiscovery: %v\n", err)
+		controller.Error(c, err)
+		return
+	}
+
+	grouped := results.GroupByStatus()
+	c.IndentedJSON(200, grouped)
 }

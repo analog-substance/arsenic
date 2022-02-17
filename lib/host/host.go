@@ -279,6 +279,20 @@ func (host Host) SetReviewedBy(reviewer string) {
 	}
 }
 
+func (host Host) Files(globs ...string) ([]string, error) {
+	var allFiles []string
+	for _, glob := range globs {
+		files, err := filepath.Glob(filepath.Join(host.Dir, glob))
+		if err != nil {
+			return nil, err
+		}
+
+		allFiles = append(allFiles, files...)
+	}
+
+	return allFiles, nil
+}
+
 func All() []Host {
 	allHosts := []Host{}
 	for _, hostDir := range getHostDirs() {
