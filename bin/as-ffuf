@@ -96,7 +96,7 @@ run(){
 
     if [[ -n "$hostname" ]]; then
         # Check if hostname is an IP
-        if ! echo $hostname | grep -qP "(?:(?:2(?:[0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9])\.){3}(?:(?:2([0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9]))"; then
+        if ! echo $hostname | grep -qP "^(?:(?:2(?:[0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9])\.){3}(?:(?:2([0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9]))$"; then
             echo "$hostname" >> "$host_dir/recon/hostnames.txt"
             cat $host_dir/recon/hostnames.txt | sed 's/^\*\.//g' | sed 's/:[0-9]*//g' | sed 's/\.$//g' | tr 'A-Z' 'a-z' | sort -d |  uniq > $host_dir/recon/hostnames.txt.new
             mv $host_dir/recon/hostnames.txt.new "$host_dir/recon/hostnames.txt"
