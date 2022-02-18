@@ -41,6 +41,8 @@ github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
 github.com/NoF0rte/gocdp v0.0.1 h1:L5NYsvOMnoTKON0Z0izFSH4Vd+DUD7GEKDKjEBCEOf0=
 github.com/NoF0rte/gocdp v0.0.1/go.mod h1:ULOThegerC4bRPimesHC9x65upscuyh1mJwjY/PfJWw=
+github.com/NoF0rte/gocdp v0.0.3 h1:z+yBM3lS55fb26es7POIsOwOCMRYKIiZWu0eXCzdZbk=
+github.com/NoF0rte/gocdp v0.0.3/go.mod h1:ULOThegerC4bRPimesHC9x65upscuyh1mJwjY/PfJWw=
 github.com/ahmetb/go-linq/v3 v3.2.0 h1:BEuMfp+b59io8g5wYzNoFe9pWPalRklhlhbiU3hYZDE=
 github.com/ahmetb/go-linq/v3 v3.2.0/go.mod h1:haQ3JfOeWK8HpVxMtHHEMPVgBKiYyQ+f1/kLZh/cj9U=
 github.com/antihax/optional v1.0.0/go.mod h1:uupD/76wgC+ih3iEmQUL+0Ugr19nfwCT1kdvxnR2qWY=
