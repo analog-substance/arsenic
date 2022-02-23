@@ -17,7 +17,7 @@ if [ -z "$name" ]; then
       | sed 's/^[0-9\.]* //g;s/\.md//;s/_/ /g;s/^\(.*\)$/\1\n\1 Details\n\1 Request\n\1 Response\n\1 Results/' \
       | awk '{for(i=0;++i<=NF;){OFS=(i==NF)?RS:FS;printf toupper(substr($i,0,1)) substr($i,2) OFS }}' \
       | sort -u \
-      | rofi -dmenu -p "Screenshot Caption")
+      | rofi -i -dmenu -p "Screenshot Caption")
   else
     name="Screenshot"
   fi
