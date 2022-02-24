@@ -7,7 +7,7 @@
 ##|
 ##|Options:
 ##|  -H                                     Header `"Name: Value"`, separated by colon. Multiple -H flags are accepted.
-##|  -recursion-depth                       Maximum recursion depth. (default: 3)
+##|  -recursion-depth                       Maximum recursion depth. (default: 0)
 ##|  -p                                     Seconds of `delay` between requests, or a range of random delay. For example "0.1" or "0.1-2.0"
 ##|  -e                                     Comma separated list of extensions. Extends FUZZ keyword.
 ##|  -mc                                    Match HTTP status codes, or "all" for everything. (default: all)
@@ -31,7 +31,7 @@
 ##|  -x                                     Proxy URL (SOCKS5 or HTTP). For example: http://127.0.0.1:8080 or socks5://127.0.0.1:8080
 ##|  --auth string                          Authorization header value
 ##|                                             Authorization: <value>
-##|  
+##|
 ##|  -h, --help                             Help for as-ffuf
 ##|  -o, --output string                    Name of the file to write the results to
 ##|                                         Default: ffuf.{HTTP_METHOD}.{URL}.{WORDLIST}.txt
@@ -74,7 +74,7 @@ combine_lines() {
 list_by_prefix() {
     sed 's/,/\n/g' | grep $1 | cut -d$1 -f2
 }
-run(){
+run() {
     # Get hostname from URL
     # Remove URL scheme (http:// or https://) and remove port (:port)
     local hostname=$(echo "$url" | sed 's|http\(s\)\?://||;s/:[0-9]\+//' | awk -F '/' '{print $1}')
@@ -97,12 +97,12 @@ run(){
     if [[ -n "$hostname" ]]; then
         # Check if hostname is an IP
         if ! echo $hostname | grep -qP "^(?:(?:2(?:[0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9])\.){3}(?:(?:2([0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9]))$"; then
-            echo "$hostname" >> "$host_dir/recon/hostnames.txt"
-            cat $host_dir/recon/hostnames.txt | sed 's/^\*\.//g' | sed 's/:[0-9]*//g' | sed 's/\.$//g' | tr 'A-Z' 'a-z' | sort -d |  uniq > $host_dir/recon/hostnames.txt.new
+            echo "$hostname" >>"$host_dir/recon/hostnames.txt"
+            cat $host_dir/recon/hostnames.txt | sed 's/^\*\.//g' | sed 's/:[0-9]*//g' | sed 's/\.$//g' | tr 'A-Z' 'a-z' | sort -d | uniq >$host_dir/recon/hostnames.txt.new
             mv $host_dir/recon/hostnames.txt.new "$host_dir/recon/hostnames.txt"
         else
-            echo "$hostname" >> $host_dir/recon/ip-addresses.txt
-            cat $host_dir/recon/ip-addresses.txt | sed 's/^\*\.//g' | sed 's/:[0-9]*//g' | sort -d |  uniq > $host_dir/recon/ip-addresses.txt.new
+            echo "$hostname" >>$host_dir/recon/ip-addresses.txt
+            cat $host_dir/recon/ip-addresses.txt | sed 's/^\*\.//g' | sed 's/:[0-9]*//g' | sort -d | uniq >$host_dir/recon/ip-addresses.txt.new
             mv $host_dir/recon/ip-addresses.txt.new "$host_dir/recon/ip-addresses.txt"
         fi
     fi
@@ -118,7 +118,7 @@ run(){
 
     ffuf -ac -v -mc $match_codes -fc $filter_codes -o $output_path -of json -u $url -w "$wordlist_file" "${ffuf_args[@]}" $@
     ffuf_exit_code=$?
-    cat $output_path | jq > $output_path.new
+    cat $output_path | jq >$output_path.new
     mv $output_path.new $output_path
 }
 graceful_exit() {
@@ -137,130 +137,130 @@ fi
 host_dir="."
 output_file=""
 method="GET"
-recursion_depth=3
+recursion_depth=0
 match_codes="all"
 filter_codes="404"
 output_file_override=0
 while [[ "$1" =~ ^- && ! "$1" == "--" ]]; do
     case $1 in
-        -H)
-            add_ffuf_args $1 "$2"
-            shift
-            ;;
-        -recursion-depth)
-            recursion_depth=$2
-            shift
-            ;;
-        -p)
-            add_ffuf_args $1 "$2"
-            shift
-            ;;
-        -e)
-            add_ffuf_args $1 "$2"
-            shift
-            ;;
-        -mc)
-            if [[ "$match_codes" == "all" ]]; then
-                match_codes="$2"
-            else
-                match_codes+="$2"
-            fi
-            shift
-            ;;
-        -ml|-ms|-mw|-mr)
-            add_ffuf_args $1 "$2"
-            shift
-            ;;
-        -fc)
-            # Split by comma, get all codes to remove, and combine back into comma separated list
-            local remove_codes=`echo "$2" | list_by_prefix - | combine_lines`
+    -H)
+        add_ffuf_args $1 "$2"
+        shift
+        ;;
+    -recursion-depth)
+        recursion_depth=$2
+        shift
+        ;;
+    -p)
+        add_ffuf_args $1 "$2"
+        shift
+        ;;
+    -e)
+        add_ffuf_args $1 "$2"
+        shift
+        ;;
+    -mc)
+        if [[ "$match_codes" == "all" ]]; then
+            match_codes="$2"
+        else
+            match_codes+="$2"
+        fi
+        shift
+        ;;
+    -ml | -ms | -mw | -mr)
+        add_ffuf_args $1 "$2"
+        shift
+        ;;
+    -fc)
+        # Split by comma, get all codes to remove, and combine back into comma separated list
+        local remove_codes=$(echo "$2" | list_by_prefix - | combine_lines)
 
-            # Split by comma, get all codes to add, and combine back into comma separated list
-            local add_codes=`echo "$2" | list_by_prefix + | combine_lines`
-            if [[ -z $remove_codes && -z $add_codes ]]; then
-                filter_codes=`echo "$2" | sed 's/ //g'`
-            else
-                if [[ -n "$add_codes" ]]; then
-                    filter_codes="$filter_codes,$add_codes"
-                fi
+        # Split by comma, get all codes to add, and combine back into comma separated list
+        local add_codes=$(echo "$2" | list_by_prefix + | combine_lines)
+        if [[ -z $remove_codes && -z $add_codes ]]; then
+            filter_codes=$(echo "$2" | sed 's/ //g')
+        else
+            if [[ -n "$add_codes" ]]; then
+                filter_codes="$filter_codes,$add_codes"
+            fi
 
-                filter_codes=`get_difference $filter_codes $remove_codes`
-            fi
-            shift
-            ;;
-        -fl|-fs|-fw|-fr)
-            add_ffuf_args $1 "$2"
-            shift
-            ;;
-        -X)
-            method=$(echo "$2" | tr 'a-z' 'A-Z')
-            add_ffuf_args $1 "$method"
-            shift
-            ;;
-        -t|--token) # access token for authorization
-            add_ffuf_args -H "Authorization: Bearer $2"
-            shift
-            ;;
-        --auth)
-            add_ffuf_args -H "Authorization: $2"
-            shift
-            ;;
-        -w|--wordlist)
-            wordlist_file=$(realpath "$2")
-            wordlist_name=`basename $wordlist_file`
-            wordlist_name="${wordlist_name%.*}"
-            shift
-            ;;
-        -u|--url)
-            url="$2"
-            if [[ -z "$urls" ]]; then
-                urls="$url"
-            else
-                urls=`echo -e "$2\n$urls" | sort -d | uniq`
-            fi
-            shift
-            ;;
-        -uf|--url-file)
-            contents=`cat "$2" | grep -v "^#"`
-            if [[ -z "$urls" ]]; then
-                urls="$contents"
-            else
-                urls=`echo -e "$contents\n$urls" | sort -d | uniq`
-            fi
-            shift
-            ;;
-        -a|--useragent)
-            agent="$2"
+            filter_codes=$(get_difference $filter_codes $remove_codes)
+        fi
+        shift
+        ;;
+    -fl | -fs | -fw | -fr)
+        add_ffuf_args $1 "$2"
+        shift
+        ;;
+    -X)
+        method=$(echo "$2" | tr 'a-z' 'A-Z')
+        add_ffuf_args $1 "$method"
+        shift
+        ;;
+    -t | --token) # access token for authorization
+        add_ffuf_args -H "Authorization: Bearer $2"
+        shift
+        ;;
+    --auth)
+        add_ffuf_args -H "Authorization: $2"
+        shift
+        ;;
+    -w | --wordlist)
+        wordlist_file=$(realpath "$2")
+        wordlist_name=$(basename $wordlist_file)
+        wordlist_name="${wordlist_name%.*}"
+        shift
+        ;;
+    -u | --url)
+        url="$2"
+        if [[ -z "$urls" ]]; then
+            urls="$url"
+        else
+            urls=$(echo -e "$2\n$urls" | sort -d | uniq)
+        fi
+        shift
+        ;;
+    -uf | --url-file)
+        contents=$(cat "$2" | grep -v "^#")
+        if [[ -z "$urls" ]]; then
+            urls="$contents"
+        else
+            urls=$(echo -e "$contents\n$urls" | sort -d | uniq)
+        fi
+        shift
+        ;;
+    -a | --useragent)
+        agent="$2"
 
-            case "$agent" in
-                Firefox|firefox)
-                    agent='Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101 Firefox/68.0'
-                    ;;
-                Safari|safari)
-                    agent='Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_2) AppleWebKit/601.3.9 (KHTML, like Gecko) Version/9.0.2 Safari/601.3.9'
-                    ;;
-                Chrome|chrome)
-                    agent='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36'
-                    ;;
-            esac
-            add_ffuf_args -H "User-Agent: $agent"
-            shift
+        case "$agent" in
+        Firefox | firefox)
+            agent='Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101 Firefox/68.0'
             ;;
-        -x)
-            add_ffuf_args -x "$2"
-            shift
+        Safari | safari)
+            agent='Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_2) AppleWebKit/601.3.9 (KHTML, like Gecko) Version/9.0.2 Safari/601.3.9'
             ;;
-        -o|--output)
-            output_file="$2"
-            output_file_override=1
-            shift
+        Chrome | chrome)
+            agent='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36'
             ;;
-        -h|--help)
-            show_usage
-            exit 0
-            ;;
-    esac;
-    shift;
+        esac
+        add_ffuf_args -H "User-Agent: $agent"
+        shift
+        ;;
+    -x)
+        add_ffuf_args -x "$2"
+        shift
+        ;;
+    -o | --output)
+        output_file="$2"
+        output_file_override=1
+        shift
+        ;;
+    -h | --help)
+        show_usage
+        exit 0
+        ;;
+    esac
+    shift
 done
 if [[ "$1" == '--' ]]; then
     shift
