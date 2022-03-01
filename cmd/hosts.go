@@ -139,7 +139,7 @@ Currently Metadata has the following methods:
 				}
 			}
 			if jsonOut {
-				outObj := map[string][]string{"urls":validHostURLs.SortedStringSlice()}
+				outObj := map[string][]string{"urls": validHostURLs.SortedStringSlice()}
 				json, err := json.MarshalIndent(outObj, "", "  ")
 				if err != nil {
 					fmt.Println(err)
