@@ -21,7 +21,7 @@ accurate_punch(){
 try_punch(){
   base_dir="hosts/$ip"
   mkdir -p $base_dir/loot/passwords $base_dir/recon
-  if [ ! -f "$base_dir/recon/nmap-punched-quick-tcp.gnmap" ] ; then
+  if ! compgen -G "hosts/$host/recon/nmap-*tcp*" > /dev/null 2>&1; then
     cd $base_dir
     accurate_punch $ip
     cd - 2>/dev/null
