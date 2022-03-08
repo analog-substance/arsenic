@@ -108,6 +108,7 @@ var analyzeCmd = &cobra.Command{
 This will create a single host for hostnames that resolve to the same IPs`,
 	Run: func(cmd *cobra.Command, args []string) {
 		create, _ := cmd.Flags().GetBool("create")
+		keepPrivateIPs, _ := cmd.Flags().GetBool("private-ips")
 
 		// mode := "dry-run"
 		// if create {
@@ -128,7 +129,7 @@ This will create a single host for hostnames that resolve to the same IPs`,
 		reviewDomains(resolvResults)
 		fmt.Println("\n[+] Domain review complete")
 
-		reviewIps()
+		reviewIps(keepPrivateIPs)
 		fmt.Println("\n[+] Updating existing hosts")
 
 		domains := serviceByDomain.keys()
@@ -291,14 +292,14 @@ func reviewDomains(resolvResults []string) {
 	}
 }
 
-func reviewIps() {
+func reviewIps(keepPrivateIPs bool) {
 	privateIpRegex := regexp.MustCompile(`\b(127\.[0-9]{1,3}\.|10\.[0-9]{1,3}\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[01])\.)[0-9]{1,3}\.[0-9]{1,3}\b`)
 
 	// Start grouping domains based off of their resolved IPs
 	ips := domainsByIp.keys()
 	for _, ip := range ips {
 		// Filter out the private ips
-		if privateIpRegex.MatchString(ip) {
+		if !keepPrivateIPs && privateIpRegex.MatchString(ip) {
 			continue
 		}
 
@@ -347,4 +348,5 @@ func init() {
 	rootCmd.AddCommand(analyzeCmd)
 
 	analyzeCmd.Flags().BoolP("create", "c", false, "really create hosts")
+	analyzeCmd.Flags().Bool("private-ips", false, "keep private IPs")
 }
