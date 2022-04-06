@@ -70,7 +70,7 @@ function scanHost {
 
   set +e
   if grep lock hosts/*/recon/nmap-punched-quick-tcp.nmap | grep :lock > /dev/null; then
-    _warn "other UDP port scans are still running... lets wait before continuing"
+    _warn "other TCP port scans are still running... lets wait before continuing"
     exit 1
   fi
 }
