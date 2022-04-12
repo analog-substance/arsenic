@@ -3,7 +3,7 @@ module github.com/analog-substance/arsenic
 go 1.13
 
 require (
-	github.com/NoF0rte/gocdp v0.0.3
+	github.com/NoF0rte/gocdp v0.0.4
 	github.com/ahmetb/go-linq/v3 v3.2.0
 	github.com/gin-contrib/cors v1.3.1
 	github.com/gin-gonic/gin v1.7.7
