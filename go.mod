@@ -11,7 +11,6 @@ require (
 	github.com/lair-framework/go-nmap v0.0.0-20191202052157-3507e0b03523
 	github.com/magiconair/properties v1.8.6 // indirect
 	github.com/mitchellh/go-homedir v1.1.0
-	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/ryanuber/columnize v2.1.2+incompatible
 	github.com/spf13/afero v1.8.2 // indirect
 	github.com/spf13/cobra v1.4.0
