@@ -10,6 +10,7 @@
 ##|  -recursion-depth                       Maximum recursion depth. (default: 0)
 ##|  -p                                     Seconds of `delay` between requests, or a range of random delay. For example "0.1" or "0.1-2.0"
 ##|  -e                                     Comma separated list of extensions. Extends FUZZ keyword.
+##|  -dac                                   Disable auto calibration of filters.
 ##|  -mc                                    Match HTTP status codes, or "all" for everything. (default: all)
 ##|  -ml                                    Match amount of lines in response
 ##|  -ms                                    Match HTTP response size
@@ -116,7 +117,7 @@ run() {
         add_ffuf_args -recursion -recursion-depth $recursion_depth
     fi
 
-    ffuf -ac -v -mc $match_codes -fc $filter_codes -o $output_path -of json -u $url -w "$wordlist_file" "${ffuf_args[@]}" $@
+    ffuf $auto_calibrate -v -mc $match_codes -fc $filter_codes -o $output_path -of json -u $url -w "$wordlist_file" "${ffuf_args[@]}" $@
     ffuf_exit_code=$?
     cat $output_path | jq >$output_path.new
     mv $output_path.new $output_path
@@ -134,6 +135,7 @@ if [[ $# -eq 0 ]]; then
     exit 0
 fi
 
+auto_calibrate="-ac"
 host_dir="."
 output_file=""
 method="GET"
@@ -158,6 +160,9 @@ while [[ "$1" =~ ^- && ! "$1" == "--" ]]; do
     -e)
         add_ffuf_args $1 "$2"
         shift
+        ;;
+    -dac)
+        auto_calibrate=""
         ;;
     -mc)
         if [[ "$match_codes" == "all" ]]; then
