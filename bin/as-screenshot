@@ -1,6 +1,10 @@
 #! /bin/bash
 
-SCREENSHOT_DIR="$HOME/op/report/static"
+if [[ -z "$OP_DIR" ]]; then
+  OP_DIR="$HOME/op"
+fi
+
+SCREENSHOT_DIR="$OP_DIR/report/static"
 if [ -d report/static ] ; then
   SCREENSHOT_DIR="`pwd`/report/static"
 fi
@@ -22,7 +26,7 @@ if [ -z "$name" ]; then
     name="Screenshot"
   fi
 fi
-NAME=$(echo "$name" | sed 's/[^A-Za-z ]//g' | sed 's/ \+/-/g')
+NAME=$(echo "$name" | sed 's/[^A-Za-z 0-9\.]//g' | sed 's/ \+/-/g')
 
 SCREENSHOT_PATH="$SCREENSHOT_DIR/$NAME-$( date +'%Y-%m-%d_%H%M' ).png"
 set -e
