@@ -11,6 +11,7 @@ import (
 	"github.com/analog-substance/arsenic/api/controller"
 	"github.com/analog-substance/arsenic/api/models"
 	"github.com/analog-substance/arsenic/lib/host"
+	"github.com/analog-substance/arsenic/lib/set"
 	"github.com/analog-substance/arsenic/lib/util"
 	"github.com/gin-gonic/gin"
 )
@@ -96,6 +97,14 @@ func GetContentDiscovery(c *gin.Context) {
 		return
 	}
 
-	grouped := results.GroupByStatus()
+	var dedupped gocdp.CDResults
+	resultSet := set.NewStringSet()
+	for _, result := range results {
+		if resultSet.Add(result.Url) {
+			dedupped = append(dedupped, result)
+		}
+	}
+
+	grouped := dedupped.GroupByStatus()
 	c.IndentedJSON(200, grouped)
 }
