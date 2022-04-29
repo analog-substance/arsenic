@@ -178,10 +178,10 @@ while [[ "$1" =~ ^- && ! "$1" == "--" ]]; do
         ;;
     -fc)
         # Split by comma, get all codes to remove, and combine back into comma separated list
-        local remove_codes=$(echo "$2" | list_by_prefix - | combine_lines)
+        remove_codes=$(echo "$2" | list_by_prefix - | combine_lines)
 
         # Split by comma, get all codes to add, and combine back into comma separated list
-        local add_codes=$(echo "$2" | list_by_prefix + | combine_lines)
+        add_codes=$(echo "$2" | list_by_prefix + | combine_lines)
         if [[ -z $remove_codes && -z $add_codes ]]; then
             filter_codes=$(echo "$2" | sed 's/ //g')
         else
