@@ -405,6 +405,15 @@ func (host Host) flags() []string {
 		flags = append(flags, "Aquatone")
 	}
 
+	checkGlob = func(glob string) bool {
+		globbed, _ := filepath.Glob(filepath.Join(host.Dir, "loot", glob))
+		return len(globbed) > 0
+	}
+
+	if checkGlob("hashes*") {
+		flags = append(flags, "Loot::hashes")
+	}
+
 	return flags
 }
 
