@@ -14,6 +14,7 @@ import (
 )
 
 var cfgFile string
+var configInitialized bool = false
 
 var rootCmd = &cobra.Command{
 	Use:     "arsenic",
@@ -182,6 +183,8 @@ func initConfig() {
 
 	viper.AutomaticEnv() // read in environment variables that match
 	viper.ReadInConfig()
+
+	configInitialized = true
 }
 
 // If no config file exists, all possible keys in the defaults

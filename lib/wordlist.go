@@ -8,12 +8,15 @@ import (
 	"os"
 	"path"
 	"regexp"
+	"sort"
 	"strings"
 
 	"github.com/analog-substance/arsenic/lib/set"
 	"github.com/analog-substance/arsenic/lib/util"
 	"github.com/spf13/viper"
 )
+
+var validWordlistTypes []string
 
 func GenerateWordlist(wordlistType string, lineSet *set.Set) {
 	for _, wordlistPath := range GetWordlists(wordlistType) {
@@ -72,8 +75,20 @@ func readWordlist(wordlistType string, lineSet *set.Set, reader io.Reader) bool 
 	return false
 }
 
+func cleanLine(wordlistType, line string) string {
+	if wordlistType == "web-content" {
+		re := regexp.MustCompile(`^(/+)`)
+		line = re.ReplaceAllString(line, "")
+	} else if wordlistType == "subdomains" {
+		re := regexp.MustCompile(`^\*\.`)
+		line = re.ReplaceAllString(line, "")
+		line = strings.ToLower(line)
+	}
+	return strings.TrimSpace(line)
+}
+
 func shouldIgnoreLine(wordlistType, line string) bool {
-	if wordlistType == "web-content" || wordlistType == "sqli" || wordlistType == "xss" {
+	if IsValidWordlistType(wordlistType) {
 		// this is why we can't have nice things
 		re := regexp.MustCompile(`^(## Contribed by)|^/*(\?|\.$|#!?)|\.(gif|ico|jpe?g|png|js|css)$|^\^|\[[0-9a-zA-Z]\-[0-9a-zA-Z]\]|\*\.|\$$`)
 		return re.MatchString(line)
@@ -81,10 +96,24 @@ func shouldIgnoreLine(wordlistType, line string) bool {
 	return false
 }
 
-func cleanLine(wordlistType, line string) string {
-	if wordlistType == "web-content" {
-		re := regexp.MustCompile(`^(/+)`)
-		line = re.ReplaceAllString(line, "")
+func GetValidWordlistTypes() []string {
+	if len(validWordlistTypes) == 0 {
+		wordlistsMap := viper.GetStringMap("wordlists")
+		for wordlist := range wordlistsMap {
+			validWordlistTypes = append(validWordlistTypes, wordlist)
+		}
+		sort.Strings(validWordlistTypes)
 	}
-	return strings.TrimSpace(line)
+
+	return validWordlistTypes
+}
+
+func IsValidWordlistType(wordlistType string) bool {
+	wordlistTypes := GetValidWordlistTypes()
+	for _, validType := range wordlistTypes {
+		if wordlistType == validType {
+			return true
+		}
+	}
+	return false
 }
