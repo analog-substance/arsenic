@@ -36,6 +36,8 @@ rm arsenic-hugo/example/themes/arsenic # remove the symlink that is used just fo
 mv arsenic-hugo/example .hugo
 mv arsenic-hugo .hugo/themes/arsenic
 
+mkdir -p report/{sections,findings}
+
 if [[ "$NEW_OP" == "1" ]]; then
   mv .hugo/README.md report/sections/
   ln -s report/sections/README.md
@@ -66,20 +68,31 @@ ls -d ../../report/* | xargs -n 1 ln -sf
 
 cd ../../
 
-_ "Hugo Setup complete"
-
 if [ ! -f Makefile ]; then
   {
-    echo -e "report::\n\tcd .hugo; \\"
-    echo -e "\thugo server"
-    echo -e "addnote::\n\tcd .hugo; \\"
-    echo -e "\thugo new \"content/notes/\$\$(date +'%Y-%m-%d_%H%M%S')__\$\$(whoami).md\" --kind note"
-    echo -e "update_hugo::\n\tas-setup-hugo"
+	  cat <<EOF
+report:: .hugo/node_modules
+	cd .hugo; \\
+	hugo server
+.hugo/node_modules:
+	cd .hugo; \\
+	npm install
+addnote::
+	cd .hugo; \\
+	hugo new "content/notes/\$\$(date +'%Y-%m-%d_%H%M%S')__\$\$(whoami).md" --kind note
+update_hugo::
+	as-setup-hugo
+EOF
   } >> Makefile
 fi
 
-if ! grep -q ".hugo_build.lock" .gitignore; then
-  echo ".hugo_build.lock" >> .gitignore
-fi
+add_gitignore() {
+  if [ ! -e ".gitignore" ] || ! grep -q "$1" .gitignore; then
+    echo "$1" >> .gitignore
+  fi
+}
+
+add_gitignore ".hugo_build.lock"
+add_gitignore ".hugo/node_modules/*"
 
 _ "Setup Hugo complete"
