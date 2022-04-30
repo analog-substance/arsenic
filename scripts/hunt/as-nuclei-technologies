@@ -16,17 +16,21 @@ fi
 ## END: Load common functions
 ####
 
-arsenic hosts -p http | nuclei -project -t technologies -o "/tmp/nuclei-technologies.txt"
+arsenic hosts -p http | nuclei -project -project-path .nuclei -t technologies -o "/tmp/nuclei-technologies.txt"
 if [ ! -s "/tmp/nuclei-technologies.txt" ]; then
   exit
 fi
 
-arsenic hosts -p http | while read url; do
-  hostname=$(echo "$url" | sed 's|https\?://||')
-  hostDir=$(arsenic hosts -H "$hostname" --paths)
-  output="$hostDir/recon/nuclei-technologies.$(echo "$url" | sed 's|://|\.|').txt"
+arsenic hosts | awk '{print $1}' | while read host; do
+  hostDir=$(arsenic hosts -H "$host" --paths)
+  output="$hostDir/recon/nuclei-technologies.txt"
 
-  grep -F "$url" /tmp/nuclei-technologies.txt > "$output"
+  grep -F "$host" /tmp/nuclei-technologies.txt | while read line; do
+    hostLine=$(echo "$line" | grep -oP '\]\s[^\[\]]+\s?' | sed 's/] //g;s|https\?://||g' | awk -F '/' '{print $1}' | awk -F ':' '{print $1}' | awk '{print $1}')
+    if [[ "$host" == "$hostLine" ]]; then
+      echo "$line"
+    fi
+  done | sort -u > "$output"
 
   if [[ -e "$output" && ! -s "$output" ]]; then
     rm $output 2> /dev/null

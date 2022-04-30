@@ -29,5 +29,9 @@ if [ -f "/usr/share/nmap/nmap.xsl" ]; then
   cp /usr/share/nmap/nmap.xsl report/static
 fi
 
+{
+  echo ".nuclei/*"
+} >> .gitignore
+
 touch scope-domains.txt
 touch scope-ips.txt
