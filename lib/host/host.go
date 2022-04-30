@@ -319,6 +319,7 @@ func Get(hostDirsOrHostnames ...string) []Host {
 		host := InitHost(hostDir)
 		hostnames := host.Metadata.Hostnames
 		hostnames = append(hostnames, host.Metadata.Name)
+		hostnames = append(hostnames, host.Metadata.IPAddresses...)
 
 		if linq.From(hostDirsOrHostnames).AnyWith(func(hostDirOrHostname interface{}) bool {
 			return linq.From(hostnames).AnyWith(func(hostname interface{}) bool {
