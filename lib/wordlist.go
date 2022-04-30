@@ -3,15 +3,16 @@ package lib
 import (
 	"bufio"
 	"fmt"
-	"github.com/analog-substance/arsenic/lib/set"
-	"github.com/analog-substance/arsenic/lib/util"
-	"github.com/spf13/viper"
 	"io"
 	"log"
 	"os"
 	"path"
 	"regexp"
 	"strings"
+
+	"github.com/analog-substance/arsenic/lib/set"
+	"github.com/analog-substance/arsenic/lib/util"
+	"github.com/spf13/viper"
 )
 
 func GenerateWordlist(wordlistType string, lineSet *set.Set) {
@@ -72,7 +73,7 @@ func readWordlist(wordlistType string, lineSet *set.Set, reader io.Reader) bool 
 }
 
 func shouldIgnoreLine(wordlistType, line string) bool {
-	if wordlistType == "web-content" {
+	if wordlistType == "web-content" || wordlistType == "sqli" || wordlistType == "xss" {
 		// this is why we can't have nice things
 		re := regexp.MustCompile(`^(## Contribed by)|^/*(\?|\.$|#!?)|\.(gif|ico|jpe?g|png|js|css)$|^\^|\[[0-9a-zA-Z]\-[0-9a-zA-Z]\]|\*\.|\$$`)
 		return re.MatchString(line)
