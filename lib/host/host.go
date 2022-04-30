@@ -205,9 +205,10 @@ func (host Host) Hostnames() []string {
 	hostnamesFile := fmt.Sprintf("%s/%s", host.Dir, "/recon/hostnames.txt")
 	hostnames, err := util.ReadLines(hostnamesFile)
 
-	if err != nil {
+	if err != nil || len(hostnames) == 0 {
 		return []string{}
 	}
+
 	sort.Strings(hostnames)
 	return hostnames
 }
