@@ -72,8 +72,7 @@ if [ ! -f Makefile ]; then
   {
 	  cat <<EOF
 report:: .hugo/node_modules
-	cd .hugo; \\
-	hugo server
+	arsenic serve --hugo .hugo
 .hugo/node_modules:
 	cd .hugo; \\
 	npm install
