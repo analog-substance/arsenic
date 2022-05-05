@@ -100,8 +100,8 @@ type Host struct {
 	Metadata *Metadata
 }
 
-func InitHost(dir string) Host {
-	host := Host{Dir: dir}
+func InitHost(dir string) *Host {
+	host := &Host{Dir: dir}
 	var metadata Metadata
 	if _, err := os.Stat(host.metadataFile()); !os.IsNotExist(err) {
 		jsonFile, err := os.Open(host.metadataFile())
@@ -185,18 +185,14 @@ func (host Host) SaveMetadata() {
 			fmt.Println(err)
 		}
 
-		if len(host.Metadata.Hostnames) > 0 {
-			err = util.WriteLines(host.hostnamesFile(), host.Metadata.Hostnames)
-			if err != nil {
-				fmt.Println(err)
-			}
+		err = util.WriteLines(host.hostnamesFile(), host.Metadata.Hostnames)
+		if err != nil {
+			fmt.Println(err)
 		}
 
-		if len(host.Metadata.IPAddresses) > 0 {
-			err = util.WriteLines(host.ipAddressesFile(), host.Metadata.IPAddresses)
-			if err != nil {
-				fmt.Println(err)
-			}
+		err = util.WriteLines(host.ipAddressesFile(), host.Metadata.IPAddresses)
+		if err != nil {
+			fmt.Println(err)
 		}
 	}
 }
@@ -294,8 +290,8 @@ func (host Host) Files(globs ...string) ([]string, error) {
 	return allFiles, nil
 }
 
-func All() []Host {
-	allHosts := []Host{}
+func All() []*Host {
+	allHosts := []*Host{}
 	for _, hostDir := range getHostDirs() {
 		host := InitHost(hostDir)
 		allHosts = append(allHosts, host)
@@ -314,8 +310,8 @@ func AllDirNames() []string {
 	return hosts
 }
 
-func Get(hostDirsOrHostnames ...string) []Host {
-	hosts := []Host{}
+func Get(hostDirsOrHostnames ...string) []*Host {
+	hosts := []*Host{}
 	for _, hostDir := range getHostDirs() {
 		host := InitHost(hostDir)
 		hostnames := host.Metadata.Hostnames
@@ -324,7 +320,7 @@ func Get(hostDirsOrHostnames ...string) []Host {
 
 		if linq.From(hostDirsOrHostnames).AnyWith(func(hostDirOrHostname interface{}) bool {
 			return linq.From(hostnames).AnyWith(func(hostname interface{}) bool {
-				return hostDirOrHostname == hostname
+				return strings.EqualFold(hostDirOrHostname.(string), hostname.(string))
 			})
 		}) {
 			hosts = append(hosts, host)
@@ -333,8 +329,8 @@ func Get(hostDirsOrHostnames ...string) []Host {
 	return hosts
 }
 
-func GetByIp(ips ...string) []Host {
-	hosts := []Host{}
+func GetByIp(ips ...string) []*Host {
+	hosts := []*Host{}
 	for _, hostDir := range getHostDirs() {
 		host := InitHost(hostDir)
 		hostIps := host.Metadata.IPAddresses

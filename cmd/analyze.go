@@ -138,7 +138,7 @@ This will create a single host for hostnames that resolve to the same IPs`,
 
 			service := serviceByDomain[domain]
 
-			var h host.Host
+			var h *host.Host
 			hosts := host.Get(domain)
 			if len(hosts) == 0 { // New service/host
 				fmt.Printf("[+] Creating new service %s\n", domain)

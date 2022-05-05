@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 	"text/template"
@@ -53,7 +54,7 @@ Currently Metadata has the following methods:
 
 		query, _ := cmd.Flags().GetString("query")
 
-		var hosts []host.Host
+		var hosts []*host.Host
 		if len(hostsArgs) > 0 {
 			hosts = host.Get(hostsArgs...)
 		} else if query != "" {
@@ -68,7 +69,7 @@ Currently Metadata has the following methods:
 				})
 			}
 
-			funcMap["appendMatch"] = func(match host.Host) string {
+			funcMap["appendMatch"] = func(match *host.Host) string {
 				hosts = append(hosts, match)
 				return ""
 			}
@@ -98,13 +99,42 @@ Currently Metadata has the following methods:
 		reviewer := util.GetReviewer(reviewerFlag)
 		userFlagsToAdd, _ := cmd.Flags().GetStringSlice("add-flags")
 		userFlagsToRemove, _ := cmd.Flags().GetStringSlice("remove-flags")
+		namesToAdd, _ := cmd.Flags().GetStringSlice("add-names")
+		namesToRemove, _ := cmd.Flags().GetStringSlice("remove-names")
 		updateArsenicFlags, _ := cmd.Flags().GetBool("update")
 		jsonOut, _ := cmd.Flags().GetBool("json")
 		pathsOut, _ := cmd.Flags().GetBool("paths")
 
-		shouldSave := len(userFlagsToRemove) > 0 || len(userFlagsToAdd) > 0 || updateArsenicFlags || addReviewedBy
+		shouldSave := len(userFlagsToRemove) > 0 || len(userFlagsToAdd) > 0 || len(namesToAdd) > 0 || len(namesToRemove) > 0 || updateArsenicFlags || addReviewedBy
 
 		if shouldSave {
+			if (len(namesToAdd) > 0 || len(namesToRemove) > 0) && len(hosts) == 1 {
+				host := hosts[0]
+				noHostnames := len(host.Metadata.Hostnames) == 0
+
+				hostnames := set.NewSet("")
+				for _, hostname := range host.Metadata.Hostnames {
+					if linq.From(namesToRemove).AnyWith(func(item interface{}) bool { return strings.EqualFold(hostname, item.(string)) }) {
+						continue
+					}
+					hostnames.Add(hostname)
+				}
+				hostnames.AddRange(namesToAdd)
+
+				host.Metadata.Hostnames = hostnames.SortedStringSlice()
+				if noHostnames && len(host.Metadata.Hostnames) > 0 {
+					host.Metadata.Name = host.Metadata.Hostnames[0]
+					newDir := filepath.Join("hosts", host.Metadata.Name)
+
+					err := os.Rename(host.Dir, newDir)
+					if err != nil {
+						fmt.Println(err)
+					}
+
+					host.Dir = newDir
+				}
+			}
+
 			for _, host := range hosts {
 				flagsSet := set.NewSet("")
 				for _, flag := range host.Metadata.UserFlags {
@@ -162,7 +192,7 @@ Currently Metadata has the following methods:
 			}
 		} else {
 			var lines []string
-			linq.From(hosts).SelectT(func(host host.Host) string {
+			linq.From(hosts).SelectT(func(host *host.Host) string {
 				return host.Metadata.Columnize()
 			}).ToSlice(&lines)
 			fmt.Println(columnize.SimpleFormat(lines))
@@ -175,6 +205,8 @@ func init() {
 	hostsCmd.Flags().StringSliceP("add-flags", "a", []string{}, "flag(s) to add")
 	hostsCmd.Flags().StringSliceP("remove-flags", "r", []string{}, "flag(s) to remove")
 	hostsCmd.Flags().StringSliceP("protocols", "p", []string{}, "print protocol strings")
+	hostsCmd.Flags().StringSlice("add-names", []string{}, "Hostname(s) to add")
+	hostsCmd.Flags().StringSlice("remove-names", []string{}, "Hostname(s) to remove")
 	hostsCmd.Flags().BoolP("update", "u", false, "Update arsenic flags")
 	hostsCmd.Flags().BoolP("json", "j", false, "Return JSON")
 	hostsCmd.Flags().Bool("paths", false, "Return only the path to each hosts directory")
