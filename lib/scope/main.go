@@ -2,13 +2,13 @@ package scope
 
 import (
 	"fmt"
-	"github.com/analog-substance/arsenic/lib/util"
-	"golang.org/x/net/publicsuffix"
-	"net"
 	"path/filepath"
 	"regexp"
 	"sort"
 	"strings"
+
+	"github.com/analog-substance/arsenic/lib/util"
+	"golang.org/x/net/publicsuffix"
 )
 
 func GetRootDomains(domains []string, pruneBlacklisted bool) []string {
@@ -39,16 +39,8 @@ func GetRootDomains(domains []string, pruneBlacklisted bool) []string {
 	return rootDomains
 }
 
-func IsIp(ipOrHostname string) bool {
-	if net.ParseIP(ipOrHostname) == nil {
-		return false
-	} else {
-		return true
-	}
-}
-
 func IsInScope(ipOrHostname string, forceRootDomainBlacklistPrecedence bool) bool {
-	if IsIp(ipOrHostname) {
+	if util.IsIp(ipOrHostname) {
 		return getScope().IsIPInScope(ipOrHostname)
 	}
 	return getScope().IsDomainInScope(ipOrHostname, forceRootDomainBlacklistPrecedence)

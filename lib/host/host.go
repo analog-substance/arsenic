@@ -134,7 +134,12 @@ func InitHost(dir string) *Host {
 		} else {
 			// If the host doesn't have hostnames.txt or ip-addresses.txt, lets use the name of the host directory
 			metadata.Name = filepath.Base(dir)
-			hostnames = append(hostnames, metadata.Name)
+
+			if util.IsIp(metadata.Name) {
+				ipAddresses = append(ipAddresses, metadata.Name)
+			} else {
+				hostnames = append(hostnames, metadata.Name)
+			}
 		}
 	}
 
@@ -198,7 +203,7 @@ func (host Host) SaveMetadata() {
 }
 
 func (host Host) Hostnames() []string {
-	hostnamesFile := fmt.Sprintf("%s/%s", host.Dir, "/recon/hostnames.txt")
+	hostnamesFile := filepath.Join(host.Dir, "recon/hostnames.txt")
 	hostnames, err := util.ReadLines(hostnamesFile)
 
 	if err != nil || len(hostnames) == 0 {
@@ -246,7 +251,7 @@ func (host Host) URLs() []string {
 }
 
 func (host Host) IPAddresses() []string {
-	IPAddressesFile := fmt.Sprintf("%s/%s", host.Dir, "/recon/ip-addresses.txt")
+	IPAddressesFile := filepath.Join(host.Dir, "recon/ip-addresses.txt")
 	IPAddresses, err := util.ReadLines(IPAddressesFile)
 
 	if err != nil {

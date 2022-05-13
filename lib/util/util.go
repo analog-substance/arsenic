@@ -7,6 +7,7 @@ import (
 	"io/fs"
 	"log"
 	"math/rand"
+	"net"
 	"os"
 	"os/exec"
 	"os/signal"
@@ -268,4 +269,12 @@ func Sanitize(s string) string {
 	windows_regex := regexp.MustCompile("[<>:/\\|?*\"]+")
 	s = windows_regex.ReplaceAllString(s, "_")
 	return strings.TrimSpace(s)
+}
+
+func IsIp(ipOrHostname string) bool {
+	if net.ParseIP(ipOrHostname) == nil {
+		return false
+	} else {
+		return true
+	}
 }
