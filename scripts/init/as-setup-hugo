@@ -71,11 +71,34 @@ cd ../../
 if [ ! -f Makefile ]; then
   {
 	  cat <<EOF
+.DEFAULT_GOAL := report
+
+NPM := \$(shell which npm)
+ARSENIC := \$(shell which arsenic)
+ifdef ARSENIC
+ARSENIC_SERVE_HUGO := \$(shell arsenic serve --help | grep hugo)
+endif
+
+.PHONY: report
+
 report:: .hugo/node_modules
-	arsenic serve --hugo .hugo
+ifdef ARSENIC_SERVE_HUGO
+	@arsenic serve --hugo .hugo
+else
+	@echo "[!] Warning: arsenic is outdated. Update arsenic to get the latest features"
+	@cd .hugo; \\
+	hugo server
+endif
+	
 .hugo/node_modules:
-	cd .hugo; \\
+ifdef NPM
+	@cd .hugo; \\
 	npm install
+else
+	@echo "[!] npm is required to start the hugo server."
+	@exit 1
+endif
+	
 addnote::
 	cd .hugo; \\
 	hugo new "content/notes/\$\$(date +'%Y-%m-%d_%H%M%S')__\$\$(whoami).md" --kind note
