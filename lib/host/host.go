@@ -254,7 +254,7 @@ func (host Host) IPAddresses() []string {
 	IPAddressesFile := filepath.Join(host.Dir, "recon/ip-addresses.txt")
 	IPAddresses, err := util.ReadLines(IPAddressesFile)
 
-	if err != nil {
+	if err != nil || len(IPAddresses) == 0 {
 		return []string{}
 	}
 	return IPAddresses
