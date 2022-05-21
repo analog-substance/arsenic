@@ -43,15 +43,29 @@ Show hosts who are in a CIDR block
 
   $ arsenic hosts -q '.InCIDR "10.1.1.0/24"'
 
-Currently Metadata has the following methods:
+Currently Metadata has the following methods and fields:
 
-- HasPorts
-- HasTCPPorts
-- HasUDPPorts
-- HasFlags
-- HasASFlags
-- HasUserFlags
-- InCIDR
+Methods:
+- HasPorts(ports ...int) bool
+- HasTCPPorts(ports ...int) bool
+- HasUDPPorts(ports ...int) bool
+- HasFlags(flags ...string) bool
+- HasASFlags(flags ...string) bool
+- HasUserFlags(flags ...string) bool
+- HasAnyHostname() bool
+- InCIDR(cidrStr string) bool
+
+Fields:
+- Name        string
+- Hostnames   []string
+- RootDomains []string
+- IPAddresses []string
+- Flags       []string
+- UserFlags   []string
+- TCPPorts    []int
+- UDPPorts    []int
+- Ports       []Port
+- ReviewedBy  string
 
 `,
 	Run: func(cmd *cobra.Command, args []string) {
@@ -158,6 +172,7 @@ Currently Metadata has the following methods:
 			}
 		}
 
+		format, _ := cmd.Flags().GetString("format")
 		protocols, _ := cmd.Flags().GetStringSlice("protocols")
 		if len(protocols) > 0 {
 			hostURLs := set.NewSet("")
@@ -195,6 +210,20 @@ Currently Metadata has the following methods:
 			for _, host := range hosts {
 				fmt.Println(host.Dir)
 			}
+		} else if format != "" {
+			t := template.New("format")
+			_, err := t.Parse(format)
+			if err != nil {
+				cmd.PrintErrln(err)
+				return
+			}
+			for _, host := range hosts {
+				err = t.Execute(os.Stdout, host.Metadata)
+				if err != nil {
+					cmd.PrintErrln(err)
+					return
+				}
+			}
 		} else {
 			var lines []string
 			linq.From(hosts).SelectT(func(host *host.Host) string {
@@ -220,6 +249,7 @@ func init() {
 		return host.AllDirNames(), cobra.ShellCompDirectiveDefault
 	})
 	hostsCmd.Flags().StringP("query", "q", "", "Query to run. Using Go Template style conditionals.")
+	hostsCmd.Flags().StringP("format", "f", "", "Go template format to apply to each matched host's metadata")
 	hostsCmd.Flags().StringP("reviewed-by", "R", "operator", "Set the reviewer. -R=reviewer or reads from $AS_REVIEWER, and $USER.")
 	hostsCmd.Flags().Lookup("reviewed-by").NoOptDefVal = "operator"
 }

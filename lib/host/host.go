@@ -92,6 +92,10 @@ func (md Metadata) HasUserFlags(flags ...string) bool {
 	return containsStr(md.UserFlags, flags...)
 }
 
+func (md Metadata) HasAnyHostname() bool {
+	return len(md.Hostnames) > 0
+}
+
 func (md Metadata) InCIDR(cidrStr string) bool {
 	_, cidr, err := net.ParseCIDR(cidrStr)
 	if err != nil {
