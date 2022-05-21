@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -89,6 +90,20 @@ func (md Metadata) HasASFlags(flags ...string) bool {
 
 func (md Metadata) HasUserFlags(flags ...string) bool {
 	return containsStr(md.UserFlags, flags...)
+}
+
+func (md Metadata) InCIDR(cidrStr string) bool {
+	_, cidr, err := net.ParseCIDR(cidrStr)
+	if err != nil {
+		return false
+	}
+
+	for _, ip := range md.IPAddresses {
+		if cidr.Contains(net.ParseIP(ip)) {
+			return true
+		}
+	}
+	return false
 }
 
 func (md Metadata) Columnize() string {

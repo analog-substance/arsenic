@@ -39,6 +39,10 @@ Show hosts with ports 22 or 2022:
 
   $ arsenic hosts -q '.HasPorts 22 2022'
 
+Show hosts who are in a CIDR block
+
+  $ arsenic hosts -q '.InCIDR "10.1.1.0/24"'
+
 Currently Metadata has the following methods:
 
 - HasPorts
@@ -47,6 +51,7 @@ Currently Metadata has the following methods:
 - HasFlags
 - HasASFlags
 - HasUserFlags
+- InCIDR
 
 `,
 	Run: func(cmd *cobra.Command, args []string) {
