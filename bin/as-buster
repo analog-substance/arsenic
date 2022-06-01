@@ -75,35 +75,37 @@ list_by_prefix() {
 run(){
     # Get hostname from URL
     # Remove URL scheme (http:// or https://) and remove port (:port)
-    hostname=$(echo "$url" | sed 's|http\(s\)\?://||;s/:[0-9]\+//' | awk -F '/' '{print $1}')
-    if [[ -z "$output_file" ]]; then
+    local hostname=$(echo "$url" | sed 's|http\(s\)\?://||;s/:[0-9]\+//' | awk -F '/' '{print $1}')
+    if [[ $output_file_override -eq 0 ]]; then
         output_file="gobuster.$method.$(echo "$url" | sed 's|://|.|;s|/$||;s|/|.|g').$wordlist_name.txt"
     fi
-    output_path="$output_dir/$output_file"
+    local output_path="recon/$output_file"
 
     # if host dir exists we are in the op root.
     if [ -d hosts ]; then
-        if [ -d hosts/$hostname ]; then
-            pushd hosts/$hostname > /dev/null 2>&1
-        else
-            host=$(grep -l "$hostname" hosts/*/recon/*hostnames.txt | awk -F '/' '{print $2}' | sort -u)
-            if [[ -n "$host" ]]; then
-                pushd hosts/$host > /dev/null 2>&1
-            else
-                mkdir -p hosts/$hostname/recon
-                pushd hosts/$hostname > /dev/null 2>&1
-            fi
+        host_dir=$(arsenic hosts -H "$hostname" --paths | head -n 1)
+        if [[ -z "$host_dir" ]]; then
+            host_dir="hosts/$hostname"
         fi
+
+        mkdir -p "$host_dir/recon"
+        output_path="$host_dir/$output_path"
     fi
 
     if [[ -n "$hostname" ]]; then
         # Check if hostname is an IP
-        if ! echo $hostname | grep -qP "(?:(?:2(?:[0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9])\.){3}(?:(?:2([0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9]))"; then
-          echo "$hostname" >> recon/hostnames.txt
-          cat recon/hostnames.txt | sed 's/^\*\.//g' | sed 's/:[0-9]*//g' | sed 's/\.$//g' | tr 'A-Z' 'a-z' | sort -d |  uniq > recon/hostnames.txt.new
-          mv recon/hostnames.txt.new recon/hostnames.txt
+        if ! echo $hostname | grep -qP "^(?:(?:2(?:[0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9])\.){3}(?:(?:2([0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9]))$"; then
+            echo "$hostname" >>"$host_dir/recon/hostnames.txt"
+            cat $host_dir/recon/hostnames.txt | sed 's/^\*\.//g' | sed 's/:[0-9]*//g' | sed 's/\.$//g' | tr 'A-Z' 'a-z' | sort -d | uniq >$host_dir/recon/hostnames.txt.new
+            mv $host_dir/recon/hostnames.txt.new "$host_dir/recon/hostnames.txt"
+        else
+            echo "$hostname" >>$host_dir/recon/ip-addresses.txt
+            cat $host_dir/recon/ip-addresses.txt | sed 's/^\*\.//g' | sed 's/:[0-9]*//g' | sort -d | uniq >$host_dir/recon/ip-addresses.txt.new
+            mv $host_dir/recon/ip-addresses.txt.new "$host_dir/recon/ip-addresses.txt"
         fi
     fi
+
+    url=$(echo "$url" | sed 's|/$||') # Remove trailing /
 
     # tee to output_path instead of using gobusters output. this way the gobuster header gets saved and error message
     # -z to prevent progress updates, since we are redirecting stderr to stdout
@@ -141,6 +143,7 @@ if [[ $# -eq 0 ]]; then
     exit 0
 fi
 
+output_file_override=0
 output_file=""
 method="GET"
 output_dir="recon"
@@ -227,6 +230,7 @@ while [[ "$1" =~ ^- && ! "$1" == "--" ]]; do
             ;;
         -o|--output)
             output_file="$2"
+            output_file_override=1
             shift
             ;;
         -h|--help)
