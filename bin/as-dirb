@@ -75,7 +75,7 @@ run(){
 
     url=$(echo "$url" | sed 's|/$||') # Remove trailing /
 
-    dirb "$url" "$wordlist_file" -o $output_path "${dirb_args[@]}" $@
+    dirb "$url" "$wordlist_file" -o $output_path -l -w "${dirb_args[@]}" $@
 }
 cleanup() {
     find ./ -name "*dirb*" -type f -size 0 -exec rm "{}" ";"
