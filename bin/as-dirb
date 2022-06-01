@@ -1,0 +1,181 @@
+#!/bin/bash
+
+######################################################################
+##|A dirb helper script
+##|Usage:
+##| as-dirb [options]
+##|
+##|Options:
+##|  --auth string                          Authorization header value
+##|                                             Authorization: <value>
+##|  -x, --extensions string                File extension(s) to search for
+##|  -h, --help                             Help for as-dirb
+##|  -o, --output string                    Name of the file to write the results to
+##|                                         Default: dirb.{HTTP_METHOD}.{URL}.{WORDLIST}.txt
+##|  --proxy string                         Proxy to use for requests [[http(s)|socks(4|5)]://host:port]
+##|  -b, --status-codes-blacklist string    Comma delimited list of blacklisted status codes
+##|  -t, --token string                     Access token to be put in the Authorization header
+##|                                             Authorization: Bearer <token>
+##|  -u, --url string                       The target URL. Can be used multiple times to specify more target URLs
+##|  -uf, --url-file string                 The path to a file containing the target URLs
+##|  -a, --useragent [preset, custom]       The user agent string to use. Use supplied presets or a custom string
+##|                                         Presets
+##|                                             Firefox = Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101 Firefox/68.0
+##|                                             Chrome = Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36
+##|                                             Safari = Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_2) AppleWebKit/601.3.9 (KHTML, like Gecko) Version/9.0.2 Safari/601.3.9
+##|  -w, --wordlist string                  Path to the wordlist
+##|  --                                     Pass the rest of the arguments to dirb
+######################################################################
+
+dirb_args=()
+dirb_args_count=0
+add_dirb_args() {
+    while [[ $# -gt 0 ]]; do
+        dirb_args[$dirb_args_count]="$1"
+        dirb_args_count=$(($dirb_args_count + 1))
+        shift
+    done
+}
+
+show_usage() {
+    cat $0 | grep -a "^##[\|]" | sed "s/##[|]//g"
+}
+run(){
+    # Get hostname from URL
+    # Remove URL scheme (http:// or https://) and remove port (:port)
+    local hostname=$(echo "$url" | sed 's|http\(s\)\?://||;s/:[0-9]\+//' | awk -F '/' '{print $1}')
+    if [[ $output_file_override -eq 0 ]]; then
+        output_file="dirb.$method.$(echo "$url" | sed 's|://|.|;s|/$||;s|/|.|g').$wordlist_name.txt"
+    fi
+    local output_path="recon/$output_file"
+
+    # if host dir exists we are in the op root.
+    if [ -d hosts ]; then
+        host_dir=$(arsenic hosts -H "$hostname" --paths | head -n 1)
+        if [[ -z "$host_dir" ]]; then
+            host_dir="hosts/$hostname"
+        fi
+
+        mkdir -p "$host_dir/recon"
+        output_path="$host_dir/$output_path"
+    fi
+
+    if [[ -n "$hostname" ]]; then
+        # Check if hostname is an IP
+        if ! echo $hostname | grep -qP "^(?:(?:2(?:[0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9])\.){3}(?:(?:2([0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9]))$"; then
+            echo "$hostname" >>"$host_dir/recon/hostnames.txt"
+            cat $host_dir/recon/hostnames.txt | sed 's/^\*\.//g' | sed 's/:[0-9]*//g' | sed 's/\.$//g' | tr 'A-Z' 'a-z' | sort -d | uniq >$host_dir/recon/hostnames.txt.new
+            mv $host_dir/recon/hostnames.txt.new "$host_dir/recon/hostnames.txt"
+        else
+            echo "$hostname" >>$host_dir/recon/ip-addresses.txt
+            cat $host_dir/recon/ip-addresses.txt | sed 's/^\*\.//g' | sed 's/:[0-9]*//g' | sort -d | uniq >$host_dir/recon/ip-addresses.txt.new
+            mv $host_dir/recon/ip-addresses.txt.new "$host_dir/recon/ip-addresses.txt"
+        fi
+    fi
+
+    url=$(echo "$url" | sed 's|/$||') # Remove trailing /
+
+    dirb "$url" "$wordlist_file" -o $output_path "${dirb_args[@]}" $@
+}
+cleanup() {
+    find ./ -name "*dirb*" -type f -size 0 -exec rm "{}" ";"
+}
+graceful_exit() {
+    echo
+    echo "Exiting"
+    exit 0
+}
+
+trap graceful_exit SIGINT
+
+if [[ $# -eq 0 ]]; then
+    show_usage
+    exit 0
+fi
+
+output_file_override=0
+output_file=""
+method="GET"
+output_dir="recon"
+while [[ "$1" =~ ^- && ! "$1" == "--" ]]; do
+    case $1 in
+        -x|--extensions)
+            add_dirb_args -X "$2"
+            shift
+            ;;
+        -t|--token) # access token for authorization
+            add_dirb_args -H "Authorization: Bearer $2"
+            shift
+            ;;
+        --auth)
+            add_dirb_args -H "Authorization: $2"
+            shift
+            ;;
+        -w|--wordlist)
+            wordlist_file=$(realpath "$2")
+            wordlist_name=`basename $wordlist_file`
+            wordlist_name="${wordlist_name%.*}"
+            shift
+            ;;
+        -u|--url)
+            url="$2"
+            if [[ -z "$urls" ]]; then
+                urls="$url"
+            else
+                urls=`echo -e "$2\n$urls" | sort -d | uniq`
+            fi
+            shift
+            ;;
+        -uf|--url-file)
+            contents=`cat "$2" | grep -v "^#"`
+            if [[ -z "$urls" ]]; then
+                urls="$contents"
+            else
+                urls=`echo -e "$contents\n$urls" | sort -d | uniq`
+            fi
+            shift
+            ;;
+        -a|--useragent)
+            agent="$2"
+
+            case "$agent" in
+                Firefox|firefox)
+                    agent='Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101 Firefox/68.0'
+                    ;;
+                Safari|safari)
+                    agent='Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_2) AppleWebKit/601.3.9 (KHTML, like Gecko) Version/9.0.2 Safari/601.3.9'
+                    ;;
+                Chrome|chrome)
+                    agent='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36'
+                    ;;
+            esac
+            add_dirb_args -a "$agent"
+            shift
+            ;;
+        --proxy)
+            add_dirb_args -p "$2"
+            shift
+            ;;
+        -o|--output)
+            output_file="$2"
+            output_file_override=1
+            shift
+            ;;
+        -h|--help)
+            show_usage
+            exit 0
+            ;;
+        -b|--status-codes-blacklist) # blacklisted status codes
+            add_dirb_args -N "$2"
+            shift
+            ;;
+    esac;
+    shift;
+done
+if [[ "$1" == '--' ]]; then
+    shift
+fi
+
+for url in $urls; do
+    run $@
+done

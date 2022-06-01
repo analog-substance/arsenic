@@ -83,7 +83,7 @@ func GetContentDiscovery(c *gin.Context) {
 	}
 	host := hosts[0]
 
-	files, err := host.Files("recon/ffuf*", "recon/gobuster*")
+	files, err := host.Files("recon/ffuf*", "recon/gobuster*", "recon/dirb*")
 	if err != nil {
 		log.Printf("getContentDiscovery: %v\n", err)
 		controller.Error(c, err) // return generic error? Would be more secure...

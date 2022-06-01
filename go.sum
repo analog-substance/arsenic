@@ -54,6 +54,8 @@ github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym
 github.com/DataDog/datadog-go v3.2.0+incompatible/go.mod h1:LButxg5PwREeZtORoXG3tL4fMGNddJ+vMq1mwgfaqoQ=
 github.com/NoF0rte/gocdp v0.0.4 h1:Rt5zfilCy+2aDYh/dDVIX25/JgUNCbNbs/r06V681FM=
 github.com/NoF0rte/gocdp v0.0.4/go.mod h1:ULOThegerC4bRPimesHC9x65upscuyh1mJwjY/PfJWw=
+github.com/NoF0rte/gocdp v0.0.5 h1:pP6FJARjWHdCcWRd4IvCzkieTg19f5trMKn/Hmh/g9Q=
+github.com/NoF0rte/gocdp v0.0.5/go.mod h1:ULOThegerC4bRPimesHC9x65upscuyh1mJwjY/PfJWw=
 github.com/OneOfOne/xxhash v1.2.2/go.mod h1:HSdplMjZKSmBqAxg5vPj2TmRDmfkzw+cTzAElWljhcU=
 github.com/ahmetb/go-linq/v3 v3.2.0 h1:BEuMfp+b59io8g5wYzNoFe9pWPalRklhlhbiU3hYZDE=
 github.com/ahmetb/go-linq/v3 v3.2.0/go.mod h1:haQ3JfOeWK8HpVxMtHHEMPVgBKiYyQ+f1/kLZh/cj9U=
