@@ -31,7 +31,12 @@ NAME=$(echo "$name" | sed 's/[^A-Za-z 0-9\.]//g' | sed 's/ \+/-/g')
 SCREENSHOT_PATH="$SCREENSHOT_DIR/$NAME-$( date +'%Y-%m-%d_%H%M' ).png"
 set -e
 
-maim -s -u --format=png "$SCREENSHOT_PATH"
+if which flameshot > /dev/null 2>&1; then
+  flameshot gui -p "$SCREENSHOT_PATH"
+else
+  maim -s -u --format=png "$SCREENSHOT_PATH"
+fi
+
 echo "![$name]($(echo -n "$SCREENSHOT_PATH" | sed 's|'"$SCREENSHOT_DIR"'|/static|'))" | xclip -selection clipboard -target text/plain -i
 
 if [ -t 1 ] ; then
