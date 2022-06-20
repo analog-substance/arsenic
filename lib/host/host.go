@@ -285,11 +285,18 @@ func (host Host) isReviewed() bool {
 }
 
 func (host Host) SetReviewedBy(reviewer string) {
+	host.Metadata.ReviewedBy = reviewer
+
 	if reviewer == "" {
+		linq.From(host.Metadata.Flags).
+			Where(func(i interface{}) bool {
+				return i != reviewedFlag
+			}).
+			Append(unreviewedFlag).
+			ToSlice(&host.Metadata.Flags)
 		return
 	}
 
-	host.Metadata.ReviewedBy = reviewer
 	if !host.isReviewed() {
 		linq.From(host.Metadata.Flags).
 			Where(func(i interface{}) bool {
