@@ -95,7 +95,9 @@ function getAllDomains {
     mv scope-domains-generated-combined.txt.new scope-domains-generated-combined.txt
 }
 
-export GIT=1
-if [ ! -d .git ]; then
-  export GIT=0
+if [[ -z "$GIT" ]]; then
+  export GIT=1
+  if [ ! -d .git ]; then
+    export GIT=0
+  fi
 fi
