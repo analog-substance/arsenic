@@ -290,7 +290,7 @@ func (host Host) SetReviewedBy(reviewer string) {
 	if reviewer == "" {
 		linq.From(host.Metadata.Flags).
 			Where(func(i interface{}) bool {
-				return i != reviewedFlag
+				return i != reviewedFlag && i != unreviewedFlag
 			}).
 			Append(unreviewedFlag).
 			ToSlice(&host.Metadata.Flags)
