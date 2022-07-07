@@ -143,6 +143,7 @@ func InitHost(dir string) *Host {
 	}
 	metadata.existing = string(existing)
 
+	host.Metadata = &metadata
 	hostnames := host.Hostnames()
 	ipAddresses := host.IPAddresses()
 	if metadata.Name == "unknown" || len(metadata.Name) == 0 {
@@ -162,20 +163,34 @@ func InitHost(dir string) *Host {
 		}
 	}
 
-	flags := host.flags()
+	metadata.Flags = host.flags()
 	ports := host.ports()
 
 	tcpPorts := protoPorts(ports, "tcp")
 	udpPorts := protoPorts(ports, "udp")
-
 	reviewStatus := reviewedFlag
-	if len(ports) > 0 {
-		flags = append(flags, "OpenPorts")
+
+	if len(tcpPorts) > 0 {
+		metadata.Flags = append(metadata.Flags, "open-tcp")
 		if metadata.ReviewedBy == "" {
 			reviewStatus = unreviewedFlag
 		}
 	}
-	flags = append(flags, reviewStatus)
+
+	if len(udpPorts) > 0 {
+		metadata.Flags = append(metadata.Flags, "open-udp")
+		if metadata.ReviewedBy == "" {
+			reviewStatus = unreviewedFlag
+		}
+	}
+
+	if len(ports) > 0 {
+		metadata.Flags = append(metadata.Flags, "OpenPorts")
+		if metadata.ReviewedBy == "" {
+			reviewStatus = unreviewedFlag
+		}
+	}
+	metadata.Flags = append(metadata.Flags, reviewStatus)
 
 	metadata.Hostnames = hostnames
 	metadata.RootDomains = scope.GetRootDomains(hostnames, true)
@@ -183,9 +198,7 @@ func InitHost(dir string) *Host {
 	metadata.TCPPorts = tcpPorts
 	metadata.UDPPorts = udpPorts
 	metadata.Ports = ports
-	metadata.Flags = flags
 
-	host.Metadata = &metadata
 	return host
 }
 
@@ -413,6 +426,10 @@ func (host Host) flags() []string {
 	}
 
 	if checkGlob("nmap-punched-tcp.*") {
+		flags = append(flags, "nmap-tcp-svc")
+	}
+
+	if checkGlob("nmap-*-tcp.*") {
 		flags = append(flags, "nmap-tcp")
 	}
 
@@ -449,6 +466,10 @@ func (host Host) ports() []Port {
 	globbed, _ := filepath.Glob(fmt.Sprintf("%s/recon/%s", host.Dir, "nmap-*-??p.xml"))
 
 	for _, file := range globbed {
+		if host.Metadata.HasFlags("ignore::nmap-quick") && strings.Contains(file, "quick") {
+			continue
+		}
+
 		data, err := ioutil.ReadFile(file)
 		if err != nil {
 			continue
@@ -459,10 +480,10 @@ func (host Host) ports() []Port {
 			continue
 		}
 
-		for _, host := range nmapRun.Hosts {
-			for _, port := range host.Ports {
+		for _, nmapHost := range nmapRun.Hosts {
+			for _, port := range nmapHost.Ports {
 
-				if port.State.State != "closed" && port.State.State != "filtered" {
+				if port.State.State != "closed" && port.State.State != "filtered" && port.State.State != "tcpwrapped" && port.State.State != "unknown" {
 					service := port.Service.Name
 
 					if strings.HasPrefix(service, "http") && port.Service.Tunnel == "ssl" || port.PortId == 443 {

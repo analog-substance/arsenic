@@ -1,0 +1,28 @@
+#! /bin/bash
+
+dir_to_import="$1"
+
+for host in $(ls -d "$dir_to_import"/*); do
+  dir=""
+  for domain in $(cat "$host/recon/hostnames.txt" "$host/recon/ip-addresses.txt"); do
+    dir=$(arsenic hosts --paths -H "$domain")
+    if [ -n "$dir" ]; then
+      break
+    fi
+  done
+
+  if [ -n "$dir" ]; then
+    echo found $dir
+
+    cat "$host/recon/ip-addresses.txt" "$dir/recon/ip-addresses.txt" | sort -d | uniq > "$host/recon/ip-addresses.txt.new"
+    mv "$host/recon/ip-addresses.txt.new" "$host/recon/ip-addresses.txt"
+
+    cat "$host/recon/hostnames.txt" "$dir/recon/hostnames.txt" | sort -d | uniq > "$host/recon/hostnames.txt.new"
+    mv "$host/recon/hostnames.txt.new" "$host/recon/hostnames.txt"
+
+    cp -r "$host/recon" "$dir"
+
+  else
+    echo "failed to find a match for $host"
+  fi
+done

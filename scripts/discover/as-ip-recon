@@ -67,6 +67,7 @@ fi
 if [ -f "$RECON_FILE" ] ; then
   _ "saving scope from amass intel active"
   cat "$RECON_FILE" \
+  | arsenic scope prune \
   | sort -d \
   | uniq \
   | tee scope-domains-generated-amass-intel-active.txt

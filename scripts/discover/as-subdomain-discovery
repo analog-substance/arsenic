@@ -83,9 +83,9 @@ done
 if compgen -G "recon/domains/*/subdomains-*.txt" > /dev/null 2>&1; then
   _ "saving scope as-subdomain-discovery"
   cat recon/domains/*/subdomains-*.txt 2>/dev/null \
+  | arsenic scope prune \
   | sort -d \
   | uniq \
-  | arsenic scope prune \
   | tee scope-domains-generated-as-subdomain-discovery.txt
 fi
 

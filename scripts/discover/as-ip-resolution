@@ -40,4 +40,6 @@ cat "$RECON_FILE" \
 | awk '{print $NF}' \
 | removeInvalidDomains \
 | arsenic scope prune \
+| sort -d \
+| uniq \
 | tee scope-domains-generated-resolv-ips.txt
