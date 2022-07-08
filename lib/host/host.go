@@ -464,9 +464,12 @@ func (host Host) flags() []string {
 func (host Host) ports() []Port {
 	portMap := make(map[string]Port)
 	globbed, _ := filepath.Glob(fmt.Sprintf("%s/recon/%s", host.Dir, "nmap-*-??p.xml"))
+	quick := []string{}
 
+	tcpPorts := false
 	for _, file := range globbed {
-		if host.Metadata.HasFlags("ignore::nmap-quick") && strings.Contains(file, "quick") {
+		if strings.Contains(file, "quick") {
+			quick = append(quick, file)
 			continue
 		}
 
@@ -494,6 +497,44 @@ func (host Host) ports() []Port {
 						service = "http"
 					}
 					portMap[fmt.Sprintf("%s/%d", port.Protocol, port.PortId)] = Port{port.PortId, port.Protocol, service}
+					if !tcpPorts && port.Protocol == "tcp" {
+						tcpPorts = true
+					}
+				}
+			}
+		}
+	}
+
+	if !tcpPorts && len(quick) > 0 && !host.Metadata.HasFlags("ignore::nmap-quick") {
+		for _, file := range quick {
+			data, err := ioutil.ReadFile(file)
+			if err != nil {
+				continue
+			}
+
+			nmapRun, err := nmap.Parse(data)
+			if err != nil {
+				continue
+			}
+
+			for _, nmapHost := range nmapRun.Hosts {
+				for _, port := range nmapHost.Ports {
+
+					if port.State.State != "closed" && port.State.State != "filtered" && port.Service.Name != "tcpwrapped" && port.Service.Name != "unknown" {
+						service := port.Service.Name
+
+						if strings.HasPrefix(service, "http") && port.Service.Tunnel == "ssl" || port.PortId == 443 {
+							service = "https"
+						}
+
+						if port.PortId == 80 {
+							service = "http"
+						}
+						portMap[fmt.Sprintf("%s/%d", port.Protocol, port.PortId)] = Port{port.PortId, port.Protocol, service}
+						if !tcpPorts && port.Protocol == "tcp" {
+							tcpPorts = true
+						}
+					}
 				}
 			}
 		}
