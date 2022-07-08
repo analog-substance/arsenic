@@ -483,7 +483,7 @@ func (host Host) ports() []Port {
 		for _, nmapHost := range nmapRun.Hosts {
 			for _, port := range nmapHost.Ports {
 
-				if port.State.State != "closed" && port.State.State != "filtered" && port.State.State != "tcpwrapped" && port.State.State != "unknown" {
+				if port.State.State != "closed" && port.State.State != "filtered" && port.Service.Name != "tcpwrapped" && port.Service.Name != "unknown" {
 					service := port.Service.Name
 
 					if strings.HasPrefix(service, "http") && port.Service.Tunnel == "ssl" || port.PortId == 443 {
