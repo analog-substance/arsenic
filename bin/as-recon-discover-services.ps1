@@ -52,6 +52,16 @@ Begin {
 
 		nmap -oA "$OutputDir/nmap-punched-tcp" -n -A -p"$ports" $Target
 	}
+
+	function Fix-NmapXml {
+		param (
+			[string]
+			$Dir
+		)
+		Get-ChildItem -Path "$Dir" -Recurse -Filter '*nmap*.xml' | ForEach-Object {
+			(Get-Content $_.FullName) -replace '[^"]*nmap\.xsl', "/static/nmap.xsl" | Out-File $_.FullName
+		}
+	}
 }
 
 Process {
@@ -59,7 +69,5 @@ Process {
 	$reconDir = "$targetDir/recon"
 	New-Item "$targetDir/loot/passwords", "$reconDir" -ItemType Directory -Force | Out-Null
 	Accurate-Punch -OutputDir "$reconDir"
-	Get-ChildItem -Path "$reconDir" -Recurse -Filter '*nmap*.xml' | ForEach-Object {
-		(Get-Content $_.FullName) -replace '[^"]*nmap\.xsl', "/static/nmap.xsl" | Out-File $_.FullName
-	}
+	Fix-NmapXml -Dir "$reconDir"
 }
