@@ -11,49 +11,81 @@ param (
 	$Target,
 
 	[switch]
+	$UDP,
+
+	[switch]
+	$QuickOnly,
+
+	[switch]
 	$Force
 )
 
 Begin {
-	function Quick-Scan {
+	function Quick-TCPScan {
         param(
             [string]
             $OutputDir
         )
-		if ($Force -or -not (Test-Path -Path "$OutputDir" -Filter "nmap-punched-quick-tcp.nmap" -PathType Leaf)) {
+		if ($Force -or -not (Test-Path -Path "$OutputDir\nmap-punched-quick-tcp.nmap")) {
 			nmap --open -T3 -n -p- $Target -oA "$OutputDir/nmap-punched-quick-tcp"
 		} else {
 			Get-Content "$OutputDir/nmap-punched-quick-tcp.nmap"
 		}
 	}
     
-	function Accurate-Punch {
+	function Accurate-TCPPunch {
         param(
             [string]
             $OutputDir
         )
+        $FixXml = $false
 
-		if ((Test-Path -Path "$OutputDir" -Filter "nmap-punched-tcp.nmap" -PathType Leaf) -and -not $Force) {
-			Write-Host "[!] Skipping $Target since it was already done"
+		if ((Test-Path -Path "$OutputDir\nmap-punched-tcp.nmap") -and -not $Force) {
+			Write-Output "[!] Skipping $Target since it was already done"
 			return
 		}
 
-		Write-Host "[+] scanning $Target"
+		Write-Output "[+] scanning $Target"
         
-        $ports = Quick-Scan -OutputDir "$OutputDir" | Select-String "\s+open" | ForEach-Object { $_.Line.Split("/")[0] }
+        $ports = Quick-TCPScan -OutputDir "$OutputDir" | Select-String "\s+open" | ForEach-Object { $_.Line.Split("/")[0] }
 		if ($null -ne $ports) {
 			$ports = [string]::Join(",", $ports)
 		}
+
+        $FixXml = $true
         
 
 		if ([string]::IsNullOrEmpty($ports)) {
-			Write-Host "[+] ${Target}: No open ports"
+			Write-Output "[+] ${Target}: No open ports"
 			return
 		}
 
-		Write-Host "[+] Version scanning $ports"
+		if ($QuickOnly) {
+			return
+		}
+
+		Write-Output "[+] Version scanning $ports"
 
 		nmap -oA "$OutputDir/nmap-punched-tcp" -n -A -p"$ports" $Target
+	}
+
+	function Accurate-UDPPunch {
+		param(
+            [string]
+            $OutputDir
+        )
+
+        $FixXml = $false
+
+		if ((Test-Path -Path "$OutputDir\nmap-punched-udp.nmap") -and -not $Force) {
+			Write-Output "[!] Skipping $Target since it was already done"
+			return
+		}
+
+        $FixXml = $true
+
+		Write-Output "[+] scanning $Target"
+		nmap -oA "$OutputDir/nmap-punched-udp" -sUV -Pn -n -p- --max-rtt-timeout 100ms --min-rate 1000 --version-intensity 0 $Target
 	}
 
 	function Fix-NmapXml {
@@ -65,12 +97,21 @@ Begin {
 			(Get-Content $_.FullName) -replace '[^"]*nmap\.xsl', "/static/nmap.xsl" | Out-File $_.FullName
 		}
 	}
+
+    $FixXML = $false
 }
 
 Process {
 	$targetDir = "hosts/$Target"
 	$reconDir = "$targetDir/recon"
 	New-Item "$targetDir/loot/passwords", "$reconDir" -ItemType Directory -Force | Out-Null
-	Accurate-Punch -OutputDir "$reconDir"
-	Fix-NmapXml -Dir "$reconDir"
+	if ($UDP) {
+		Accurate-UDPPunch -OutputDir "$reconDir"
+	} else {
+		Accurate-TCPPunch -OutputDir "$reconDir"
+	}
+
+	if ($FixXML) {
+        Fix-NmapXml -Dir "$reconDir"
+    }
 }
