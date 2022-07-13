@@ -56,14 +56,14 @@ function Scan-Target {
 		Write-Host "[-] Port Scan / UDP / $Target / complete"
 	}
 	
-	$nextTarget = Get-Hosts
+	$nextTarget = Get-Hosts | Select-Object -First 1
 	if ([string]::IsNullOrEmpty($nextTarget)) {
 		# if grep lock hosts/*/recon/nmap-punched-udp.nmap | grep :lock > /dev/null; then
 		# 	_warn "other UDP port scans are still running... lets wait before continuing"
 		# 	exit 1
 		# fi
 	} else {
-		Invoke-Expression -Command "$PSCommandPath -Action `"scan`" -Target $nextTarget"
+		Invoke-Expression -Command "$PSCommandPath -Action `"scan`" -Target `"$nextTarget`""
 	}
 }
 
@@ -71,8 +71,11 @@ function Get-Hosts {
 	$excludeHosts = Get-ChildItem -Path hosts -Recurse -File -Filter 'nmap-punched-udp*' `
 		| Select-Object -ExpandProperty DirectoryName -Unique `
 		| ForEach-Object {
-			[regex]::Matches($_, “hosts[\\/]([^\\/]+)[\\/]recon”).Groups[1].Value
+			[regex]::Matches($_, "hosts[\\/]([^\\/]+)[\\/]recon").Groups[1].Value
 		}
+    if ($null -eq $excludeHosts) {
+        $excludeHosts = @()
+    }
 
 	$allHosts = Get-ChildItem -Path hosts -Directory | Select-Object -ExpandProperty Name
 
@@ -87,7 +90,7 @@ if ($Action -eq "list") {
 }
 
 if ([string]::IsNullOrEmpty($Target)) {
-	$Target = Get-Hosts | Select-Object -First
+	$Target = Get-Hosts | Select-Object -First 1
 	Write-Host "[!] Auto selected $Target"
 }
 
@@ -95,7 +98,6 @@ if ([string]::IsNullOrEmpty($Target)) {
 	exit
 }
 
-Scan-Target
 $outputDir = "hosts/$Target"
 $reconDir = "$outputDir/recon"
 New-Item "$outputDir/loot/passwords", "$reconDir" -ItemType Directory -Force | Out-Null
