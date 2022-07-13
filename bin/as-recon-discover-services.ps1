@@ -33,7 +33,7 @@ Begin {
             $OutputDir
         )
 
-		if (Test-Path -Path "$OutputDir" -Filter "nmap-punched-tcp.nmap" -PathType Leaf -and -not $Force) {
+		if ((Test-Path -Path "$OutputDir" -Filter "nmap-punched-tcp.nmap" -PathType Leaf) -and -not $Force) {
 			Write-Host "[!] Skipping $Target since it was already done"
 			return
 		}
@@ -41,7 +41,10 @@ Begin {
 		Write-Host "[+] scanning $Target"
         
         $ports = Quick-Scan -OutputDir "$OutputDir" | Select-String "\s+open" | ForEach-Object { $_.Line.Split("/")[0] }
-        $ports = [string]::Join(",", $ports)
+		if ($null -ne $ports) {
+			$ports = [string]::Join(",", $ports)
+		}
+        
 
 		if ([string]::IsNullOrEmpty($ports)) {
 			Write-Host "[+] ${Target}: No open ports"
