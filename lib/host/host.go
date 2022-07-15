@@ -13,6 +13,8 @@ import (
 	"strings"
 
 	"github.com/analog-substance/arsenic/lib/scope"
+	"github.com/analog-substance/arsenic/lib/set"
+	"github.com/spf13/viper"
 
 	"github.com/lair-framework/go-nmap"
 
@@ -114,6 +116,12 @@ func (md Metadata) Columnize() string {
 	return fmt.Sprintf("%s | %s | %s\n", md.Name, strings.Join(md.Flags, ","), strings.Join(md.UserFlags, ","))
 }
 
+func (md *Metadata) AddFlags(flags ...string) {
+	flagSet := set.NewStringSet(md.Flags)
+	flagSet.AddRange(flags)
+	md.Flags = flagSet.StringSlice()
+}
+
 type Host struct {
 	Dir      string
 	Metadata *Metadata
@@ -163,7 +171,7 @@ func InitHost(dir string) *Host {
 		}
 	}
 
-	metadata.Flags = host.flags()
+	metadata.AddFlags(host.flags()...)
 	ports := host.ports()
 
 	tcpPorts := protoPorts(ports, "tcp")
@@ -171,26 +179,26 @@ func InitHost(dir string) *Host {
 	reviewStatus := reviewedFlag
 
 	if len(tcpPorts) > 0 {
-		metadata.Flags = append(metadata.Flags, "open-tcp")
+		metadata.AddFlags("open-tcp")
 		if metadata.ReviewedBy == "" {
 			reviewStatus = unreviewedFlag
 		}
 	}
 
 	if len(udpPorts) > 0 {
-		metadata.Flags = append(metadata.Flags, "open-udp")
+		metadata.AddFlags("open-udp")
 		if metadata.ReviewedBy == "" {
 			reviewStatus = unreviewedFlag
 		}
 	}
 
 	if len(ports) > 0 {
-		metadata.Flags = append(metadata.Flags, "OpenPorts")
+		metadata.AddFlags("OpenPorts")
 		if metadata.ReviewedBy == "" {
 			reviewStatus = unreviewedFlag
 		}
 	}
-	metadata.Flags = append(metadata.Flags, reviewStatus)
+	metadata.AddFlags(reviewStatus)
 
 	metadata.Hostnames = hostnames
 	metadata.RootDomains = scope.GetRootDomains(hostnames, true)
@@ -462,6 +470,9 @@ func (host Host) flags() []string {
 }
 
 func (host Host) ports() []Port {
+	var ignoreServices []util.IgnoreService
+	viper.UnmarshalKey("ignore-services", &ignoreServices)
+
 	portMap := make(map[string]Port)
 	globbed, _ := filepath.Glob(fmt.Sprintf("%s/recon/%s", host.Dir, "nmap-*-??p.xml"))
 	quick := []string{}
@@ -486,7 +497,22 @@ func (host Host) ports() []Port {
 		for _, nmapHost := range nmapRun.Hosts {
 			for _, port := range nmapHost.Ports {
 
-				if port.State.State != "closed" && port.State.State != "filtered" && port.Service.Name != "tcpwrapped" && port.Service.Name != "unknown" {
+				if port.State.State != "closed" && port.State.State != "filtered" {
+					ignore := false
+					for _, svc := range ignoreServices {
+						if svc.ShouldIgnore(port.Service.Name, port.PortId) {
+							ignore = true
+							if svc.Flag != "" {
+								host.Metadata.AddFlags(svc.Flag)
+							}
+							break
+						}
+					}
+
+					if ignore {
+						continue
+					}
+
 					service := port.Service.Name
 
 					if strings.HasPrefix(service, "http") && port.Service.Tunnel == "ssl" || port.PortId == 443 {
@@ -520,7 +546,22 @@ func (host Host) ports() []Port {
 			for _, nmapHost := range nmapRun.Hosts {
 				for _, port := range nmapHost.Ports {
 
-					if port.State.State != "closed" && port.State.State != "filtered" && port.Service.Name != "tcpwrapped" && port.Service.Name != "unknown" {
+					if port.State.State != "closed" && port.State.State != "filtered" {
+						ignore := false
+						for _, svc := range ignoreServices {
+							if svc.ShouldIgnore(port.Service.Name, port.PortId) {
+								ignore = true
+								if svc.Flag != "" {
+									host.Metadata.AddFlags(svc.Flag)
+								}
+								break
+							}
+						}
+
+						if ignore {
+							continue
+						}
+
 						service := port.Service.Name
 
 						if strings.HasPrefix(service, "http") && port.Service.Tunnel == "ssl" || port.PortId == 443 {

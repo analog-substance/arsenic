@@ -135,6 +135,23 @@ func initConfig() {
 		"wixsite.com",
 	}
 
+	ignoreServices := []util.IgnoreService{
+		{
+			Name:  "msrpc",
+			Ports: "40000-65535",
+			Flag:  "ignored::ephemeral-msrpc",
+		},
+		{
+			Name:  "tcpwrapped",
+			Ports: "all",
+		},
+		{
+			Name:  "unknown",
+			Ports: "all",
+		},
+	}
+
+	setConfigDefault("ignore-services", ignoreServices)
 	setConfigDefault("blacklist.root-domains", blacklistedRootDomains)
 	setConfigDefault("blacklist.domains", []string{})
 	setConfigDefault("blacklist.ips", []string{})
