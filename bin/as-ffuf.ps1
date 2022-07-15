@@ -132,6 +132,11 @@ Begin {
 	if (![string]::IsNullOrEmpty($Proxy)) {
 		Add-Args -x "$Proxy"
 	}
+
+    $outputOverride = $false
+    if (![string]::IsNullOrEmpty($Output)) {
+		$outputOverride = $true
+	}
 }
 
 Process {
@@ -139,13 +144,18 @@ Process {
 
 	$uri = [System.Uri]$URL
 	$hostname = $uri.Host
-	if ([string]::IsNullOrEmpty($Output)) {
+	if (!$outputOverride) {
 		$uriPath = $uri.AbsolutePath.Trim("/").Replace("/", ".")
 		if (![string]::IsNullOrEmpty($uriPath)) {
 			$uriPath = ".$uriPath"
 		}
+        
+        $port = ""
+        if ($uri.Port -ne 80 -and $uri.Port -ne 443) {
+            $port = ".$($uri.Port)"
+        }
 
-		$Output = "ffuf.$Method.$($uri.Scheme).$hostname$uriPath.$wordlistName.json"
+		$Output = "ffuf.$Method.$($uri.Scheme).$hostname$port$uriPath.$wordlistName.json"
 	}
 
 	$outputPath = "recon\$Output"
@@ -169,9 +179,9 @@ Process {
 	if ($url -notmatch ".*FUZZ.*") {
 		$URL = "$URL/FUZZ"
 	}
-	Add-Args -u "$URL" -o "$outputPath"
+    
+	& ffuf.exe -u "$URL" -o "$outputPath" $Script:ffufArgs | Out-Host
 
-	& ffuf.exe $Script:ffufArgs
-
-	cat $outputPath | ConvertFrom-Json | ConvertTo-Json | Out-File -FilePath "$outputPath" -Encoding utf8
+	cat $outputPath | ConvertFrom-Json | ConvertTo-Json | Out-File -FilePath "$outputPath.new" -Encoding utf8
+    mv -Force "$outputPath.new" $outputPath
 }
