@@ -119,7 +119,7 @@ func (md Metadata) Columnize() string {
 func (md *Metadata) AddFlags(flags ...string) {
 	flagSet := set.NewStringSet(md.Flags)
 	flagSet.AddRange(flags)
-	md.Flags = flagSet.StringSlice()
+	md.Flags = flagSet.SortedStringSlice()
 }
 
 type Host struct {
