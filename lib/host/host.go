@@ -122,6 +122,16 @@ func (md *Metadata) AddFlags(flags ...string) {
 	md.Flags = flagSet.SortedStringSlice()
 }
 
+func (md *Metadata) RemoveFlags(flags ...string) {
+	var filteredFlags []string
+	linq.From(md.Flags).Where(func(i interface{}) bool {
+		return !linq.From(flags).AnyWith(func(j interface{}) bool {
+			return i == j
+		})
+	}).ToSlice(&filteredFlags)
+	md.Flags = filteredFlags
+}
+
 type Host struct {
 	Dir      string
 	Metadata *Metadata
@@ -198,6 +208,8 @@ func InitHost(dir string) *Host {
 			reviewStatus = unreviewedFlag
 		}
 	}
+
+	metadata.RemoveFlags(reviewedFlag, unreviewedFlag)
 	metadata.AddFlags(reviewStatus)
 
 	metadata.Hostnames = hostnames
