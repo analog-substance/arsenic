@@ -262,8 +262,8 @@ func (host Host) Hostnames() []string {
 		return []string{}
 	}
 
-	sort.Strings(hostnames)
-	return hostnames
+	hostnameSet := set.NewStringSet(hostnames)
+	return hostnameSet.SortedStringSlice()
 }
 
 func (host Host) URLs() []string {
@@ -309,7 +309,9 @@ func (host Host) IPAddresses() []string {
 	if err != nil || len(IPAddresses) == 0 {
 		return []string{}
 	}
-	return IPAddresses
+
+	ipSet := set.NewStringSet(IPAddresses)
+	return ipSet.SortedStringSlice()
 }
 
 func (host Host) isReviewed() bool {
