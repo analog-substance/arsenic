@@ -4,8 +4,8 @@ import (
 	"os"
 	"os/exec"
 
+	"github.com/analog-substance/arsenic/lib/util"
 	"github.com/d5/tengo/v2"
-	"github.com/defektive/arsenic/lib/util"
 )
 
 type GitModule struct {
