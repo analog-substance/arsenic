@@ -1,0 +1,210 @@
+fmt := import("fmt")
+text := import("text")
+os := import("os")
+filepath := import("filepath")
+sort := import("sort")
+arsenic := import("arsenic")
+url := import("url")
+engine := import("engine")
+times := import("times")
+
+wordlistFile := ""
+wordlistName := ""
+
+panic := func(err) {
+  fmt.println(err)
+  engine.stop()
+  times.sleep(1*times.millisecond)
+}
+
+genOutputFileName := func(rawURL) {
+  rawURL = text.replace(rawURL, "://", ".", -1)
+  rawURL = text.replace(rawURL, "/", ".", -1)
+  return fmt.sprintf("ffuf.%s.%s.json", rawURL, wordlistName)
+}
+
+getHostURLs := func() {
+  urls := arsenic.host_urls("http")
+  if is_error(urls) {
+    panic(urls)
+  }
+
+  hostURLs := []
+  for rawURL in urls {
+    hostname := url.hostname(rawURL)
+    if is_error(hostname) {
+      panic(hostname)
+    }
+
+    paths := arsenic.host_path(hostname)
+    if is_error(paths) {
+      panic(paths)
+    }
+
+    hostPath := paths[0]
+    host := filepath.base(hostPath)
+
+    outputFile := genOutputFileName(rawURL)
+    
+    if !filepath.exists(filepath.join(hostPath, "recon", outputFile)) {
+      hostURLs = append(hostURLs, fmt.sprintf("%s %s", host, rawURL))
+    }
+  }
+
+  return hostURLs
+}
+
+wordlistFile = filepath.abs("recon/wordlist-content-discover.txt")
+if is_error(wordlistFile) {
+  panic(wordlistFile)
+}
+
+if !filepath.exists(wordlistFile) {
+  err := arsenic.gen_wordlist("web-content", wordlistFile)
+  if is_error(err) {
+    panic(err)
+  }
+}
+
+wordlistName = filepath.base(wordlistFile)
+
+urls := arsenic.host_urls("http")
+if is_error(urls) {
+  panic(urls)
+}
+
+for u in urls {
+  fmt.println(u)
+}
+// hostURLs := getHostURLs()
+// for hostURL in hostURLs {
+//   fmt.println(hostURL)
+// }
+
+
+// function newGetHostUrls {
+//   arsenic hosts -p http  | while read url; do
+
+//     hostname=$(echo "$url" | sed 's|https\?://||g' | awk -F ':' '{print $1}')
+//     hostPath=$(arsenic hosts -H "$hostname" --paths)
+//     host=$(echo "$hostPath" | awk -F '/' '{print $2}')
+
+//     draft="nope"
+//     if [ -f "$hostPath/00_metadata.md" ] ; then
+//       draft=$(grep draft "$hostPath/00_metadata.md" || echo "nope")
+//     fi
+//     if [ "$draft" == "nope" ]; then
+//       output_file=$(genOutputFileName "$url")
+//       if [ ! -f "$hostPath/recon/$output_file" ] ; then
+//         echo $host $url
+//       fi
+//     fi
+//   done | sort -d | uniq
+// }
+
+// function scanHost {
+//   set +u
+//   host="$1"
+//   url="$2"
+//   set -u
+
+//   _ "Content Discovery / $host / $url / checking"
+
+
+//   draft="nope"
+//   if [ -f "hosts/$host/00_metadata.md" ] ; then
+//     draft=$(grep draft "hosts/$host/00_metadata.md" || echo "nope")
+//   fi
+//   if [ "$draft" == "nope" ]; then
+//     _info "Content Discovery / $host / $url / preparing"
+//     cd "hosts/$host"
+//     output_file=$(genOutputFileName "$url")
+
+//     gitPull
+//     if [ ! -f "recon/$output_file" ] ; then
+//       _ "Scanning $host $url"
+//       if [ ! -z $CHECK_ONLY ]; then
+//         echo "$url"
+//       else
+//         # ffuf dir -e -k --random-agent -d -u $url -w ../../recon/ffuf-wordlist.txt -o "recon/ffuf-wordlist-$hostname-$port.txt" &
+
+//         # If the host points to an S3 bucket, we don't want to ffuf it
+//         if curl -sIL $host | grep -q "https://aws.amazon.com/s3/"; then
+//           _info "Content Discovery / $host / $url / s3 detected"
+//           echo "s3" > $output_file
+//           gitCommit "recon/$output_file" "skip ffuf $url" reset
+//         else
+//           gitLock "recon/$output_file" "ffuf lock: $url"
+
+//           set +o pipefail
+//           set +e
+
+//           _info "Content Discovery / $host / $url / running"
+//           as-ffuf -a Firefox -u $url -w $wordlist_file -o "$output_file"
+//         fi
+
+//         gitCommit "." "ffuf complete: $url"
+//         set -e
+//         set -o pipefail
+//         _info "Content Discovery / $host / $url / complete"
+//       fi
+//     fi
+//     cd - > /dev/null
+//   fi
+
+//   if [ $MANUAL -eq 0 ]; then
+//     ARGS=$(head -n1 <<<$($ME list | grep -v "no host found"))
+//     if [ ! -z "$ARGS" ] ; then
+//       ARG_HOST=$(echo "$ARGS" | awk '{print $1}')
+//       ARG_URL=$(echo "$ARGS" | awk '{print $2}')
+//       exec $ME scan
+//     fi
+
+//     set +e
+//     if grep lock hosts/*/recon/ffuf*.json | grep :lock > /dev/null; then
+//       _warn "other ffufs are still running... lets wait before continuing"
+//       exit 1
+//     fi
+//   fi
+// }
+
+// if [ ! -f "recon/wordlist-content-discover.txt" ]; then
+//   arsenic wordlist web-content > "recon/wordlist-content-discover.txt"
+// fi
+
+// wordlist_file=$(realpath "recon/wordlist-content-discover.txt")
+// wordlist_name=`basename $wordlist_file`
+// wordlist_name="${wordlist_name%.*}"
+
+// if [ -z "$CMD" ] ; then
+//   _warn "$0 [ list | scan  [ hostname/ip url ]  ]"
+//   exit
+// fi
+
+// gitPull
+
+// if [ "$CMD" == "list" ]; then
+//   newGetHostUrls
+//   exit
+// fi
+
+// if [ "$CMD" == "scan" ] ; then
+//   MANUAL=1
+//   if [ -z "$ARG_HOST" ] ; then
+//     MANUAL=0
+//     _warn no args found, autodetecting
+//     ARGS=$(head -n1 <<<$($ME list | grep -v "no host found" | sort -R))
+//     ARG_HOST=$(echo "$ARGS" | awk '{print $1}')
+//     ARG_URL=$(echo "$ARGS" | awk '{print $2}')
+//     if [ "$ARG_HOST" == "" ]; then
+//       set +e
+//       if grep lock hosts/*/recon/ffuf*.json | grep :lock > /dev/null; then
+//         _warn "other ffufs are still running... lets wait before continuing"
+//         exit 1
+//       fi
+//       exit
+//     fi
+//     _warn "Auto selected $ARG_HOST $ARG_URL"
+//   fi
+//   scanHost $ARG_HOST $ARG_URL
+// fi
