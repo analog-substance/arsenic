@@ -8,6 +8,10 @@ import (
 	"github.com/d5/tengo/v2"
 )
 
+var gitModule *GitModule = &GitModule{
+	isGit: util.DirExists(".git"),
+}
+
 type GitModule struct {
 	isGit     bool
 	moduleMap map[string]tengo.Object
@@ -65,12 +69,4 @@ func gitCommit(path string, msg string, mode string) error {
 	}
 
 	return nil
-}
-
-var gitModule *GitModule
-
-func init() {
-	gitModule = &GitModule{
-		isGit: util.DirExists(".git"),
-	}
 }
