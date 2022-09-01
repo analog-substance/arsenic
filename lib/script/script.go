@@ -1,6 +1,7 @@
 package script
 
 import (
+	"context"
 	"os"
 
 	"github.com/d5/tengo/v2"
@@ -13,8 +14,11 @@ func Run(path string) error {
 	bytes, _ := os.ReadFile(path)
 	script := tengo.NewScript(bytes)
 
+	ctx, cancel := context.WithCancel(context.Background())
+	engineModule.stopScript = cancel
+
 	script.SetImports(moduleMap)
-	_, err := script.Run()
+	_, err := script.RunContext(ctx)
 	return err
 }
 
@@ -26,5 +30,6 @@ func init() {
 	moduleMap.AddBuiltinModule("sort", sortModule.ModuleMap())
 	moduleMap.AddBuiltinModule("url", urlModule.ModuleMap())
 	moduleMap.AddBuiltinModule("arsenic", arsenicModule.ModuleMap())
+	moduleMap.AddBuiltinModule("engine", engineModule.ModuleMap())
 	moduleMap.AddBuiltinModule("log", logModule)
 }
