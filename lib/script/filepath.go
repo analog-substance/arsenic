@@ -1,9 +1,9 @@
 package script
 
 import (
-	"os"
 	"path/filepath"
 
+	"github.com/analog-substance/arsenic/lib/util"
 	"github.com/d5/tengo/v2"
 )
 
@@ -20,6 +20,7 @@ func (m *FilePathModule) ModuleMap() map[string]tengo.Object {
 			"exists": &tengo.UserFunction{Name: "exists", Value: m.exists},
 			"base":   &tengo.UserFunction{Name: "base", Value: m.base},
 			"abs":    &tengo.UserFunction{Name: "abs", Value: m.abs},
+			"ext":    &tengo.UserFunction{Name: "ext", Value: m.ext},
 		}
 	}
 	return m.moduleMap
@@ -53,9 +54,8 @@ func (m *FilePathModule) exists(args ...tengo.Object) (tengo.Object, error) {
 		}
 	}
 
-	_, err := os.Stat(path)
 	obj := tengo.TrueValue
-	if os.IsNotExist(err) {
+	if !util.FileExists(path) {
 		obj = tengo.FalseValue
 	}
 
@@ -99,4 +99,21 @@ func (m *FilePathModule) abs(args ...tengo.Object) (tengo.Object, error) {
 	}
 
 	return &tengo.String{Value: absPath}, nil
+}
+
+func (m *FilePathModule) ext(args ...tengo.Object) (tengo.Object, error) {
+	if len(args) != 1 {
+		return nil, tengo.ErrWrongNumArguments
+	}
+
+	path, ok := tengo.ToString(args[0])
+	if !ok {
+		return nil, tengo.ErrInvalidArgumentType{
+			Name:     "path",
+			Expected: "string",
+			Found:    args[0].TypeName(),
+		}
+	}
+
+	return &tengo.String{Value: filepath.Ext(path)}, nil
 }

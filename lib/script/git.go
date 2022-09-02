@@ -52,7 +52,7 @@ func (m *GitModule) lock(args ...tengo.Object) (tengo.Object, error) {
 	lockFile, _ := tengo.ToString(args[0])
 	msg, _ := tengo.ToString(args[1])
 	if util.FileExists(lockFile) {
-		util.LogWarn("cant lock a file that exists")
+		util.LogWarn("can't lock a file that exists")
 		os.Exit(1)
 	}
 

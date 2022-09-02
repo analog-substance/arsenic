@@ -2,6 +2,8 @@ package script
 
 import (
 	"context"
+	"fmt"
+	"time"
 
 	"github.com/d5/tengo/v2"
 )
@@ -23,6 +25,22 @@ func (m *EngineModule) ModuleMap() map[string]tengo.Object {
 }
 
 func (m *EngineModule) stop(args ...tengo.Object) (tengo.Object, error) {
-	m.stopScript()
+	message := ""
+	if len(args) == 1 {
+		message, _ = tengo.ToString(args[0])
+	}
+
+	stopScript(message)
 	return nil, nil
+}
+
+func stopScript(args ...string) {
+	if len(args) == 1 {
+		fmt.Println(args[0])
+	}
+
+	go func() {
+		engineModule.stopScript()
+	}()
+	time.Sleep(1 * time.Millisecond)
 }
