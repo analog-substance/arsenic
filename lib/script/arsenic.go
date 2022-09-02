@@ -193,10 +193,8 @@ func (m *ArsenicModule) ffuf(args ...tengo.Object) (tengo.Object, error) {
 	signal.Notify(sigs, os.Interrupt, syscall.SIGTERM)
 
 	// relay trapped signals to the spawned process
-	terminate := false
 	go func() {
 		for sig := range sigs {
-			terminate = true
 			cmd.Process.Signal(sig)
 			cancel()
 		}
@@ -212,19 +210,9 @@ func (m *ArsenicModule) ffuf(args ...tengo.Object) (tengo.Object, error) {
 	}
 
 	if err := cmd.Wait(); err != nil {
-		if exiterr, ok := err.(*exec.ExitError); ok {
-			if status, ok := exiterr.Sys().(syscall.WaitStatus); ok {
-				if status.Signaled() {
-					terminate = true
-				}
-			}
-		} else {
+		if _, ok := err.(*exec.ExitError); !ok {
 			return nil, err
 		}
-	}
-
-	if terminate {
-		stopScript()
 	}
 
 	return nil, nil

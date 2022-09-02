@@ -10,15 +10,25 @@ import (
 
 var moduleMap *tengo.ModuleMap
 
-func Run(path string) error {
+func Run(path string, scriptArgs map[string]string) error {
 	bytes, _ := os.ReadFile(path)
 	script := tengo.NewScript(bytes)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	engineModule.stopScript = cancel
 
+	args := make(map[string]interface{})
+	for key, value := range scriptArgs {
+		args[key] = value
+	}
+
+	err := script.Add("args", args)
+	if err != nil {
+		return err
+	}
+
 	script.SetImports(moduleMap)
-	_, err := script.RunContext(ctx)
+	_, err = script.RunContext(ctx)
 	return err
 }
 

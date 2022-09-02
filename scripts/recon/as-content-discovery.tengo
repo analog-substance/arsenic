@@ -12,14 +12,23 @@ rand := import("rand")
 
 wordlistFile := ""
 wordlistName := ""
-argHost := ""
-argURL := ""
 manual := true
 
-action := ""
-if action == "" {
-  action = "scan"
+action := "scan"
+if args.action {
+  action = args.action
 }
+
+argHost := ""
+if args.host {
+  argHost = args.host
+}
+
+argURL := ""
+if args.url{
+  argURL = args.url
+}
+
 
 genOutputFileName := func(rawURL) {
   rawURL = text.replace(rawURL, "://", ".", -1)
