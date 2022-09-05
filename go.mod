@@ -1,6 +1,6 @@
 module github.com/analog-substance/arsenic
 
-go 1.13
+go 1.16
 
 require (
 	github.com/NoF0rte/gocdp v0.0.6

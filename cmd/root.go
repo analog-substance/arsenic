@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"reflect"
 
 	"github.com/mitchellh/go-homedir"
@@ -155,6 +156,7 @@ func initConfig() {
 	setConfigDefault("blacklist.root-domains", blacklistedRootDomains)
 	setConfigDefault("blacklist.domains", []string{})
 	setConfigDefault("blacklist.ips", []string{})
+	setConfigDefault("scripts-directory", filepath.Join(home, ".config", "arsenic"))
 	setConfigDefault("scripts", defaultScripts)
 	setConfigDefault("wordlists", wordlists)
 	setConfigDefault("wordlist-paths", []string{"/opt/SecLists"})

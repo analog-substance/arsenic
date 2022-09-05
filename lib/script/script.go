@@ -3,15 +3,17 @@ package script
 import (
 	"context"
 	"os"
+	"path/filepath"
 
 	"github.com/d5/tengo/v2"
 	"github.com/d5/tengo/v2/stdlib"
+	"github.com/spf13/viper"
 )
 
 var moduleMap *tengo.ModuleMap
 
 func Run(path string, scriptArgs map[string]string) error {
-	bytes, _ := os.ReadFile(path)
+	bytes, _ := os.ReadFile(filepath.Join(viper.GetString("scripts-directory"), path))
 	script := tengo.NewScript(bytes)
 
 	ctx, cancel := context.WithCancel(context.Background())
