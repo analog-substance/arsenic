@@ -12,10 +12,10 @@ var scriptCmd = &cobra.Command{
 	Use:   "script",
 	Short: "Run arbitrary arsenic scripts",
 	Run: func(cmd *cobra.Command, args []string) {
-		// name, _ := cmd.Flags().GetString("name")
+		name, _ := cmd.Flags().GetString("name")
 		scriptArgs, _ := cmd.Flags().GetStringToString("script-args")
 
-		err := script.Run("recon/as-content-discovery.tengo", scriptArgs)
+		err := script.Run(name, scriptArgs)
 		if err != nil && err != context.Canceled {
 			panic(err)
 		}
@@ -24,8 +24,8 @@ var scriptCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(scriptCmd)
-	// scriptCmd.Flags().StringP("name", "n", "", "Name of the script to run")
-	// scriptCmd.MarkFlagRequired("name")
+	scriptCmd.Flags().StringP("name", "n", "", "Name of the script to run")
+	scriptCmd.MarkFlagRequired("name")
 
 	scriptCmd.Flags().StringToStringP("script-args", "a", make(map[string]string), "Args to pass to the script")
 }

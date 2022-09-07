@@ -13,6 +13,10 @@ import (
 var moduleMap *tengo.ModuleMap
 
 func Run(path string, scriptArgs map[string]string) error {
+	if filepath.Ext(path) != ".tengo" {
+		path = path + ".tengo"
+	}
+
 	bytes, _ := os.ReadFile(filepath.Join(viper.GetString("scripts-directory"), path))
 	script := tengo.NewScript(bytes)
 
