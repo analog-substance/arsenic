@@ -46,6 +46,6 @@ func init() {
 	moduleMap.AddBuiltinModule("sort", sortModule.ModuleMap())
 	moduleMap.AddBuiltinModule("url", urlModule.ModuleMap())
 	moduleMap.AddBuiltinModule("arsenic", arsenicModule.ModuleMap())
-	moduleMap.AddBuiltinModule("engine", scriptModule.ModuleMap())
+	moduleMap.AddBuiltinModule("script", scriptModule.ModuleMap())
 	moduleMap.AddBuiltinModule("log", logModule)
 }
