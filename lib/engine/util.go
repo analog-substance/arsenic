@@ -1,4 +1,4 @@
-package script
+package engine
 
 import (
 	"github.com/d5/tengo/v2"

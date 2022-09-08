@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/analog-substance/arsenic/lib/script"
+	"github.com/analog-substance/arsenic/lib/engine"
 	"github.com/analog-substance/arsenic/lib/util"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -20,7 +20,7 @@ var scriptCmd = &cobra.Command{
 		name, _ := cmd.Flags().GetString("name")
 		scriptArgs, _ := cmd.Flags().GetStringToString("script-args")
 
-		err := script.Run(name, scriptArgs)
+		err := engine.Run(name, scriptArgs)
 		if err != nil && err != context.Canceled {
 			panic(err)
 		}

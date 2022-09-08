@@ -5,7 +5,7 @@ filepath := import("filepath")
 sort := import("sort")
 arsenic := import("arsenic")
 url := import("url")
-engine := import("engine")
+script := import("script")
 times := import("times")
 log := import("log")
 rand := import("rand")
@@ -40,19 +40,19 @@ genOutputFileName := func(rawURL) {
 getHostURLs := func() {
   urls := arsenic.host_urls("http")
   if is_error(urls) {
-    engine.stop(urls)
+    script.stop(urls)
   }
 
   hostURLs := []
   for rawURL in urls {
     hostname := url.hostname(rawURL)
     if is_error(hostname) {
-      engine.stop(hostname)
+      script.stop(hostname)
     }
 
     hostPath := arsenic.host_path(hostname)
     if is_error(hostPath) {
-      engine.stop(hostPath)
+      script.stop(hostPath)
     }
 
     host := filepath.base(hostPath)
@@ -86,12 +86,12 @@ scanHost := func(host, rawURL) {
 
   previousDir := os.getwd()
   if is_error(previousDir) {
-    engine.stop(previousDir)
+    script.stop(previousDir)
   }
 
   err := os.chdir(filepath.join("hosts", host))
   if is_error(err) {
-    engine.stop(err)
+    script.stop(err)
   }
   
   outputFile := genOutputFileName(rawURL)
@@ -106,14 +106,14 @@ scanHost := func(host, rawURL) {
 
     err = git.lock(outputPath, format("ffuf lock: %s", rawURL))
     if is_error(err) {
-      engine.stop(err)
+      script.stop(err)
     }
 
     log.info(format("Content Discovery / %s / %s / running", host, rawURL))
 
     err = arsenic.ffuf("-a", "Firefox", "-u", rawURL, "-w", wordlistFile, "-o", outputFile)
     if is_error(err) {
-      engine.stop(err)
+      script.stop(err)
     }
 
     log.info(format("Content Discovery / %s / %s / complete", host, rawURL))
@@ -121,25 +121,25 @@ scanHost := func(host, rawURL) {
 
   err = git.commit(".", format("ffuf complete: %s", rawURL))
   if is_error(err) {
-    engine.stop(err)
+    script.stop(err)
   }
 
   err = os.chdir(previousDir)
   if is_error(err){
-    engine.stop(err)
+    script.stop(err)
   }
 }
 
 wordlistFile = filepath.abs("recon/wordlist-content-discover.txt")
 if is_error(wordlistFile) {
-  engine.stop(wordlistFile)
+  script.stop(wordlistFile)
 }
 
 if !filepath.exists(wordlistFile) {
   log.info("Generating wordlist...")
   err := arsenic.gen_wordlist("web-content", wordlistFile)
   if is_error(err) {
-    engine.stop(err)
+    script.stop(err)
   }
 }
 
@@ -148,7 +148,7 @@ wordlistName = text.trim_suffix(wordlistName, filepath.ext(wordlistName))
 
 err := git.pull()
 if is_error(err) {
-  engine.stop(err)
+  script.stop(err)
 }
 
 if action == "list" {
@@ -156,7 +156,7 @@ if action == "list" {
   for hostURL in hostURLs {
     fmt.println(hostURL)
   }
-  engine.stop()
+  script.stop()
 }
 
 autoSelect := func() {
@@ -164,15 +164,15 @@ autoSelect := func() {
   if !elem {
     files := arsenic.locked_files("hosts/*/recon/ffuf*.json")
     if is_error(files) {
-      engine.stop(files)
+      script.stop(files)
     }
 
     if len(files) > 0 {
       log.warn("other ffufs are still running... lets wait before continuing")
-      engine.stop()
+      script.stop()
     }
 
-    engine.stop("No host found")
+    script.stop("No host found")
   }
   
   argHost = text.fields(elem)[0]

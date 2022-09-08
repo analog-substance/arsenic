@@ -1,4 +1,4 @@
-package script
+package engine
 
 import (
 	"github.com/analog-substance/arsenic/lib/util"

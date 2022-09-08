@@ -1,4 +1,4 @@
-package script
+package engine
 
 import (
 	"bufio"
@@ -198,7 +198,7 @@ func (m *GitModule) lock(lockFile string, msg string) error {
 
 	if util.FileExists(lockFile) {
 		util.LogWarn("can't lock a file that exists")
-		stopScript()
+		scriptModule.stop()
 		return nil
 	}
 

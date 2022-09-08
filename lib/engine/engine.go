@@ -1,4 +1,4 @@
-package script
+package engine
 
 import (
 	"context"
@@ -21,7 +21,7 @@ func Run(path string, scriptArgs map[string]string) error {
 	script := tengo.NewScript(bytes)
 
 	ctx, cancel := context.WithCancel(context.Background())
-	engineModule.stopScript = cancel
+	scriptModule.stopScript = cancel
 
 	args := make(map[string]interface{})
 	for key, value := range scriptArgs {
@@ -46,6 +46,6 @@ func init() {
 	moduleMap.AddBuiltinModule("sort", sortModule.ModuleMap())
 	moduleMap.AddBuiltinModule("url", urlModule.ModuleMap())
 	moduleMap.AddBuiltinModule("arsenic", arsenicModule.ModuleMap())
-	moduleMap.AddBuiltinModule("engine", engineModule.ModuleMap())
+	moduleMap.AddBuiltinModule("engine", scriptModule.ModuleMap())
 	moduleMap.AddBuiltinModule("log", logModule)
 }
