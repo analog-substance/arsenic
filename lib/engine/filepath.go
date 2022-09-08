@@ -21,6 +21,7 @@ func (m *FilePathModule) ModuleMap() map[string]tengo.Object {
 			"base":   &tengo.UserFunction{Name: "base", Value: m.base},
 			"abs":    &tengo.UserFunction{Name: "abs", Value: m.abs},
 			"ext":    &tengo.UserFunction{Name: "ext", Value: m.ext},
+			"glob":   &tengo.UserFunction{Name: "glob", Value: m.glob},
 		}
 	}
 	return m.moduleMap
@@ -116,4 +117,26 @@ func (m *FilePathModule) ext(args ...tengo.Object) (tengo.Object, error) {
 	}
 
 	return &tengo.String{Value: filepath.Ext(path)}, nil
+}
+
+func (m *FilePathModule) glob(args ...tengo.Object) (tengo.Object, error) {
+	if len(args) != 1 {
+		return toError(tengo.ErrWrongNumArguments), nil
+	}
+
+	pattern, ok := tengo.ToString(args[0])
+	if !ok {
+		return toError(tengo.ErrInvalidArgumentType{
+			Name:     "pattern",
+			Expected: "string",
+			Found:    args[0].TypeName(),
+		}), nil
+	}
+
+	matches, err := filepath.Glob(pattern)
+	if err != nil {
+		return toError(err), nil
+	}
+
+	return toStringArray(matches), nil
 }

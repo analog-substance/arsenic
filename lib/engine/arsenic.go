@@ -28,6 +28,7 @@ func (m *ArsenicModule) ModuleMap() map[string]tengo.Object {
 		m.moduleMap = map[string]tengo.Object{
 			"host_urls":    &tengo.UserFunction{Name: "host_urls", Value: m.hostUrls},
 			"host_path":    &tengo.UserFunction{Name: "host_path", Value: m.hostPath},
+			"host_paths":   &tengo.UserFunction{Name: "host_paths", Value: m.hostPaths},
 			"gen_wordlist": &tengo.UserFunction{Name: "gen_wordlist", Value: m.generateWordlist},
 			"locked_files": &tengo.UserFunction{Name: "locked_files", Value: m.lockedFiles},
 			"ffuf":         &tengo.UserFunction{Name: "ffuf", Value: m.ffuf},
@@ -89,6 +90,16 @@ func (m *ArsenicModule) hostPath(args ...tengo.Object) (tengo.Object, error) {
 	}
 
 	return &tengo.String{Value: foundHost.Dir}, nil
+}
+
+func (m *ArsenicModule) hostPaths(args ...tengo.Object) (tengo.Object, error) {
+	var paths []string
+	hosts := host.All()
+	for _, h := range hosts {
+		paths = append(paths, h.Dir)
+	}
+
+	return toStringArray(paths), nil
 }
 
 func (m *ArsenicModule) generateWordlist(args ...tengo.Object) (tengo.Object, error) {

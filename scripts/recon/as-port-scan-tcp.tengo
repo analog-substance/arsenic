@@ -1,0 +1,147 @@
+fmt := import("fmt")
+text := import("text")
+os := import("os")
+filepath := import("filepath")
+sort := import("sort")
+arsenic := import("arsenic")
+url := import("url")
+script := import("script")
+times := import("times")
+log := import("log")
+rand := import("rand")
+git := import("git")
+
+action := "scan"
+if args.action {
+  action = args.action
+}
+
+argHost := ""
+if args.host {
+  argHost = args.host
+}
+
+getHosts := func() {
+  err := git.pull()
+  if is_error(err) {
+    script.stop(err)
+  }
+  
+  hosts := []
+  paths := arsenic.host_paths()
+  if is_error(paths) {
+    script.stop(paths)
+  }
+
+  for path in paths {
+    files := filepath.glob(filepath.join(path, "recon", "nmap-punched*tcp*"))
+    if len(files) > 0 {
+      continue
+    }
+
+    hosts = append(hosts, filepath.base(path))
+  }
+
+  return hosts
+}
+
+randElement := func(slice) {
+  if len(slice) == 0 {
+    return undefined
+  }
+
+  r := rand.rand(times.time_unix_nano(times.now()))
+  i := r.intn(len(slice))
+  return slice[i]
+}
+
+scanHost := func(host) {
+  if host == "" {
+    return
+  }
+
+  log.msg(format("Port Scan / TCP / %s/ checking", host))
+
+  reconPath := filepath.join("hosts", host, "recon")
+
+  files := filepath.glob(filepath.join(reconPath, "nmap-punched*tcp*"))
+  if is_error(files) {
+    script.stop(files)
+  }
+
+  if len(files) != 0 {
+    return
+  }
+
+  log.info(format("Port Scan / TCP / %s / preparing", host))
+
+  os.mkdir_all(reconPath, 0755)
+
+  err := git.lock(filepath.join(reconPath, "nmap-punched-quick-tcp.nmap"), format("TCP port scan lock: %s", host))
+  if is_error(err) {
+    script.stop(err)
+  }
+
+  previousDir := os.getwd()
+  if is_error(previousDir) {
+    script.stop(previousDir)
+  }
+
+  err := os.chdir(filepath.join("hosts", host))
+  if is_error(err) {
+    script.stop(err)
+  }
+
+  log.info("Port Scan / TCP / %s / running", host)
+
+  err = os.chdir(previousDir)
+  if is_error(err){
+    script.stop(err)
+  }
+}
+
+if action == "list" {
+  hosts := getHosts()
+  for host in hosts {
+    fmt.println(host)
+  }
+  script.stop()
+}
+
+autoSelect := func() {
+  elem := randElement(getHosts())
+  if !elem {
+    files := arsenic.locked_files("hosts/*/recon/ffuf*.json")
+    if is_error(files) {
+      script.stop(files)
+    }
+
+    if len(files) > 0 {
+      log.warn("other ffufs are still running... lets wait before continuing")
+      script.stop()
+    }
+
+    script.stop("No host found")
+  }
+  
+  argHost = text.fields(elem)[0]
+  argURL = text.fields(elem)[1]
+
+  log.warn(format("Auto selected %s %s", argHost, argURL))
+}
+
+if argHost == "" {
+  manual = false
+  log.warn("no args found, autodetecting")
+
+  autoSelect()
+}
+
+for {
+  scanHost(argHost, argURL)
+  if manual {
+    break
+  }
+
+  autoSelect()
+}
