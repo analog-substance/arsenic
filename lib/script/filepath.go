@@ -28,7 +28,7 @@ func (m *FilePathModule) ModuleMap() map[string]tengo.Object {
 
 func (m *FilePathModule) join(args ...tengo.Object) (tengo.Object, error) {
 	if len(args) < 1 {
-		return nil, tengo.ErrWrongNumArguments
+		return toError(tengo.ErrWrongNumArguments), nil
 	}
 
 	var paths []string
@@ -42,16 +42,16 @@ func (m *FilePathModule) join(args ...tengo.Object) (tengo.Object, error) {
 
 func (m *FilePathModule) exists(args ...tengo.Object) (tengo.Object, error) {
 	if len(args) != 1 {
-		return nil, tengo.ErrWrongNumArguments
+		return toError(tengo.ErrWrongNumArguments), nil
 	}
 
 	path, ok := tengo.ToString(args[0])
 	if !ok {
-		return nil, tengo.ErrInvalidArgumentType{
+		return toError(tengo.ErrInvalidArgumentType{
 			Name:     "path",
 			Expected: "string",
 			Found:    args[0].TypeName(),
-		}
+		}), nil
 	}
 
 	obj := tengo.TrueValue
@@ -64,16 +64,16 @@ func (m *FilePathModule) exists(args ...tengo.Object) (tengo.Object, error) {
 
 func (m *FilePathModule) base(args ...tengo.Object) (tengo.Object, error) {
 	if len(args) != 1 {
-		return nil, tengo.ErrWrongNumArguments
+		return toError(tengo.ErrWrongNumArguments), nil
 	}
 
 	path, ok := tengo.ToString(args[0])
 	if !ok {
-		return nil, tengo.ErrInvalidArgumentType{
+		return toError(tengo.ErrInvalidArgumentType{
 			Name:     "path",
 			Expected: "string",
 			Found:    args[0].TypeName(),
-		}
+		}), nil
 	}
 
 	return &tengo.String{Value: filepath.Base(path)}, nil
@@ -81,21 +81,21 @@ func (m *FilePathModule) base(args ...tengo.Object) (tengo.Object, error) {
 
 func (m *FilePathModule) abs(args ...tengo.Object) (tengo.Object, error) {
 	if len(args) != 1 {
-		return nil, tengo.ErrWrongNumArguments
+		return toError(tengo.ErrWrongNumArguments), nil
 	}
 
 	path, ok := tengo.ToString(args[0])
 	if !ok {
-		return nil, tengo.ErrInvalidArgumentType{
+		return toError(tengo.ErrInvalidArgumentType{
 			Name:     "path",
 			Expected: "string",
 			Found:    args[0].TypeName(),
-		}
+		}), nil
 	}
 
 	absPath, err := filepath.Abs(path)
 	if err != nil {
-		return nil, err
+		return toError(err), nil
 	}
 
 	return &tengo.String{Value: absPath}, nil
@@ -103,16 +103,16 @@ func (m *FilePathModule) abs(args ...tengo.Object) (tengo.Object, error) {
 
 func (m *FilePathModule) ext(args ...tengo.Object) (tengo.Object, error) {
 	if len(args) != 1 {
-		return nil, tengo.ErrWrongNumArguments
+		return toError(tengo.ErrWrongNumArguments), nil
 	}
 
 	path, ok := tengo.ToString(args[0])
 	if !ok {
-		return nil, tengo.ErrInvalidArgumentType{
+		return toError(tengo.ErrInvalidArgumentType{
 			Name:     "path",
 			Expected: "string",
 			Found:    args[0].TypeName(),
-		}
+		}), nil
 	}
 
 	return &tengo.String{Value: filepath.Ext(path)}, nil

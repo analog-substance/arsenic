@@ -41,11 +41,11 @@ func (m *ArsenicModule) hostUrls(args ...tengo.Object) (tengo.Object, error) {
 	for _, arg := range args {
 		protocol, ok := tengo.ToString(arg)
 		if !ok {
-			return nil, tengo.ErrInvalidArgumentType{
+			return toError(tengo.ErrInvalidArgumentType{
 				Name:     "protocol",
 				Expected: "string",
 				Found:    arg.TypeName(),
-			}
+			}), nil
 		}
 
 		protocols = append(protocols, protocol)
@@ -71,16 +71,16 @@ func (m *ArsenicModule) hostUrls(args ...tengo.Object) (tengo.Object, error) {
 
 func (m *ArsenicModule) hostPath(args ...tengo.Object) (tengo.Object, error) {
 	if len(args) != 1 {
-		return nil, tengo.ErrWrongNumArguments
+		return toError(tengo.ErrWrongNumArguments), nil
 	}
 
 	hostname, ok := tengo.ToString(args[0])
 	if !ok {
-		return nil, tengo.ErrInvalidArgumentType{
+		return toError(tengo.ErrInvalidArgumentType{
 			Name:     "hostname",
 			Expected: "string",
 			Found:    args[0].TypeName(),
-		}
+		}), nil
 	}
 
 	foundHost := host.GetFirst(hostname)
@@ -93,33 +93,33 @@ func (m *ArsenicModule) hostPath(args ...tengo.Object) (tengo.Object, error) {
 
 func (m *ArsenicModule) generateWordlist(args ...tengo.Object) (tengo.Object, error) {
 	if len(args) != 2 {
-		return nil, tengo.ErrWrongNumArguments
+		return toError(tengo.ErrWrongNumArguments), nil
 	}
 
 	wordlist, ok := tengo.ToString(args[0])
 	if !ok {
-		return nil, tengo.ErrInvalidArgumentType{
+		return toError(tengo.ErrInvalidArgumentType{
 			Name:     "wordlist",
 			Expected: "string",
 			Found:    args[0].TypeName(),
-		}
+		}), nil
 	}
 
 	path, ok := tengo.ToString(args[1])
 	if !ok {
-		return nil, tengo.ErrInvalidArgumentType{
+		return toError(tengo.ErrInvalidArgumentType{
 			Name:     "path",
 			Expected: "string",
 			Found:    args[1].TypeName(),
-		}
+		}), nil
 	}
 
-	wordlistSet := set.NewSet("")
-	lib.GenerateWordlist(wordlist, &wordlistSet)
+	wordlistSet := set.NewStringSet()
+	lib.GenerateWordlist(wordlist, wordlistSet)
 
 	file, err := os.Create(path)
 	if err != nil {
-		return nil, err
+		return toError(err), nil
 	}
 	defer file.Close()
 	wordlistSet.WriteSorted(file)
@@ -129,21 +129,21 @@ func (m *ArsenicModule) generateWordlist(args ...tengo.Object) (tengo.Object, er
 
 func (m *ArsenicModule) lockedFiles(args ...tengo.Object) (tengo.Object, error) {
 	if len(args) != 1 {
-		return nil, tengo.ErrWrongNumArguments
+		return toError(tengo.ErrWrongNumArguments), nil
 	}
 
 	glob, ok := tengo.ToString(args[0])
 	if !ok {
-		return nil, tengo.ErrInvalidArgumentType{
+		return toError(tengo.ErrInvalidArgumentType{
 			Name:     "glob",
 			Expected: "string",
 			Found:    args[0].TypeName(),
-		}
+		}), nil
 	}
 
 	matches, err := filepath.Glob(glob)
 	if err != nil {
-		return nil, err
+		return toError(err), nil
 	}
 
 	lockRegex := regexp.MustCompile(`^lock::`)
@@ -166,25 +166,24 @@ func (m *ArsenicModule) lockedFiles(args ...tengo.Object) (tengo.Object, error) 
 
 func (m *ArsenicModule) ffuf(args ...tengo.Object) (tengo.Object, error) {
 	if len(args) == 0 {
-		return nil, tengo.ErrWrongNumArguments
+		return toError(tengo.ErrWrongNumArguments), nil
 	}
 
 	var cmdArgs []string
 	for _, arg := range args {
 		cmdArg, ok := tengo.ToString(arg)
 		if !ok {
-			return nil, tengo.ErrInvalidArgumentType{
+			return toError(tengo.ErrInvalidArgumentType{
 				Name:     "ffuf arg",
 				Expected: "string",
 				Found:    arg.TypeName(),
-			}
+			}), nil
 		}
 
 		cmdArgs = append(cmdArgs, cmdArg)
 	}
 
-	cmdCtx, cancel := context.WithCancel(context.Background())
-	cmd := exec.CommandContext(cmdCtx, "as-ffuf", cmdArgs...)
+	cmd := exec.CommandContext(context.Background(), "as-ffuf", cmdArgs...)
 
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
@@ -196,7 +195,6 @@ func (m *ArsenicModule) ffuf(args ...tengo.Object) (tengo.Object, error) {
 	go func() {
 		for sig := range sigs {
 			cmd.Process.Signal(sig)
-			cancel()
 		}
 	}()
 
@@ -206,12 +204,12 @@ func (m *ArsenicModule) ffuf(args ...tengo.Object) (tengo.Object, error) {
 	}()
 
 	if err := cmd.Start(); err != nil {
-		return nil, err
+		return toError(err), nil
 	}
 
 	if err := cmd.Wait(); err != nil {
 		if _, ok := err.(*exec.ExitError); !ok {
-			return nil, err
+			return toError(err), nil
 		}
 	}
 

@@ -9,6 +9,7 @@ engine := import("engine")
 times := import("times")
 log := import("log")
 rand := import("rand")
+git := import("git")
 
 wordlistFile := ""
 wordlistName := ""
@@ -95,14 +96,19 @@ scanHost := func(host, rawURL) {
   
   outputFile := genOutputFileName(rawURL)
 
-  // git.pull()
+  git.pull()
 
-  if !filepath.exists(filepath.join("recon", outputFile)) {
+  outputPath := filepath.join("recon", outputFile)
+  if !filepath.exists(outputPath) {
     log.msg(format("Scanning %s %s", host, rawURL))
 
     // check if url is S3 bucket
 
-    // Git lock
+    err = git.lock(outputPath, format("ffuf lock: %s", rawURL))
+    if is_error(err) {
+      engine.stop(err)
+    }
+
     log.info(format("Content Discovery / %s / %s / running", host, rawURL))
 
     err = arsenic.ffuf("-a", "Firefox", "-u", rawURL, "-w", wordlistFile, "-o", outputFile)
@@ -113,7 +119,10 @@ scanHost := func(host, rawURL) {
     log.info(format("Content Discovery / %s / %s / complete", host, rawURL))
   }
 
-  // git.commit()
+  err = git.commit(".", format("ffuf complete: %s", rawURL))
+  if is_error(err) {
+    engine.stop(err)
+  }
 
   err = os.chdir(previousDir)
   if is_error(err){
@@ -137,7 +146,10 @@ if !filepath.exists(wordlistFile) {
 wordlistName = filepath.base(wordlistFile)
 wordlistName = text.trim_suffix(wordlistName, filepath.ext(wordlistName))
 
-// git.pull()
+err := git.pull()
+if is_error(err) {
+  engine.stop(err)
+}
 
 if action == "list" {
   hostURLs := getHostURLs()

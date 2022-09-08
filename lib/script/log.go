@@ -14,7 +14,7 @@ var logModule = map[string]tengo.Object{
 func logMsg(args ...tengo.Object) (tengo.Object, error) {
 	err := log("[+]", args...)
 	if err != nil {
-		return nil, err
+		return toError(err), nil
 	}
 
 	return nil, nil
@@ -23,7 +23,7 @@ func logMsg(args ...tengo.Object) (tengo.Object, error) {
 func logWarn(args ...tengo.Object) (tengo.Object, error) {
 	err := log("[!]", args...)
 	if err != nil {
-		return nil, err
+		return toError(err), nil
 	}
 
 	return nil, nil
@@ -32,7 +32,7 @@ func logWarn(args ...tengo.Object) (tengo.Object, error) {
 func logInfo(args ...tengo.Object) (tengo.Object, error) {
 	err := log("[-]", args...)
 	if err != nil {
-		return nil, err
+		return toError(err), nil
 	}
 
 	return nil, nil

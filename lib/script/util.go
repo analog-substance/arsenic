@@ -32,3 +32,11 @@ func toStringArray(slice []string) tengo.Object {
 		Value: values,
 	}
 }
+
+func toError(err error) tengo.Object {
+	return &tengo.Error{
+		Value: &tengo.String{
+			Value: err.Error(),
+		},
+	}
+}

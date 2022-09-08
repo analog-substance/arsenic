@@ -23,21 +23,21 @@ func (m *URLModule) ModuleMap() map[string]tengo.Object {
 
 func (m *URLModule) hostname(args ...tengo.Object) (tengo.Object, error) {
 	if len(args) != 1 {
-		return nil, tengo.ErrWrongNumArguments
+		return toError(tengo.ErrWrongNumArguments), nil
 	}
 
 	rawURL, ok := tengo.ToString(args[0])
 	if !ok {
-		return nil, tengo.ErrInvalidArgumentType{
+		return toError(tengo.ErrInvalidArgumentType{
 			Name:     "url",
 			Expected: "string",
 			Found:    args[0].TypeName(),
-		}
+		}), nil
 	}
 
 	parsedURL, err := url.Parse(rawURL)
 	if err != nil {
-		return nil, err
+		return toError(err), nil
 	}
 
 	return &tengo.String{Value: parsedURL.Hostname()}, nil
