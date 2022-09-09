@@ -11,6 +11,8 @@ log := import("log")
 rand := import("rand")
 git := import("git")
 
+manual := true
+
 action := "scan"
 if args.action {
   action = args.action
@@ -62,7 +64,8 @@ scanHost := func(host) {
 
   log.msg(format("Port Scan / TCP / %s/ checking", host))
 
-  reconPath := filepath.join("hosts", host, "recon")
+  hostPath := filepath.join("hosts", host)
+  reconPath := filepath.join(hostPath, "recon")
 
   files := filepath.glob(filepath.join(reconPath, "nmap-punched*tcp*"))
   if is_error(files) {
@@ -87,17 +90,29 @@ scanHost := func(host) {
     script.stop(previousDir)
   }
 
-  err := os.chdir(filepath.join("hosts", host))
+  err = os.chdir(hostPath)
   if is_error(err) {
     script.stop(err)
   }
 
-  log.info("Port Scan / TCP / %s / running", host)
+  log.info(format("Port Scan / TCP / %s / running", host))
+
+  err = arsenic.tcp_scan(host)
+  if is_error(err){
+    script.stop(err)
+  }
+
+  err = git.commit(".", format("TCP port scan complete: %s", host))
+  if is_error(err) {
+    script.stop(err)
+  }
 
   err = os.chdir(previousDir)
   if is_error(err){
     script.stop(err)
   }
+
+  log.info(format("Port Scan / TCP / %s / complete", host))
 }
 
 if action == "list" {
@@ -109,25 +124,22 @@ if action == "list" {
 }
 
 autoSelect := func() {
-  elem := randElement(getHosts())
-  if !elem {
-    files := arsenic.locked_files("hosts/*/recon/ffuf*.json")
+  argHost = randElement(getHosts())
+  if !argHost {
+    files := arsenic.locked_files("hosts/*/recon/nmap-punched-quick-tcp.nmap")
     if is_error(files) {
       script.stop(files)
     }
 
     if len(files) > 0 {
-      log.warn("other ffufs are still running... lets wait before continuing")
+      log.warn("other TCP port scans are still running... lets wait before continuing")
       script.stop()
     }
 
     script.stop("No host found")
   }
   
-  argHost = text.fields(elem)[0]
-  argURL = text.fields(elem)[1]
-
-  log.warn(format("Auto selected %s %s", argHost, argURL))
+  log.warn(format("Auto selected %s", argHost))
 }
 
 if argHost == "" {
@@ -138,7 +150,7 @@ if argHost == "" {
 }
 
 for {
-  scanHost(argHost, argURL)
+  scanHost(argHost)
   if manual {
     break
   }

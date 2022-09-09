@@ -155,9 +155,6 @@ func (m *GitModule) commit(path string, msg string, mode string) error {
 	}
 
 	cmd := exec.Command("git", "commit", "-m", msg)
-	cmd.Stderr = os.Stderr
-	cmd.Stdout = os.Stdout
-
 	err = cmd.Run()
 	if err != nil {
 		fmt.Println("nothing happened")

@@ -1,14 +1,10 @@
 package engine
 
 import (
-	"context"
 	"os"
-	"os/exec"
-	"os/signal"
 	"path/filepath"
 	"regexp"
 	"strings"
-	"syscall"
 
 	"github.com/analog-substance/arsenic/lib"
 	"github.com/analog-substance/arsenic/lib/host"
@@ -32,6 +28,7 @@ func (m *ArsenicModule) ModuleMap() map[string]tengo.Object {
 			"gen_wordlist": &tengo.UserFunction{Name: "gen_wordlist", Value: m.generateWordlist},
 			"locked_files": &tengo.UserFunction{Name: "locked_files", Value: m.lockedFiles},
 			"ffuf":         &tengo.UserFunction{Name: "ffuf", Value: m.ffuf},
+			"tcp_scan":     &tengo.UserFunction{Name: "tcp_scan", Value: m.tcpScan},
 		}
 	}
 	return m.moduleMap
@@ -194,34 +191,36 @@ func (m *ArsenicModule) ffuf(args ...tengo.Object) (tengo.Object, error) {
 		cmdArgs = append(cmdArgs, cmdArg)
 	}
 
-	cmd := exec.CommandContext(context.Background(), "as-ffuf", cmdArgs...)
-
-	cmd.Stderr = os.Stderr
-	cmd.Stdout = os.Stdout
-
-	sigs := make(chan os.Signal)
-	signal.Notify(sigs, os.Interrupt, syscall.SIGTERM)
-
-	// relay trapped signals to the spawned process
-	go func() {
-		for sig := range sigs {
-			cmd.Process.Signal(sig)
-		}
-	}()
-
-	defer func() {
-		signal.Stop(sigs)
-		close(sigs)
-	}()
-
-	if err := cmd.Start(); err != nil {
+	err := execModule.runWithSigHandler("as-ffuf", cmdArgs...)
+	if err != nil {
 		return toError(err), nil
 	}
 
-	if err := cmd.Wait(); err != nil {
-		if _, ok := err.(*exec.ExitError); !ok {
-			return toError(err), nil
+	return nil, nil
+}
+
+func (m *ArsenicModule) tcpScan(args ...tengo.Object) (tengo.Object, error) {
+	if len(args) == 0 {
+		return toError(tengo.ErrWrongNumArguments), nil
+	}
+
+	var cmdArgs []string
+	for _, arg := range args {
+		cmdArg, ok := tengo.ToString(arg)
+		if !ok {
+			return toError(tengo.ErrInvalidArgumentType{
+				Name:     "as-recon-discover-service arg",
+				Expected: "string",
+				Found:    arg.TypeName(),
+			}), nil
 		}
+
+		cmdArgs = append(cmdArgs, cmdArg)
+	}
+
+	err := execModule.runWithSigHandler("as-recon-discover-services", cmdArgs...)
+	if err != nil {
+		return toError(err), nil
 	}
 
 	return nil, nil

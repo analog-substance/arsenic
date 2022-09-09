@@ -47,5 +47,6 @@ func init() {
 	moduleMap.AddBuiltinModule("url", urlModule.ModuleMap())
 	moduleMap.AddBuiltinModule("arsenic", arsenicModule.ModuleMap())
 	moduleMap.AddBuiltinModule("script", scriptModule.ModuleMap())
+	moduleMap.AddBuiltinModule("exec", execModule.ModuleMap())
 	moduleMap.AddBuiltinModule("log", logModule)
 }
