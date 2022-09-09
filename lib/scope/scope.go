@@ -1,12 +1,13 @@
 package scope
 
 import (
+	"regexp"
+	"strings"
+
 	"github.com/analog-substance/arsenic/lib/set"
 	"github.com/analog-substance/arsenic/lib/util"
 	"github.com/spf13/viper"
 	"golang.org/x/net/publicsuffix"
-	"regexp"
-	"strings"
 )
 
 type scope struct {
@@ -35,7 +36,7 @@ func (s *scope) loadDomainInfo() {
 		s.blacklistedDomains = viper.GetStringSlice("blacklist.domains")
 
 		util.ReadLineByLine("scope-domains.txt", func(line string) {
-			line = normalizeScope(line, "domain")
+			line = normalizeScope(line, "domains")
 			rootDomain, _ := publicsuffix.EffectiveTLDPlusOne(line)
 
 			domainSet.Add(line)
