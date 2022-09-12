@@ -13,28 +13,19 @@ import (
 	"github.com/d5/tengo/v2"
 )
 
-var arsenicModule *ArsenicModule = &ArsenicModule{}
-
-type ArsenicModule struct {
-	moduleMap map[string]tengo.Object
-}
-
-func (m *ArsenicModule) ModuleMap() map[string]tengo.Object {
-	if m.moduleMap == nil {
-		m.moduleMap = map[string]tengo.Object{
-			"host_urls":    &tengo.UserFunction{Name: "host_urls", Value: m.hostUrls},
-			"host_path":    &tengo.UserFunction{Name: "host_path", Value: m.hostPath},
-			"host_paths":   &tengo.UserFunction{Name: "host_paths", Value: m.hostPaths},
-			"gen_wordlist": &tengo.UserFunction{Name: "gen_wordlist", Value: m.generateWordlist},
-			"locked_files": &tengo.UserFunction{Name: "locked_files", Value: m.lockedFiles},
-			"ffuf":         &tengo.UserFunction{Name: "ffuf", Value: m.ffuf},
-			"tcp_scan":     &tengo.UserFunction{Name: "tcp_scan", Value: m.tcpScan},
-		}
+func (s *Script) ArsenicModuleMap() map[string]tengo.Object {
+	return map[string]tengo.Object{
+		"host_urls":    &tengo.UserFunction{Name: "host_urls", Value: s.hostUrls},
+		"host_path":    &tengo.UserFunction{Name: "host_path", Value: s.hostPath},
+		"host_paths":   &tengo.UserFunction{Name: "host_paths", Value: s.hostPaths},
+		"gen_wordlist": &tengo.UserFunction{Name: "gen_wordlist", Value: s.generateWordlist},
+		"locked_files": &tengo.UserFunction{Name: "locked_files", Value: s.lockedFiles},
+		"ffuf":         &tengo.UserFunction{Name: "ffuf", Value: s.ffuf},
+		"tcp_scan":     &tengo.UserFunction{Name: "tcp_scan", Value: s.tcpScan},
 	}
-	return m.moduleMap
 }
 
-func (m *ArsenicModule) hostUrls(args ...tengo.Object) (tengo.Object, error) {
+func (s *Script) hostUrls(args ...tengo.Object) (tengo.Object, error) {
 	var protocols []string
 	for _, arg := range args {
 		protocol, ok := tengo.ToString(arg)
@@ -67,7 +58,7 @@ func (m *ArsenicModule) hostUrls(args ...tengo.Object) (tengo.Object, error) {
 	return toStringArray(validHostURLs.SortedStringSlice()), nil
 }
 
-func (m *ArsenicModule) hostPath(args ...tengo.Object) (tengo.Object, error) {
+func (s *Script) hostPath(args ...tengo.Object) (tengo.Object, error) {
 	if len(args) != 1 {
 		return toError(tengo.ErrWrongNumArguments), nil
 	}
@@ -89,7 +80,7 @@ func (m *ArsenicModule) hostPath(args ...tengo.Object) (tengo.Object, error) {
 	return &tengo.String{Value: foundHost.Dir}, nil
 }
 
-func (m *ArsenicModule) hostPaths(args ...tengo.Object) (tengo.Object, error) {
+func (s *Script) hostPaths(args ...tengo.Object) (tengo.Object, error) {
 	var paths []string
 	hosts := host.All()
 	for _, h := range hosts {
@@ -99,7 +90,7 @@ func (m *ArsenicModule) hostPaths(args ...tengo.Object) (tengo.Object, error) {
 	return toStringArray(paths), nil
 }
 
-func (m *ArsenicModule) generateWordlist(args ...tengo.Object) (tengo.Object, error) {
+func (s *Script) generateWordlist(args ...tengo.Object) (tengo.Object, error) {
 	if len(args) != 2 {
 		return toError(tengo.ErrWrongNumArguments), nil
 	}
@@ -135,7 +126,7 @@ func (m *ArsenicModule) generateWordlist(args ...tengo.Object) (tengo.Object, er
 	return nil, nil
 }
 
-func (m *ArsenicModule) lockedFiles(args ...tengo.Object) (tengo.Object, error) {
+func (s *Script) lockedFiles(args ...tengo.Object) (tengo.Object, error) {
 	if len(args) != 1 {
 		return toError(tengo.ErrWrongNumArguments), nil
 	}
@@ -172,7 +163,7 @@ func (m *ArsenicModule) lockedFiles(args ...tengo.Object) (tengo.Object, error) 
 	return toStringArray(locked), nil
 }
 
-func (m *ArsenicModule) ffuf(args ...tengo.Object) (tengo.Object, error) {
+func (s *Script) ffuf(args ...tengo.Object) (tengo.Object, error) {
 	if len(args) == 0 {
 		return toError(tengo.ErrWrongNumArguments), nil
 	}
@@ -191,7 +182,7 @@ func (m *ArsenicModule) ffuf(args ...tengo.Object) (tengo.Object, error) {
 		cmdArgs = append(cmdArgs, cmdArg)
 	}
 
-	err := execModule.runWithSigHandler("as-ffuf", cmdArgs...)
+	err := s.runWithSigHandler("as-ffuf", cmdArgs...)
 	if err != nil {
 		return toError(err), nil
 	}
@@ -199,7 +190,7 @@ func (m *ArsenicModule) ffuf(args ...tengo.Object) (tengo.Object, error) {
 	return nil, nil
 }
 
-func (m *ArsenicModule) tcpScan(args ...tengo.Object) (tengo.Object, error) {
+func (s *Script) tcpScan(args ...tengo.Object) (tengo.Object, error) {
 	if len(args) == 0 {
 		return toError(tengo.ErrWrongNumArguments), nil
 	}
@@ -218,7 +209,7 @@ func (m *ArsenicModule) tcpScan(args ...tengo.Object) (tengo.Object, error) {
 		cmdArgs = append(cmdArgs, cmdArg)
 	}
 
-	err := execModule.runWithSigHandler("as-recon-discover-services", cmdArgs...)
+	err := s.runWithSigHandler("as-recon-discover-services", cmdArgs...)
 	if err != nil {
 		return toError(err), nil
 	}

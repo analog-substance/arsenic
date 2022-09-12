@@ -10,22 +10,13 @@ import (
 	"github.com/d5/tengo/v2"
 )
 
-var execModule *ExecModule = &ExecModule{}
-
-type ExecModule struct {
-	moduleMap map[string]tengo.Object
-}
-
-func (m *ExecModule) ModuleMap() map[string]tengo.Object {
-	if m.moduleMap == nil {
-		m.moduleMap = map[string]tengo.Object{
-			"run_with_sig_handler": &tengo.UserFunction{Name: "run_with_sig_handler", Value: m.tengoRunWithSigHandler},
-		}
+func (s *Script) ExecModuleMap() map[string]tengo.Object {
+	return map[string]tengo.Object{
+		"run_with_sig_handler": &tengo.UserFunction{Name: "run_with_sig_handler", Value: s.tengoRunWithSigHandler},
 	}
-	return m.moduleMap
 }
 
-func (m *ExecModule) tengoRunWithSigHandler(args ...tengo.Object) (tengo.Object, error) {
+func (s *Script) tengoRunWithSigHandler(args ...tengo.Object) (tengo.Object, error) {
 	if len(args) == 0 {
 		return toError(tengo.ErrWrongNumArguments), nil
 	}
@@ -53,7 +44,7 @@ func (m *ExecModule) tengoRunWithSigHandler(args ...tengo.Object) (tengo.Object,
 		cmdArgs = append(cmdArgs, cmdArg)
 	}
 
-	err := m.runWithSigHandler(cmdName, cmdArgs...)
+	err := s.runWithSigHandler(cmdName, cmdArgs...)
 	if err != nil {
 		return toError(err), nil
 	}
@@ -61,7 +52,7 @@ func (m *ExecModule) tengoRunWithSigHandler(args ...tengo.Object) (tengo.Object,
 	return nil, nil
 }
 
-func (m *ExecModule) runWithSigHandler(name string, args ...string) error {
+func (s *Script) runWithSigHandler(name string, args ...string) error {
 	cmd := exec.CommandContext(context.Background(), name, args...)
 
 	cmd.Stderr = os.Stderr

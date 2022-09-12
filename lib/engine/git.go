@@ -14,40 +14,28 @@ import (
 	"github.com/d5/tengo/v2"
 )
 
-var gitModule *GitModule = &GitModule{
-	isGit: util.DirExists(".git"),
-}
-
-type GitModule struct {
-	isGit     bool
-	moduleMap map[string]tengo.Object
-}
-
-func (m *GitModule) ModuleMap() map[string]tengo.Object {
-	if m.moduleMap == nil {
-		m.moduleMap = map[string]tengo.Object{
-			"pull":   &tengo.UserFunction{Name: "pull", Value: m.tengoPull},
-			"commit": &tengo.UserFunction{Name: "commit", Value: m.tengoCommit},
-			"lock":   &tengo.UserFunction{Name: "lock", Value: m.tengoLock},
-		}
+func (s *Script) GitModuleMap() map[string]tengo.Object {
+	return map[string]tengo.Object{
+		"pull":   &tengo.UserFunction{Name: "pull", Value: s.tengoPull},
+		"commit": &tengo.UserFunction{Name: "commit", Value: s.tengoCommit},
+		"lock":   &tengo.UserFunction{Name: "lock", Value: s.tengoLock},
 	}
-	return m.moduleMap
 }
 
-func (m *GitModule) tengoPull(args ...tengo.Object) (tengo.Object, error) {
-	if !m.isGit {
+func (s *Script) tengoPull(args ...tengo.Object) (tengo.Object, error) {
+	if !s.isGit {
 		return nil, nil
 	}
 
-	err := m.pull(true)
+	err := s.pull(true)
 	if err != nil {
 		return toError(err), nil
 	}
 	return nil, nil
 }
 
-func (m *GitModule) pull(rebase bool) error {
-	if !m.isGit {
+func (s *Script) pull(rebase bool) error {
+	if !s.isGit {
 		return nil
 	}
 	args := []string{"pull"}
@@ -82,8 +70,8 @@ func (m *GitModule) pull(rebase bool) error {
 	return nil
 }
 
-func (m *GitModule) tengoCommit(args ...tengo.Object) (tengo.Object, error) {
-	if !m.isGit {
+func (s *Script) tengoCommit(args ...tengo.Object) (tengo.Object, error) {
+	if !s.isGit {
 		return nil, nil
 	}
 
@@ -121,14 +109,14 @@ func (m *GitModule) tengoCommit(args ...tengo.Object) (tengo.Object, error) {
 		}
 	}
 
-	err := m.commit(path, message, mode)
+	err := s.commit(path, message, mode)
 	if err != nil {
 		return toError(err), nil
 	}
 	return nil, nil
 }
 
-func (m *GitModule) hardReset() {
+func (s *Script) hardReset() {
 	util.LogWarn("reset to origin")
 
 	rebaseCmd := exec.Command("git", "rebase", "--abort")
@@ -144,12 +132,12 @@ func (m *GitModule) hardReset() {
 	resetCmd.Run()
 }
 
-func (m *GitModule) commit(path string, msg string, mode string) error {
-	if !m.isGit {
+func (s *Script) commit(path string, msg string, mode string) error {
+	if !s.isGit {
 		return nil
 	}
 
-	err := m.add(path)
+	err := s.add(path)
 	if err != nil {
 		return err
 	}
@@ -161,47 +149,47 @@ func (m *GitModule) commit(path string, msg string, mode string) error {
 		return nil
 	}
 
-	err = m.push()
+	err = s.push()
 	if err == nil {
 		return nil
 	}
 
 	util.LogWarn("First push failed", err)
 
-	err = m.pull(true)
+	err = s.pull(true)
 	if err != nil {
 		util.LogWarn("pull rebase failed", err)
 		if mode == "reset" {
-			m.hardReset()
+			s.hardReset()
 		}
 		os.Exit(2)
 	}
 
-	return m.push()
+	return s.push()
 }
 
-func (m *GitModule) push() error {
+func (s *Script) push() error {
 	return exec.Command("git", "push").Run()
 }
 
-func (m *GitModule) add(path string) error {
+func (s *Script) add(path string) error {
 	return exec.Command("git", "add", path).Run()
 }
 
-func (m *GitModule) lock(lockFile string, msg string) error {
-	if !m.isGit {
+func (s *Script) lock(lockFile string, msg string) error {
+	if !s.isGit {
 		return nil
 	}
 
 	if util.FileExists(lockFile) {
 		util.LogWarn("can't lock a file that exists")
-		scriptModule.stop()
+		s.stop()
 		return nil
 	}
 
-	err := m.pull(true)
+	err := s.pull(true)
 	if err != nil {
-		m.hardReset()
+		s.hardReset()
 		os.Exit(1)
 	}
 
@@ -215,11 +203,11 @@ func (m *GitModule) lock(lockFile string, msg string) error {
 		return err
 	}
 
-	return m.commit(lockFile, msg, "reset")
+	return s.commit(lockFile, msg, "reset")
 }
 
-func (m *GitModule) tengoLock(args ...tengo.Object) (tengo.Object, error) {
-	if !m.isGit {
+func (s *Script) tengoLock(args ...tengo.Object) (tengo.Object, error) {
+	if !s.isGit {
 		return nil, nil
 	}
 
@@ -245,7 +233,7 @@ func (m *GitModule) tengoLock(args ...tengo.Object) (tengo.Object, error) {
 		}), nil
 	}
 
-	err := m.lock(lockFile, msg)
+	err := s.lock(lockFile, msg)
 	if err != nil {
 		return toError(err), nil
 	}

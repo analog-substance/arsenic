@@ -5,48 +5,62 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/analog-substance/arsenic/lib/util"
 	"github.com/d5/tengo/v2"
 	"github.com/d5/tengo/v2/stdlib"
 	"github.com/spf13/viper"
 )
 
-var moduleMap *tengo.ModuleMap
+type Script struct {
+	ctx    context.Context
+	cancel context.CancelFunc
+	script *tengo.Script
+	isGit  bool
+}
 
-func Run(path string, scriptArgs map[string]string) error {
+func NewScript(path string) *Script {
 	if filepath.Ext(path) != ".tengo" {
 		path = path + ".tengo"
 	}
 
-	bytes, _ := os.ReadFile(filepath.Join(viper.GetString("scripts-directory"), path))
-	script := tengo.NewScript(bytes)
-
 	ctx, cancel := context.WithCancel(context.Background())
-	scriptModule.stopScript = cancel
+	script := &Script{
+		ctx:    ctx,
+		cancel: cancel,
+		isGit:  util.DirExists(".git"),
+	}
 
+	bytes, _ := os.ReadFile(filepath.Join(viper.GetString("scripts-directory"), path))
+	s := tengo.NewScript(bytes)
+
+	moduleMap := stdlib.GetModuleMap(stdlib.AllModuleNames()...)
+
+	moduleMap.AddBuiltinModule("filepath", script.FilePathModuleMap())
+	moduleMap.AddBuiltinModule("git", script.GitModuleMap())
+	moduleMap.AddBuiltinModule("sort", script.SortModuleMap())
+	moduleMap.AddBuiltinModule("url", script.URLModuleMap())
+	moduleMap.AddBuiltinModule("arsenic", script.ArsenicModuleMap())
+	moduleMap.AddBuiltinModule("script", script.ScriptModuleMap())
+	moduleMap.AddBuiltinModule("exec", script.ExecModuleMap())
+	moduleMap.AddBuiltinModule("log", logModule)
+
+	s.SetImports(moduleMap)
+	script.script = s
+
+	return script
+}
+
+func (s *Script) Run(scriptArgs map[string]string) error {
 	args := make(map[string]interface{})
 	for key, value := range scriptArgs {
 		args[key] = value
 	}
 
-	err := script.Add("args", args)
+	err := s.script.Add("args", args)
 	if err != nil {
 		return err
 	}
 
-	script.SetImports(moduleMap)
-	_, err = script.RunContext(ctx)
+	_, err = s.script.RunContext(s.ctx)
 	return err
-}
-
-func init() {
-	moduleMap = stdlib.GetModuleMap(stdlib.AllModuleNames()...)
-
-	moduleMap.AddBuiltinModule("filepath", filepathModule.ModuleMap())
-	moduleMap.AddBuiltinModule("git", gitModule.ModuleMap())
-	moduleMap.AddBuiltinModule("sort", sortModule.ModuleMap())
-	moduleMap.AddBuiltinModule("url", urlModule.ModuleMap())
-	moduleMap.AddBuiltinModule("arsenic", arsenicModule.ModuleMap())
-	moduleMap.AddBuiltinModule("script", scriptModule.ModuleMap())
-	moduleMap.AddBuiltinModule("exec", execModule.ModuleMap())
-	moduleMap.AddBuiltinModule("log", logModule)
 }

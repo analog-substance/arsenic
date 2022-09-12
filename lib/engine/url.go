@@ -6,22 +6,13 @@ import (
 	"github.com/d5/tengo/v2"
 )
 
-var urlModule *URLModule = &URLModule{}
-
-type URLModule struct {
-	moduleMap map[string]tengo.Object
-}
-
-func (m *URLModule) ModuleMap() map[string]tengo.Object {
-	if m.moduleMap == nil {
-		m.moduleMap = map[string]tengo.Object{
-			"hostname": &tengo.UserFunction{Name: "hostname", Value: m.hostname},
-		}
+func (s *Script) URLModuleMap() map[string]tengo.Object {
+	return map[string]tengo.Object{
+		"hostname": &tengo.UserFunction{Name: "hostname", Value: s.hostname},
 	}
-	return m.moduleMap
 }
 
-func (m *URLModule) hostname(args ...tengo.Object) (tengo.Object, error) {
+func (s *Script) hostname(args ...tengo.Object) (tengo.Object, error) {
 	if len(args) != 1 {
 		return toError(tengo.ErrWrongNumArguments), nil
 	}

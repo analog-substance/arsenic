@@ -20,7 +20,9 @@ var scriptCmd = &cobra.Command{
 		name, _ := cmd.Flags().GetString("name")
 		scriptArgs, _ := cmd.Flags().GetStringToString("script-args")
 
-		err := engine.Run(name, scriptArgs)
+		script := engine.NewScript(name)
+
+		err := script.Run(scriptArgs)
 		if err != nil && err != context.Canceled {
 			panic(err)
 		}
