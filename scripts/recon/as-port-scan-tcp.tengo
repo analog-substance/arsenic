@@ -2,7 +2,7 @@ fmt := import("fmt")
 text := import("text")
 os := import("os")
 filepath := import("filepath")
-sort := import("sort")
+slice := import("slice")
 arsenic := import("arsenic")
 url := import("url")
 script := import("script")
@@ -36,7 +36,7 @@ getHosts := func() {
   }
 
   for path in paths {
-    files := filepath.glob(filepath.join(path, "recon", "nmap-punched*tcp*"))
+    files := filepath.glob(filepath.join(path, "recon", "nmap*tcp*"))
     if len(files) > 0 {
       continue
     }
@@ -45,16 +45,6 @@ getHosts := func() {
   }
 
   return hosts
-}
-
-randElement := func(slice) {
-  if len(slice) == 0 {
-    return undefined
-  }
-
-  r := rand.rand(times.time_unix_nano(times.now()))
-  i := r.intn(len(slice))
-  return slice[i]
 }
 
 scanHost := func(host) {
@@ -124,7 +114,7 @@ if action == "list" {
 }
 
 autoSelect := func() {
-  argHost = randElement(getHosts())
+  argHost = slice.rand_item(getHosts())
   if !argHost {
     files := arsenic.locked_files("hosts/*/recon/nmap-punched-quick-tcp.nmap")
     if is_error(files) {

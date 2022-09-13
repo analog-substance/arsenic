@@ -37,7 +37,7 @@ func NewScript(path string) *Script {
 
 	moduleMap.AddBuiltinModule("filepath", script.FilePathModuleMap())
 	moduleMap.AddBuiltinModule("git", script.GitModuleMap())
-	moduleMap.AddBuiltinModule("sort", script.SortModuleMap())
+	moduleMap.AddBuiltinModule("slice", script.SliceModuleMap())
 	moduleMap.AddBuiltinModule("url", script.URLModuleMap())
 	moduleMap.AddBuiltinModule("arsenic", script.ArsenicModuleMap())
 	moduleMap.AddBuiltinModule("script", script.ScriptModuleMap())
