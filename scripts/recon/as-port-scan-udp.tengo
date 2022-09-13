@@ -1,0 +1,171 @@
+fmt := import("fmt")
+text := import("text")
+os := import("os")
+filepath := import("filepath")
+slice := import("slice")
+arsenic := import("arsenic")
+url := import("url")
+script := import("script")
+times := import("times")
+log := import("log")
+rand := import("rand")
+git := import("git")
+exec := import("exec")
+
+manual := true
+xslRegex := text.re_compile(`"[^"]*nmap\.xsl"`)
+
+action := "scan"
+if args.action {
+  action = args.action
+}
+
+argHost := ""
+if args.host {
+  argHost = args.host
+}
+
+getHosts := func() {
+  err := git.pull()
+  if is_error(err) {
+    script.stop(err)
+  }
+  
+  hosts := []
+  paths := arsenic.host_paths()
+  if is_error(paths) {
+    script.stop(paths)
+  }
+
+  for path in paths {
+    files := filepath.glob(filepath.join(path, "recon", "nmap-punched*udp*"))
+    if len(files) > 0 {
+      continue
+    }
+
+    hosts = append(hosts, filepath.base(path))
+  }
+
+  return hosts
+}
+
+scanHost := func(host) {
+  if host == "" {
+    return
+  }
+
+  log.msg(format("Port Scan / UDP / %s/ checking", host))
+
+  hostPath := filepath.join("hosts", host)
+  reconPath := filepath.join(hostPath, "recon")
+
+  files := filepath.glob(filepath.join(reconPath, "nmap*udp*"))
+  if is_error(files) {
+    script.stop(files)
+  }
+
+  if len(files) != 0 {
+    return
+  }
+
+  log.info(format("Port Scan / UDP / %s / preparing", host))
+
+  os.mkdir_all(reconPath, 0755)
+
+  err := git.lock(filepath.join(reconPath, "nmap-punched-quick-udp.nmap"), format("UDP port scan lock: %s", host))
+  if is_error(err) {
+    script.stop(err)
+  }
+
+  previousDir := os.getwd()
+  if is_error(previousDir) {
+    script.stop(previousDir)
+  }
+
+  err = os.chdir(hostPath)
+  if is_error(err) {
+    script.stop(err)
+  }
+
+  log.info(format("Port Scan / UDP / %s / running", host))
+
+  err = exec.run_with_sig_handler("sudo", "nmap", "-oA", "recon/nmap-punched-udp", "-sUV", "-p-", "-Pn", "--max-rtt-timeout", "100ms", "--min-rate", "1000", "--version-intensity", "0", host)
+  if is_error(err) {
+    script.stop(err)
+  }
+
+  xmlFile := filepath.join("recon", "nmap-punched-udp.xml")
+  bytes := os.read_file(xmlFile)
+  if is_error(bytes) {
+    script.stop(bytes)
+  }
+
+  output := xslRegex.replace(string(bytes), `"/static/nmap.xsl"`)
+  f := os.create(xmlFile)
+  if is_error(f) {
+    script.stop(f)
+  }
+
+  file.write_string(output)
+  file.close()
+
+  // err = arsenic.udp_scan(host)
+  // if is_error(err){
+  //   script.stop(err)
+  // }
+
+  err = git.commit(".", format("UDP port scan complete: %s", host))
+  if is_error(err) {
+    script.stop(err)
+  }
+
+  err = os.chdir(previousDir)
+  if is_error(err){
+    script.stop(err)
+  }
+
+  log.info(format("Port Scan / UDP / %s / complete", host))
+}
+
+if action == "list" {
+  hosts := getHosts()
+  for host in hosts {
+    fmt.println(host)
+  }
+  script.stop()
+}
+
+autoSelect := func() {
+  argHost = slice.rand_item(getHosts())
+  if !argHost {
+    files := arsenic.locked_files("hosts/*/recon/nmap-punched-quick-udp.nmap")
+    if is_error(files) {
+      script.stop(files)
+    }
+
+    if len(files) > 0 {
+      log.warn("other UDP port scans are still running... lets wait before continuing")
+      script.stop()
+    }
+
+    script.stop("No host found")
+  }
+  
+  log.warn(format("Auto selected %s", argHost))
+}
+
+if argHost == "" {
+  manual = false
+  log.warn("no args found, autodetecting")
+
+  autoSelect()
+}
+
+for {
+  scanHost(argHost)
+  if manual {
+    break
+  }
+
+  autoSelect()
+}
