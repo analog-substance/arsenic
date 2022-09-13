@@ -150,7 +150,7 @@ if action == "list" {
 }
 
 autoSelect := func() {
-  slice.rand_item(getHostURLs())
+  elem := slice.rand_item(getHostURLs())
   if !elem {
     files := arsenic.locked_files("hosts/*/recon/ffuf*.json")
     if is_error(files) {
