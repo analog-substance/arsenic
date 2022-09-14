@@ -22,6 +22,24 @@ func toStringSlice(array *tengo.Array) ([]string, error) {
 	return slice, nil
 }
 
+func toIntSlice(array *tengo.Array) ([]int, error) {
+	var slice []int
+	for _, v := range array.Value {
+		i, ok := tengo.ToInt(v)
+		if !ok {
+			return nil, tengo.ErrInvalidArgumentType{
+				Name:     "Array type",
+				Expected: "int",
+				Found:    v.TypeName(),
+			}
+		}
+
+		slice = append(slice, i)
+	}
+
+	return slice, nil
+}
+
 func toStringArray(slice []string) tengo.Object {
 	var values []tengo.Object
 	for _, s := range slice {

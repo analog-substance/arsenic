@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/NoF0rte/gocdp"
 	"github.com/analog-substance/arsenic/lib"
 	"github.com/analog-substance/arsenic/lib/host"
 	"github.com/analog-substance/arsenic/lib/set"
@@ -15,13 +16,14 @@ import (
 
 func (s *Script) ArsenicModuleMap() map[string]tengo.Object {
 	return map[string]tengo.Object{
-		"host_urls":    &tengo.UserFunction{Name: "host_urls", Value: s.hostUrls},
-		"host_path":    &tengo.UserFunction{Name: "host_path", Value: s.hostPath},
-		"host_paths":   &tengo.UserFunction{Name: "host_paths", Value: s.hostPaths},
-		"gen_wordlist": &tengo.UserFunction{Name: "gen_wordlist", Value: s.generateWordlist},
-		"locked_files": &tengo.UserFunction{Name: "locked_files", Value: s.lockedFiles},
-		"ffuf":         &tengo.UserFunction{Name: "ffuf", Value: s.ffuf},
-		"tcp_scan":     &tengo.UserFunction{Name: "tcp_scan", Value: s.tcpScan},
+		"host_urls":              &tengo.UserFunction{Name: "host_urls", Value: s.hostUrls},
+		"host_path":              &tengo.UserFunction{Name: "host_path", Value: s.hostPath},
+		"host_paths":             &tengo.UserFunction{Name: "host_paths", Value: s.hostPaths},
+		"gen_wordlist":           &tengo.UserFunction{Name: "gen_wordlist", Value: s.generateWordlist},
+		"locked_files":           &tengo.UserFunction{Name: "locked_files", Value: s.lockedFiles},
+		"ffuf":                   &tengo.UserFunction{Name: "ffuf", Value: s.ffuf},
+		"tcp_scan":               &tengo.UserFunction{Name: "tcp_scan", Value: s.tcpScan},
+		"content_discovery_urls": &tengo.UserFunction{Name: "content_discovery_urls", Value: s.contentDiscoveryURLs},
 	}
 }
 
@@ -188,6 +190,60 @@ func (s *Script) ffuf(args ...tengo.Object) (tengo.Object, error) {
 	}
 
 	return nil, nil
+}
+
+func (s *Script) contentDiscoveryURLs(args ...tengo.Object) (tengo.Object, error) {
+	if len(args) != 2 {
+		return toError(tengo.ErrWrongNumArguments), nil
+	}
+
+	glob, ok := tengo.ToString(args[0])
+	if !ok {
+		return toError(tengo.ErrInvalidArgumentType{
+			Name:     "glob",
+			Expected: "string",
+			Found:    args[0].TypeName(),
+		}), nil
+	}
+
+	array, ok := args[1].(*tengo.Array)
+	if !ok {
+		return toError(tengo.ErrInvalidArgumentType{
+			Name:     "codes",
+			Expected: "string",
+			Found:    args[1].TypeName(),
+		}), nil
+	}
+
+	codes, err := toIntSlice(array)
+	if err != nil {
+		return toError(err), nil
+	}
+
+	matches, err := filepath.Glob(glob)
+	if err != nil {
+		return toError(err), nil
+	}
+
+	results, err := gocdp.SmartParseFiles(matches)
+	if err != nil {
+		return toError(err), nil
+	}
+	grouped := results.GroupByStatus()
+
+	var urls []string
+	for _, code := range codes {
+		codeResults, ok := grouped[code]
+		if !ok {
+			continue
+		}
+
+		for _, result := range codeResults {
+			urls = append(urls, result.Url)
+		}
+	}
+
+	return toStringArray(urls), nil
 }
 
 func (s *Script) tcpScan(args ...tengo.Object) (tengo.Object, error) {

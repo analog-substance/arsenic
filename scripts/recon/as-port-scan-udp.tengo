@@ -11,6 +11,7 @@ log := import("log")
 rand := import("rand")
 git := import("git")
 exec := import("exec")
+os2 := import("os2")
 
 manual := true
 xslRegex := text.re_compile(`"[^"]*nmap\.xsl"`)
@@ -101,13 +102,10 @@ scanHost := func(host) {
   }
 
   output := xslRegex.replace(string(bytes), `"/static/nmap.xsl"`)
-  f := os.create(xmlFile)
-  if is_error(f) {
-    script.stop(f)
+  err = os2.write_file(xmlFile, output)
+  if is_error(err) {
+    script.stop(err)
   }
-
-  file.write_string(output)
-  file.close()
 
   // err = arsenic.udp_scan(host)
   // if is_error(err){
