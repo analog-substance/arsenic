@@ -20,7 +20,12 @@ var scriptCmd = &cobra.Command{
 		name, _ := cmd.Flags().GetString("name")
 		scriptArgs, _ := cmd.Flags().GetStringToString("script-args")
 
-		script := engine.NewScript(name)
+		path := filepath.Join(viper.GetString("scripts-directory"), name)
+		if filepath.Ext(path) != ".tengo" {
+			path = path + ".tengo"
+		}
+
+		script := engine.NewScript(path)
 
 		err := script.Run(scriptArgs)
 		if err != nil && err != context.Canceled {

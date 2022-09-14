@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
@@ -11,6 +12,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	"github.com/analog-substance/arsenic/lib/engine"
 	"github.com/analog-substance/arsenic/lib/util"
 )
 
@@ -24,6 +26,15 @@ var rootCmd = &cobra.Command{
 
 
 `,
+	Args: cobra.ArbitraryArgs,
+	Run: func(cmd *cobra.Command, args []string) {
+		script := engine.NewScript(args[0])
+
+		err := script.Run(map[string]string{})
+		if err != nil && err != context.Canceled {
+			panic(err)
+		}
+	},
 }
 
 func Execute() {

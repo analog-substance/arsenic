@@ -3,12 +3,11 @@ package engine
 import (
 	"context"
 	"os"
-	"path/filepath"
+	"regexp"
 
 	"github.com/analog-substance/arsenic/lib/util"
 	"github.com/d5/tengo/v2"
 	"github.com/d5/tengo/v2/stdlib"
-	"github.com/spf13/viper"
 )
 
 type Script struct {
@@ -19,10 +18,6 @@ type Script struct {
 }
 
 func NewScript(path string) *Script {
-	if filepath.Ext(path) != ".tengo" {
-		path = path + ".tengo"
-	}
-
 	ctx, cancel := context.WithCancel(context.Background())
 	script := &Script{
 		ctx:    ctx,
@@ -30,7 +25,10 @@ func NewScript(path string) *Script {
 		isGit:  util.DirExists(".git"),
 	}
 
-	bytes, _ := os.ReadFile(filepath.Join(viper.GetString("scripts-directory"), path))
+	shebangRe := regexp.MustCompile(`#!\s*/usr/bin/env arsenic\s*`)
+	bytes, _ := os.ReadFile(path)
+	bytes = shebangRe.ReplaceAll(bytes, []byte{})
+
 	s := tengo.NewScript(bytes)
 
 	moduleMap := stdlib.GetModuleMap(stdlib.AllModuleNames()...)
