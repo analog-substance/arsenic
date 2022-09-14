@@ -197,16 +197,21 @@ func (s *Script) contentDiscoveryURLs(args ...tengo.Object) (tengo.Object, error
 		return toError(tengo.ErrWrongNumArguments), nil
 	}
 
-	glob, ok := tengo.ToString(args[0])
+	patternsArray, ok := args[0].(*tengo.Array)
 	if !ok {
 		return toError(tengo.ErrInvalidArgumentType{
-			Name:     "glob",
+			Name:     "patterns",
 			Expected: "string",
 			Found:    args[0].TypeName(),
 		}), nil
 	}
 
-	array, ok := args[1].(*tengo.Array)
+	patterns, err := toStringSlice(patternsArray)
+	if err != nil {
+		return toError(err), nil
+	}
+
+	codesArray, ok := args[1].(*tengo.Array)
 	if !ok {
 		return toError(tengo.ErrInvalidArgumentType{
 			Name:     "codes",
@@ -215,30 +220,34 @@ func (s *Script) contentDiscoveryURLs(args ...tengo.Object) (tengo.Object, error
 		}), nil
 	}
 
-	codes, err := toIntSlice(array)
+	codes, err := toIntSlice(codesArray)
 	if err != nil {
 		return toError(err), nil
 	}
 
-	matches, err := filepath.Glob(glob)
-	if err != nil {
-		return toError(err), nil
+	var files []string
+	for _, pattern := range patterns {
+		matches, err := filepath.Glob(pattern)
+		if err != nil {
+			return toError(err), nil
+		}
+		files = append(files, matches...)
 	}
 
-	results, err := gocdp.SmartParseFiles(matches)
+	allResults, err := gocdp.SmartParseFiles(files)
 	if err != nil {
 		return toError(err), nil
 	}
-	grouped := results.GroupByStatus()
+	grouped := allResults.GroupByStatus()
 
 	var urls []string
 	for _, code := range codes {
-		codeResults, ok := grouped[code]
+		results, ok := grouped[code]
 		if !ok {
 			continue
 		}
 
-		for _, result := range codeResults {
+		for _, result := range results {
 			urls = append(urls, result.Url)
 		}
 	}
