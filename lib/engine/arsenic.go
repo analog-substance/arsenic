@@ -28,23 +28,47 @@ func (s *Script) ArsenicModuleMap() map[string]tengo.Object {
 }
 
 func (s *Script) hostUrls(args ...tengo.Object) (tengo.Object, error) {
-	var protocols []string
-	for _, arg := range args {
-		protocol, ok := tengo.ToString(arg)
+	if len(args) < 1 || len(args) > 2 {
+		return toError(tengo.ErrWrongNumArguments), nil
+	}
+
+	protocolsArray, ok := args[0].(*tengo.Array)
+	if !ok {
+		return toError(tengo.ErrInvalidArgumentType{
+			Name:     "protocols",
+			Expected: "string",
+			Found:    args[0].TypeName(),
+		}), nil
+	}
+
+	protocols, err := toStringSlice(protocolsArray)
+	if err != nil {
+		return toError(err), nil
+	}
+
+	var flags []string
+	if len(args) == 2 {
+		flagsArray, ok := args[1].(*tengo.Array)
 		if !ok {
 			return toError(tengo.ErrInvalidArgumentType{
-				Name:     "protocol",
+				Name:     "flags",
 				Expected: "string",
-				Found:    arg.TypeName(),
+				Found:    args[1].TypeName(),
 			}), nil
 		}
 
-		protocols = append(protocols, protocol)
+		flags, err = toStringSlice(flagsArray)
+		if err != nil {
+			return toError(err), nil
+		}
 	}
 
 	hosts := host.All()
 	hostURLs := set.NewStringSet()
 	for _, h := range hosts {
+		if len(flags) > 0 && !h.Metadata.HasFlags(flags...) {
+			continue
+		}
 		hostURLs.AddRange(h.URLs())
 	}
 

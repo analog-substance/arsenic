@@ -30,6 +30,10 @@ if args.url{
   argURL = args.url
 }
 
+flags := []
+if args.flags {
+  flags = text.split(args.flags, ",")
+}
 
 genOutputFileName := func(rawURL) {
   rawURL = text.replace(rawURL, "://", ".", -1)
@@ -38,7 +42,7 @@ genOutputFileName := func(rawURL) {
 }
 
 getHostURLs := func() {
-  urls := arsenic.host_urls("http")
+  urls := arsenic.host_urls(["http"], flags)
   if is_error(urls) {
     script.stop(urls)
   }
