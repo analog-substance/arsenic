@@ -477,12 +477,23 @@ func (host Host) flags() []string {
 		flags = append(flags, "nmap-udp")
 	}
 
-	if checkGlob("gobuster.*") {
+	hasGobuster := checkGlob("gobuster.*")
+	if hasGobuster {
 		flags = append(flags, "Gobuster")
 	}
 
-	if checkGlob("ffuf.*") {
+	hasFfuf := checkGlob("ffuf.*")
+	if hasFfuf {
 		flags = append(flags, "Ffuf")
+	}
+
+	hasDirb := checkGlob("dirb.*")
+	if hasDirb {
+		flags = append(flags, "Dirb")
+	}
+
+	if hasGobuster || hasFfuf || hasDirb {
+		flags = append(flags, "web-content")
 	}
 
 	if checkGlob("aquatone-*") {
