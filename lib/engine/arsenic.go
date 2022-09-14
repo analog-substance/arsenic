@@ -107,9 +107,30 @@ func (s *Script) hostPath(args ...tengo.Object) (tengo.Object, error) {
 }
 
 func (s *Script) hostPaths(args ...tengo.Object) (tengo.Object, error) {
+	var flags []string
+	if len(args) == 1 {
+		flagsArray, ok := args[0].(*tengo.Array)
+		if !ok {
+			return toError(tengo.ErrInvalidArgumentType{
+				Name:     "flags",
+				Expected: "string",
+				Found:    args[0].TypeName(),
+			}), nil
+		}
+
+		var err error
+		flags, err = toStringSlice(flagsArray)
+		if err != nil {
+			return toError(err), nil
+		}
+	}
+
 	var paths []string
 	hosts := host.All()
 	for _, h := range hosts {
+		if len(flags) > 0 && !h.Metadata.HasFlags(flags...) {
+			continue
+		}
 		paths = append(paths, h.Dir)
 	}
 
