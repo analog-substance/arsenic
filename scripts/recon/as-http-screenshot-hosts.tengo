@@ -10,6 +10,8 @@ times := import("times")
 log := import("log")
 rand := import("rand")
 git := import("git")
+os2 := import("os2")
+exec := import("exec")
 
 manual := true
 
@@ -107,7 +109,7 @@ scanHost := func(host) {
   log.msg(format("Aquatone / %s / checking", host.name))
 
   contentDiscoverPath := filepath.join("recon", "wordlist-content-discover.txt")
-  exists := hosts.file_exists(contentDiscoverPath)
+  exists := host.file_exists(contentDiscoverPath)
   if is_error(exists) {
     script.stop(exists)
   }
@@ -182,7 +184,7 @@ if is_error(err) {
 if action == "list" {
   hosts := getHosts()
   for h in hosts {
-    fmt.println(h)
+    fmt.println(h.name)
   }
   script.stop()
 }
