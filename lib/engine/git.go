@@ -128,6 +128,10 @@ func (s *Script) commit(path string, msg string, mode string) error {
 		return nil
 	}
 
+	// Might want this to be on a loop with a maximum number of attempts.
+	// This will fail if something is checked after we do a rebase pull.
+	// Maybe we "parse" the error to know whether it is a true fail or
+	// we need to do a rebase pull
 	err = s.push()
 	if err == nil {
 		return nil
