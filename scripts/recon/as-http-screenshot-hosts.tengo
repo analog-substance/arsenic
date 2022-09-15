@@ -59,18 +59,42 @@ getURLs := func() {
 }
 
 getHosts := func() {
-  git.pull()
-
-  paths := arsenic.host_paths(["web-content"])
-  if is_error(paths) {
-    script.stop(paths)
+  err := git.pull()
+  if is_error(err) {
+    script.stop(err)
   }
 
-  for path in paths {
-    if filepath.exists(filepath.join(path, "recon", "wordlist-content-discover.txt")) {
-      
+  allHosts := arsenic.hosts(["web-content"])
+  if is_error(allHosts) {
+    script.stop(allHosts)
+  }
+
+  hosts := []
+  for host in allHosts {
+    if host.file_exists(filepath.join("recon", "wordlist-content-discover.txt")) {
+      continue
+    }
+
+    previousDir := os.getwd()
+    if is_error(previousDir) {
+      script.stop(previousDir)
+    }
+
+    err = os.chdir(host.dir)
+    if is_error(err) {
+      script.stop(err)
+    }
+
+    if len(getURLs()) > 0 {
+      hosts = append(hosts, host.name)
+    }
+
+    err = os.chdir(previousDir)
+    if is_error(err){
+      script.stop(err)
     }
   }
+  return hosts
 }
 
 // scanHost := func(host, rawURL) {
@@ -132,9 +156,9 @@ getHosts := func() {
 // }
 
 if action == "list" {
-  urls := getURLs()
-  for u in urls {
-    fmt.println(u)
+  hosts := getHosts()
+  for h in hosts {
+    fmt.println(h)
   }
   script.stop()
 }
