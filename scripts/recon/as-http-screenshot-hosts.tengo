@@ -11,8 +11,6 @@ log := import("log")
 rand := import("rand")
 git := import("git")
 
-wordlistFile := ""
-wordlistName := ""
 manual := true
 
 action := "scan"
@@ -20,9 +18,12 @@ if args.action {
   action = args.action
 }
 
-argHost := ""
+argHost := undefined
 if args.host {
-  argHost = args.host
+  argHost = arsenic.host(args.host)
+  if is_error(argHost) {
+    script.stop(argHost)
+  }
 }
 
 proxy := ""
@@ -30,14 +31,14 @@ if args.proxy {
   proxy = args.proxy
 }
 
-getURLs := func() {
+getURLs := func(host) {
   re := text.re_compile(`\.(png|jpe?g|ico|css|gif|js)$`)
 
   urls := []
   codes := [200]
   patterns := ["recon/gobuster.*.txt", "recon/ffuf.*.json", "recon/dirb.*.txt"]
   
-  discoveredURLs := arsenic.content_discovery_urls(patterns, codes)
+  discoveredURLs := host.content_discovery_urls(patterns, codes)
   if is_error(discoveredURLs) {
     script.stop(discoveredURLs)
   }
@@ -71,7 +72,12 @@ getHosts := func() {
 
   hosts := []
   for host in allHosts {
-    if host.file_exists(filepath.join("recon", "wordlist-content-discover.txt")) {
+    exists := host.file_exists(filepath.join("recon", "wordlist-content-discover.txt"))
+    if is_error(exists) {
+      script.stop(exists)
+    }
+
+    if exists {
       continue
     }
 
@@ -85,8 +91,8 @@ getHosts := func() {
       script.stop(err)
     }
 
-    if len(getURLs()) > 0 {
-      hosts = append(hosts, host.name)
+    if len(getURLs(host)) > 0 {
+      hosts = append(hosts, host)
     }
 
     err = os.chdir(previousDir)
@@ -97,63 +103,81 @@ getHosts := func() {
   return hosts
 }
 
-// scanHost := func(host, rawURL) {
-//   log.msg(format("Content Discovery / %s / %s / checking", host, rawURL))
-//   // check if host is a draft
+scanHost := func(host) {
+  log.msg(format("Aquatone / %s / checking", host.name))
 
-//   // do the following only if the host isn't a draft
-//   log.info(format("Content Discovery / %s / %s / preparing", host, rawURL))
+  contentDiscoverPath := filepath.join("recon", "wordlist-content-discover.txt")
+  exists := hosts.file_exists(contentDiscoverPath)
+  if is_error(exists) {
+    script.stop(exists)
+  }
 
-//   previousDir := os.getwd()
-//   if is_error(previousDir) {
-//     script.stop(previousDir)
-//   }
+  if !exists {
+    log.msg(format("Aquatone / %s / preparing", host.name))
 
-//   err := os.chdir(filepath.join("hosts", host))
-//   if is_error(err) {
-//     script.stop(err)
-//   }
+    previousDir := os.getwd()
+    if is_error(previousDir) {
+      script.stop(previousDir)
+    }
+
+    err := os.chdir(host.dir)
+    if is_error(err) {
+      script.stop(err)
+    }
+
+    err = git.lock(contentDiscoverPath, format("Aquatone lock: %s", host.name))
+    if is_error(err) {
+      script.stop(err)
+    }
+
+    err = os2.write_file(contentDiscoverPath, text.join(getURLs(host), "\n"))
+    if is_error(err) {
+      script.stop(err)
+    }
+
+    log.msg(format("Aquatone / %s / running", host.name))
+
+    cmdArgs := ["-out", filepath.join("recon", "aquatone-wordlist-content-discover")]
+    if proxy != "" {
+      cmdArgs = append(cmdArgs, "-proxy", proxy)
+    }
+
+    cmd := exec.cmd("aquatone", cmdArgs...)
+    if is_error(cmd) {
+      script.stop(cmd)
+    }
+
+    err = cmd.set_file_stdin(contentDiscoverPath)
+    if is_error(err) {
+      script.stop(err)
+    }
+
+    err = cmd.run()
+    if is_error(err) {
+      script.stop(err)
+    }
+
+    // find . -name '*.html' -exec sed -i '1s/^\xEF\xBB\xBF//' {} \;
+
+    err = git.commit(".", format("Aquatone complete: %s", host.name))
+    if is_error(err) {
+      script.stop(err)
+    }
+
+    err = os.chdir(previousDir)
+    if is_error(err){
+      script.stop(err)
+    }
+  }
   
-//   outputFile := genOutputFileName(rawURL)
+  log.msg(format("Aquatone / %s / complete", host.name))
+  times.sleep(10 * times.second)
+}
 
-//   git.pull()
-
-//   outputPath := filepath.join("recon", outputFile)
-//   if !filepath.exists(outputPath) {
-//     log.msg(format("Scanning %s %s", host, rawURL))
-
-//     // check if url is S3 bucket
-
-//     err = git.lock(outputPath, format("ffuf lock: %s", rawURL))
-//     if is_error(err) {
-//       script.stop(err)
-//     }
-
-//     log.info(format("Content Discovery / %s / %s / running", host, rawURL))
-
-//     err = arsenic.ffuf("-a", "Firefox", "-u", rawURL, "-w", wordlistFile, "-o", outputFile)
-//     if is_error(err) {
-//       script.stop(err)
-//     }
-
-//     log.info(format("Content Discovery / %s / %s / complete", host, rawURL))
-//   }
-
-//   err = git.commit(".", format("ffuf complete: %s", rawURL))
-//   if is_error(err) {
-//     script.stop(err)
-//   }
-
-//   err = os.chdir(previousDir)
-//   if is_error(err){
-//     script.stop(err)
-//   }
-// }
-
-// err := git.pull()
-// if is_error(err) {
-//   script.stop(err)
-// }
+err := git.pull()
+if is_error(err) {
+  script.stop(err)
+}
 
 if action == "list" {
   hosts := getHosts()
@@ -163,40 +187,37 @@ if action == "list" {
   script.stop()
 }
 
-// autoSelect := func() {
-//   elem := slice.rand_item(getHostURLs())
-//   if !elem {
-//     files := arsenic.locked_files("hosts/*/recon/ffuf*.json")
-//     if is_error(files) {
-//       script.stop(files)
-//     }
+autoSelect := func() {
+  argHost := slice.rand_item(getHosts())
+  if !argHost {
+    files := arsenic.locked_files("hosts/*/recon/wordlist-content-discover.txt")
+    if is_error(files) {
+      script.stop(files)
+    }
 
-//     if len(files) > 0 {
-//       log.warn("other ffufs are still running... lets wait before continuing")
-//       script.stop()
-//     }
+    if len(files) > 0 {
+      log.warn("other aquatones are still running... lets wait before continuing")
+      script.stop()
+    }
 
-//     script.stop("No host found")
-//   }
-  
-//   argHost = text.fields(elem)[0]
-//   argURL = text.fields(elem)[1]
+    script.stop("No host found")
+  }
 
-//   log.warn(format("Auto selected %s %s", argHost, argURL))
-// }
+  log.warn(format("Auto selected %s", argHost.name))
+}
 
-// if argHost == "" {
-//   manual = false
-//   log.warn("no args found, autodetecting")
+if !argHost {
+  manual = false
+  log.warn("no args found, autodetecting")
 
-//   autoSelect()
-// }
+  autoSelect()
+}
 
-// for {
-//   scanHost(argHost, argURL)
-//   if manual {
-//     break
-//   }
+for {
+  scanHost(argHost)
+  if manual {
+    break
+  }
 
-//   autoSelect()
-// }
+  autoSelect()
+}
