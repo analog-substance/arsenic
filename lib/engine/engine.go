@@ -41,6 +41,7 @@ func NewScript(path string) *Script {
 	moduleMap.AddBuiltinModule("script", script.ScriptModuleMap())
 	moduleMap.AddBuiltinModule("exec", script.ExecModuleMap())
 	moduleMap.AddBuiltinModule("os2", script.OS2ModuleMap())
+	moduleMap.AddBuiltinModule("set", script.SetModuleMap())
 	moduleMap.AddBuiltinModule("log", logModule)
 
 	s.SetImports(moduleMap)

@@ -10,6 +10,7 @@ times := import("times")
 log := import("log")
 rand := import("rand")
 git := import("git")
+set := import("set")
 
 wordlistFile := ""
 wordlistName := ""
@@ -42,29 +43,34 @@ genOutputFileName := func(rawURL) {
 }
 
 getHostURLs := func() {
-  urls := arsenic.host_urls(["http"], flags)
-  if is_error(urls) {
-    script.stop(urls)
+  hosts := arsenic.hosts(flags)
+  if is_error(hosts) {
+    script.stop(hosts)
   }
 
   hostURLs := []
-  for rawURL in urls {
-    hostname := url.hostname(rawURL)
-    if is_error(hostname) {
-      script.stop(hostname)
+  urlSet := set.new_string_set()
+  for host in hosts {
+    urls := host.urls("http")
+    if is_error(urls) {
+      script.stop(urls)
     }
 
-    hostPath := arsenic.host_path(hostname)
-    if is_error(hostPath) {
-      script.stop(hostPath)
-    }
+    for rawURL in urls {
+      success := urlSet.add(rawURL)
+      if is_error(success) {
+        script.stop(success)
+      }
 
-    host := filepath.base(hostPath)
+      if !success {
+        continue
+      }
 
-    outputFile := genOutputFileName(rawURL)
-    
-    if !filepath.exists(filepath.join(hostPath, "recon", outputFile)) {
-      hostURLs = append(hostURLs, fmt.sprintf("%s %s", host, rawURL))
+      outputFile := genOutputFileName(rawURL)
+      
+      if !host.file_exists(filepath.join("recon", outputFile)) {
+        hostURLs = append(hostURLs, fmt.sprintf("%s %s", host.name, rawURL))
+      }
     }
   }
 

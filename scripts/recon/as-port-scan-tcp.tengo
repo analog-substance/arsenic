@@ -30,18 +30,18 @@ getHosts := func() {
   }
   
   hosts := []
-  paths := arsenic.host_paths()
-  if is_error(paths) {
-    script.stop(paths)
+  allHosts := arsenic.hosts()
+  if is_error(allHosts) {
+    script.stop(allHosts)
   }
 
-  for path in paths {
-    files := filepath.glob(filepath.join(path, "recon", "nmap*tcp*"))
+  for host in allHosts {
+    files := host.files(filepath.join("recon", "nmap*tcp*"))
     if len(files) > 0 {
       continue
     }
 
-    hosts = append(hosts, filepath.base(path))
+    hosts = append(hosts, host.name)
   }
 
   return hosts

@@ -17,8 +17,8 @@ import (
 func (s *Script) ArsenicModuleMap() map[string]tengo.Object {
 	return map[string]tengo.Object{
 		"host_urls":              &tengo.UserFunction{Name: "host_urls", Value: s.hostUrls},
-		"host_path":              &tengo.UserFunction{Name: "host_path", Value: s.hostPath},
-		"host_paths":             &tengo.UserFunction{Name: "host_paths", Value: s.hostPaths},
+		"host":                   &tengo.UserFunction{Name: "host", Value: s.host},
+		"hosts":                  &tengo.UserFunction{Name: "hosts", Value: s.hosts},
 		"gen_wordlist":           &tengo.UserFunction{Name: "gen_wordlist", Value: s.generateWordlist},
 		"locked_files":           &tengo.UserFunction{Name: "locked_files", Value: s.lockedFiles},
 		"ffuf":                   &tengo.UserFunction{Name: "ffuf", Value: s.ffuf},
@@ -84,7 +84,7 @@ func (s *Script) hostUrls(args ...tengo.Object) (tengo.Object, error) {
 	return toStringArray(validHostURLs.SortedStringSlice()), nil
 }
 
-func (s *Script) hostPath(args ...tengo.Object) (tengo.Object, error) {
+func (s *Script) host(args ...tengo.Object) (tengo.Object, error) {
 	if len(args) != 1 {
 		return toError(tengo.ErrWrongNumArguments), nil
 	}
@@ -103,10 +103,10 @@ func (s *Script) hostPath(args ...tengo.Object) (tengo.Object, error) {
 		return nil, nil
 	}
 
-	return &tengo.String{Value: foundHost.Dir}, nil
+	return makeArsenicHost(foundHost), nil
 }
 
-func (s *Script) hostPaths(args ...tengo.Object) (tengo.Object, error) {
+func (s *Script) hosts(args ...tengo.Object) (tengo.Object, error) {
 	var flags []string
 	if len(args) == 1 {
 		flagsArray, ok := args[0].(*tengo.Array)
@@ -125,16 +125,15 @@ func (s *Script) hostPaths(args ...tengo.Object) (tengo.Object, error) {
 		}
 	}
 
-	var paths []string
-	hosts := host.All()
-	for _, h := range hosts {
+	var hosts []tengo.Object
+	for _, h := range host.All() {
 		if len(flags) > 0 && !h.Metadata.HasFlags(flags...) {
 			continue
 		}
-		paths = append(paths, h.Dir)
+		hosts = append(hosts, makeArsenicHost(h))
 	}
 
-	return toStringArray(paths), nil
+	return &tengo.ImmutableArray{Value: hosts}, nil
 }
 
 func (s *Script) generateWordlist(args ...tengo.Object) (tengo.Object, error) {
