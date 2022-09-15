@@ -1,6 +1,11 @@
 package engine
 
 import (
+	"bufio"
+	"bytes"
+	"errors"
+	"os/exec"
+
 	"github.com/d5/tengo/v2"
 )
 
@@ -66,4 +71,29 @@ func toError(err error) tengo.Object {
 			Value: err.Error(),
 		},
 	}
+}
+
+func runWithError(cmd *exec.Cmd) error {
+	stderr, _ := cmd.StderrPipe()
+
+	if err := cmd.Start(); err != nil {
+		return err
+	}
+
+	errorText := ""
+	go func() {
+		buf := new(bytes.Buffer)
+		scanner := bufio.NewScanner(stderr)
+		for scanner.Scan() {
+			buf.WriteString(scanner.Text() + "\n")
+		}
+
+		errorText = buf.String()
+	}()
+
+	err := cmd.Wait()
+	if err != nil {
+		return errors.New(errorText)
+	}
+	return nil
 }

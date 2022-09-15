@@ -1,11 +1,8 @@
 package engine
 
 import (
-	"bufio"
-	"bytes"
 	"crypto/rand"
 	"encoding/base64"
-	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -43,28 +40,10 @@ func (s *Script) pull(rebase bool) error {
 		args = append(args, "--rebase")
 	}
 
-	cmd := exec.Command("git", args...)
-	stderr, _ := cmd.StderrPipe()
-
-	if err := cmd.Start(); err != nil {
-		return err
-	}
-
-	errorText := ""
-	go func() {
-		buf := new(bytes.Buffer)
-		scanner := bufio.NewScanner(stderr)
-		for scanner.Scan() {
-			buf.WriteString(scanner.Text() + "\n")
-		}
-
-		errorText = buf.String()
-	}()
-
-	err := cmd.Wait()
+	err := runWithError(exec.Command("git", args...))
 	if err != nil {
 		util.LogWarn("pull failed")
-		return errors.New(errorText)
+		return err
 	}
 
 	return nil
@@ -154,11 +133,11 @@ func (s *Script) commit(path string, msg string, mode string) error {
 		return nil
 	}
 
-	util.LogWarn("First push failed", err)
+	util.LogWarn("First push failed: ", err)
 
 	err = s.pull(true)
 	if err != nil {
-		util.LogWarn("pull rebase failed", err)
+		util.LogWarn("pull rebase failed: ", err)
 		if mode == "reset" {
 			s.hardReset()
 		}
@@ -169,11 +148,11 @@ func (s *Script) commit(path string, msg string, mode string) error {
 }
 
 func (s *Script) push() error {
-	return exec.Command("git", "push").Run()
+	return runWithError(exec.Command("git", "push"))
 }
 
 func (s *Script) add(path string) error {
-	return exec.Command("git", "add", path).Run()
+	return runWithError(exec.Command("git", "add", path))
 }
 
 func (s *Script) lock(lockFile string, msg string) error {
