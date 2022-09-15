@@ -191,20 +191,6 @@ scanHost := func(host) {
   times.sleep(10 * times.second)
 }
 
-htmlFiles := filepath.glob("**/*.html")
-if is_error(htmlFiles) {
-  script.stop(htmlFiles)
-}
-
-for file in htmlFiles {
-  err := os2.regex_replace_file(file, `^\xEF\xBB\xBF`, "")
-  if is_error(err) {
-    script.stop(err)
-  }
-}
-
-script.stop()
-
 err := git.pull()
 if is_error(err) {
   script.stop(err)
