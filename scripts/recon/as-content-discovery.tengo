@@ -68,7 +68,12 @@ getHostURLs := func() {
 
       outputFile := genOutputFileName(rawURL)
       
-      if !host.file_exists(filepath.join("recon", outputFile)) {
+      exists := host.file_exists(filepath.join("recon", outputFile))
+      if is_error(exists) {
+        script.stop(exists)
+      }
+
+      if !exists {
         hostURLs = append(hostURLs, fmt.sprintf("%s %s", host.name, rawURL))
       }
     }
