@@ -190,7 +190,7 @@ if action == "list" {
 }
 
 autoSelect := func() {
-  argHost := slice.rand_item(getHosts())
+  argHost = slice.rand_item(getHosts())
   if !argHost {
     files := arsenic.locked_files("hosts/*/recon/wordlist-content-discover.txt")
     if is_error(files) {
