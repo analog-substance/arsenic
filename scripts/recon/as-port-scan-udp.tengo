@@ -21,9 +21,17 @@ if args.action {
   action = args.action
 }
 
-argHost := ""
+argHost := undefined
 if args.host {
-  argHost = args.host
+  argHost = arsenic.host(args.host)
+  if is_error(argHost) {
+    script.stop(argHost)
+  }
+}
+
+flags := []
+if args.flags {
+  flags = text.split(args.flags, ",")
 }
 
 getHosts := func() {
@@ -44,23 +52,22 @@ getHosts := func() {
       continue
     }
 
-    hosts = append(hosts, host.name)
+    hosts = append(hosts, host)
   }
 
   return hosts
 }
 
 scanHost := func(host) {
-  if host == "" {
+  if !host {
     return
   }
 
-  log.msg(format("Port Scan / UDP / %s/ checking", host))
+  log.msg(format("Port Scan / UDP / %s/ checking", host.name))
 
-  hostPath := filepath.join("hosts", host)
-  reconPath := filepath.join(hostPath, "recon")
+  reconPath := filepath.join(host.dir, "recon")
 
-  files := filepath.glob(filepath.join(reconPath, "nmap*udp*"))
+  files := host.files(filepath.join(reconPath, "nmap*udp*"))
   if is_error(files) {
     script.stop(files)
   }
@@ -69,11 +76,11 @@ scanHost := func(host) {
     return
   }
 
-  log.info(format("Port Scan / UDP / %s / preparing", host))
+  log.info(format("Port Scan / UDP / %s / preparing", host.name))
 
   os.mkdir_all(reconPath, 0755)
 
-  err := git.lock(filepath.join(reconPath, "nmap-punched-quick-udp.nmap"), format("UDP port scan lock: %s", host))
+  err := git.lock(filepath.join(reconPath, "nmap-punched-quick-udp.nmap"), format("UDP port scan lock: %s", host.name))
   if is_error(err) {
     script.stop(err)
   }
@@ -83,14 +90,14 @@ scanHost := func(host) {
     script.stop(previousDir)
   }
 
-  err = os.chdir(hostPath)
+  err = os.chdir(host.dir)
   if is_error(err) {
     script.stop(err)
   }
 
-  log.info(format("Port Scan / UDP / %s / running", host))
+  log.info(format("Port Scan / UDP / %s / running", host.name))
 
-  err = exec.run_with_sig_handler("sudo", "nmap", "-oA", "recon/nmap-punched-udp", "-sUV", "-p-", "-Pn", "--max-rtt-timeout", "100ms", "--min-rate", "1000", "--version-intensity", "0", host)
+  err = exec.run_with_sig_handler("sudo", "nmap", "-oA", "recon/nmap-punched-udp", "-sUV", "-p-", "-Pn", "--max-rtt-timeout", "100ms", "--min-rate", "1000", "--version-intensity", "0", host.name)
   if is_error(err) {
     script.stop(err)
   }
@@ -112,7 +119,7 @@ scanHost := func(host) {
   //   script.stop(err)
   // }
 
-  err = git.commit(".", format("UDP port scan complete: %s", host))
+  err = git.commit(".", format("UDP port scan complete: %s", host.name))
   if is_error(err) {
     script.stop(err)
   }
@@ -122,13 +129,13 @@ scanHost := func(host) {
     script.stop(err)
   }
 
-  log.info(format("Port Scan / UDP / %s / complete", host))
+  log.info(format("Port Scan / UDP / %s / complete", host.name))
 }
 
 if action == "list" {
   hosts := getHosts()
   for host in hosts {
-    fmt.println(host)
+    fmt.println(host.name)
   }
   script.stop()
 }
@@ -149,10 +156,10 @@ autoSelect := func() {
     script.stop("No host found")
   }
   
-  log.warn(format("Auto selected %s", argHost))
+  log.warn(format("Auto selected %s", argHost.name))
 }
 
-if argHost == "" {
+if !argHost {
   manual = false
   log.warn("no args found, autodetecting")
 

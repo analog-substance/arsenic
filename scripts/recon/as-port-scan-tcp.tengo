@@ -18,9 +18,17 @@ if args.action {
   action = args.action
 }
 
-argHost := ""
+argHost := undefined
 if args.host {
-  argHost = args.host
+  argHost = arsenic.host(args.host)
+  if is_error(argHost) {
+    script.stop(argHost)
+  }
+}
+
+flags := []
+if args.flags {
+  flags = text.split(args.flags, ",")
 }
 
 getHosts := func() {
@@ -30,7 +38,7 @@ getHosts := func() {
   }
   
   hosts := []
-  allHosts := arsenic.hosts()
+  allHosts := arsenic.hosts(flags)
   if is_error(allHosts) {
     script.stop(allHosts)
   }
@@ -41,23 +49,22 @@ getHosts := func() {
       continue
     }
 
-    hosts = append(hosts, host.name)
+    hosts = append(hosts, host)
   }
 
   return hosts
 }
 
 scanHost := func(host) {
-  if host == "" {
+  if !host {
     return
   }
 
-  log.msg(format("Port Scan / TCP / %s/ checking", host))
+  log.msg(format("Port Scan / TCP / %s/ checking", host.name))
 
-  hostPath := filepath.join("hosts", host)
-  reconPath := filepath.join(hostPath, "recon")
+  reconPath := filepath.join(host.dir, "recon")
 
-  files := filepath.glob(filepath.join(reconPath, "nmap-punched*tcp*"))
+  files := host.files(filepath.join(reconPath, "nmap-punched*tcp*"))
   if is_error(files) {
     script.stop(files)
   }
@@ -66,11 +73,11 @@ scanHost := func(host) {
     return
   }
 
-  log.info(format("Port Scan / TCP / %s / preparing", host))
+  log.info(format("Port Scan / TCP / %s / preparing", host.name))
 
   os.mkdir_all(reconPath, 0755)
 
-  err := git.lock(filepath.join(reconPath, "nmap-punched-quick-tcp.nmap"), format("TCP port scan lock: %s", host))
+  err := git.lock(filepath.join(reconPath, "nmap-punched-quick-tcp.nmap"), format("TCP port scan lock: %s", host.name))
   if is_error(err) {
     script.stop(err)
   }
@@ -80,19 +87,19 @@ scanHost := func(host) {
     script.stop(previousDir)
   }
 
-  err = os.chdir(hostPath)
+  err = os.chdir(host.dir)
   if is_error(err) {
     script.stop(err)
   }
 
-  log.info(format("Port Scan / TCP / %s / running", host))
+  log.info(format("Port Scan / TCP / %s / running", host.name))
 
-  err = arsenic.tcp_scan(host)
+  err = arsenic.tcp_scan(host.name)
   if is_error(err){
     script.stop(err)
   }
 
-  err = git.commit(".", format("TCP port scan complete: %s", host))
+  err = git.commit(".", format("TCP port scan complete: %s", host.name))
   if is_error(err) {
     script.stop(err)
   }
@@ -102,13 +109,13 @@ scanHost := func(host) {
     script.stop(err)
   }
 
-  log.info(format("Port Scan / TCP / %s / complete", host))
+  log.info(format("Port Scan / TCP / %s / complete", host.name))
 }
 
 if action == "list" {
   hosts := getHosts()
   for host in hosts {
-    fmt.println(host)
+    fmt.println(host.name)
   }
   script.stop()
 }
@@ -129,10 +136,10 @@ autoSelect := func() {
     script.stop("No host found")
   }
   
-  log.warn(format("Auto selected %s", argHost))
+  log.warn(format("Auto selected %s", argHost.name))
 }
 
-if argHost == "" {
+if !argHost {
   manual = false
   log.warn("no args found, autodetecting")
 
