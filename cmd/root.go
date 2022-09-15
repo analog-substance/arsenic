@@ -208,6 +208,12 @@ func initConfig() {
 	setConfigDefault("scripts-directory", filepath.Join(home, ".config", "arsenic"))
 	setConfigDefault("scripts", defaultScripts)
 	setConfigDefault("wordlists", wordlists)
+	setConfigDefault("wordlist-paths", []string{"/opt/SecLists"})
+	setConfigDefault("discover.top-tcp-count", 30)
+	setConfigDefault("discover.top-udp-count", 30)
+	setConfigDefault("discover.timing-profile", 4)
+	setConfigDefault("analyze.require-open-ports", true)
+	setConfigDefault("dns.resolvconf", "")
 	setConfigDefault("wordlist-paths", []string{
 		"/opt/SecLists",
 		"/usr/share/seclists",

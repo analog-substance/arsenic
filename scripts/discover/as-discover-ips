@@ -1,0 +1,41 @@
+#! /bin/bash
+
+# expand all IPv4 CIDRs
+nmap -iL scope-ips.txt -sL -n \
+  | grep "report for" \
+  | awk '{print $NF}' \
+  > scope-ips-expanded-ipv4.txt
+
+# expand all IPv6 CIDRs
+nmap -iL scope-ips.txt -sL -n -6 \
+  | grep "report for" \
+  | awk '{print $NF}' \
+  > scope-ips-expanded-ipv6.txt
+
+TCP_PORTS=$(echo $(sort -r -k3 /usr/share/nmap/nmap-services | grep "/tcp" | awk '{print $2}' | cut -d/ -f1 | head -n $(arsenic config discover.top-tcp-count)) | sed 's/ /,/g')
+UDP_PORTS=$(echo $(sort -r -k3 /usr/share/nmap/nmap-services | grep "/udp" | awk '{print $2}' | cut -d/ -f1 | head -n $(arsenic config discover.top-tcp-count)) | sed 's/ /,/g')
+TIMING_PROFILE=$(arsenic config discover.timing-profile)
+
+sudo nmap -sn \
+  -PP -PA$TCP_PORTS \
+  -PS$TCP_PORTS \
+  -PU$UDP_PORTS \
+  --randomize-hosts \
+  --scan-delay 50ms \
+  -T$TIMING_PROFILE \
+  -iL scope-ips-expanded-ipv4.txt \
+  -oA recon/nmap-discovery-ipv4
+
+cat recon/nmap-discovery-ipv4.gnmap | grep Up | awk '{print $2}' > scope-ips-active-ipv4.txt
+
+sudo nmap -6 -sn \
+  -PA$TCP_PORTS \
+  -PS$TCP_PORTS \
+  -PU$UDP_PORTS \
+  --randomize-hosts \
+  --scan-delay 50ms \
+  -T$TIMING_PROFILE \
+  -iL scope-ips-expanded-ipv6.txt \
+  -oA recon/nmap-discovery-ipv6
+
+cat recon/nmap-discovery-ipv4.gnmap | grep Up | awk '{print $2}' > scope-ips-active-ipv6.txt

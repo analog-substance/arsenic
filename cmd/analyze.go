@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/lair-framework/go-nmap"
+	"github.com/spf13/viper"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -111,6 +113,7 @@ var analyzeCmd = &cobra.Command{
 This will create a single host for hostnames that resolve to the same IPs`,
 	Run: func(cmd *cobra.Command, args []string) {
 		create, _ := cmd.Flags().GetBool("create")
+		nmap, _ := cmd.Flags().GetBool("nmap")
 		keepPrivateIPs, _ := cmd.Flags().GetBool("private-ips")
 
 		// mode := "dry-run"
@@ -123,11 +126,15 @@ This will create a single host for hostnames that resolve to the same IPs`,
 		os.RemoveAll(analyzeDir)
 		util.Mkdir(filepath.Join(analyzeDir, "services"), "hosts")
 
-		resolvResults, err := getResolvResults()
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
+		if nmap {
+			getDiscoverNmaps()
+		} else {
+
+			resolvResults, err := getResolvResults()
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
 
 		reviewDomains(resolvResults)
 		fmt.Println("\n[+] Domain review complete")
@@ -180,38 +187,41 @@ This will create a single host for hostnames that resolve to the same IPs`,
 			}
 			h.Metadata.IPAddresses = service.ipAddresses.SortedStringSlice()
 
-			if create {
+			if create || nmap {
 				h.SaveMetadata()
 			}
 		}
 
 		fmt.Println("\n[+] Domain processing complete")
-		fmt.Println("\n[+] IP processing started")
 
-		scopeIps, err := util.ReadLines("scope-ips.txt")
-		if err != nil {
-			fmt.Println(err)
-			return
+		if !nmap {
+			fmt.Println("\n[+] IP processing started")
+
+			scopeIps, err := util.ReadLines("scope-ips.txt")
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+			linq.From(scopeIps).
+				ForEach(func(i interface{}) {
+					ip := i.(string)
+
+					if len(host.GetByIp(ip)) > 0 {
+						return
+					}
+
+					fmt.Printf("[+] Creating new service %s\n", ip)
+					if create {
+						h := host.InitHost(filepath.Join("hosts", ip))
+						h.Metadata.Hostnames = make([]string, 0)
+						h.Metadata.RootDomains = make([]string, 0)
+
+						h.SaveMetadata()
+					}
+				})
+
+			fmt.Println("\n[+] IP processing complete")
 		}
-		linq.From(scopeIps).
-			ForEach(func(i interface{}) {
-				ip := i.(string)
-
-				if len(host.GetByIp(ip)) > 0 {
-					return
-				}
-
-				fmt.Printf("[+] Creating new service %s\n", ip)
-				if create {
-					h := host.InitHost(filepath.Join("hosts", ip))
-					h.Metadata.Hostnames = make([]string, 0)
-					h.Metadata.RootDomains = make([]string, 0)
-
-					h.SaveMetadata()
-				}
-			})
-
-		fmt.Println("\n[+] IP processing complete")
 	},
 }
 
@@ -235,6 +245,63 @@ func getResolvResults() ([]string, error) {
 	}
 
 	return stringSet.SortedStringSlice(), nil
+}
+
+func getDiscoverNmaps() {
+	files, _ := filepath.Glob("recon/nmap-*.xml")
+	requireOpenPorts := viper.GetBool("analyze.require-open-ports")
+	for _, file := range files {
+		data, err := os.ReadFile(file)
+		if err != nil {
+			continue
+		}
+
+		nmapRun, err := nmap.Parse(data)
+		if err != nil {
+			continue
+		}
+
+		for _, nmapHost := range nmapRun.Hosts {
+			inScope := false
+			for _, addr := range nmapHost.Addresses {
+				if scope.IsInScope(addr.Addr, false) {
+					inScope = true
+					break
+				}
+			}
+
+			if inScope == false {
+				for _, hostname := range nmapHost.Hostnames {
+					if scope.IsInScope(hostname.Name, false) {
+						inScope = true
+						break
+					}
+				}
+			}
+
+			if inScope == false {
+				continue
+			}
+
+			if !requireOpenPorts || len(nmapHost.Ports) > 0 {
+				var svc *service
+
+				if len(nmapHost.Hostnames) > 0 {
+					svc = serviceByDomain.getOrInit(nmapHost.Hostnames[0].Name)
+				} else {
+					svc = serviceByDomain.getOrInit(nmapHost.Addresses[0].Addr)
+				}
+
+				for _, s := range nmapHost.Hostnames {
+					svc.hostnames.Add(s)
+				}
+
+				for _, s := range nmapHost.Addresses {
+					svc.ipAddresses.Add(s)
+				}
+			}
+		}
+	}
 }
 
 func reviewDomains(resolvResults []string) {
@@ -413,6 +480,10 @@ func reviewIps(keepPrivateIPs bool) {
 	}
 }
 
+func analyzeNmaps() {
+
+}
+
 // func normalizeDomain(domain string) string {
 // 	re := regexp.MustCompile(`\.$`)
 // 	return re.ReplaceAllString(domain, "")
@@ -423,4 +494,5 @@ func init() {
 
 	analyzeCmd.Flags().BoolP("create", "c", false, "really create hosts")
 	analyzeCmd.Flags().Bool("private-ips", false, "keep private IPs")
+	analyzeCmd.Flags().Bool("nmap", false, "import hosts from recon/nmap-*.xml files")
 }
