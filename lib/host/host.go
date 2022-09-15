@@ -70,6 +70,23 @@ func containsStr(i1 []string, i2 ...string) bool {
 	return false
 }
 
+func containsAllStr(i1 []string, i2 ...string) bool {
+	for _, v := range i2 {
+		exists := false
+		for _, i1v := range i1 {
+			if i1v == v {
+				exists = true
+				break
+			}
+		}
+
+		if !exists {
+			return false
+		}
+	}
+	return true
+}
+
 func (md Metadata) HasPorts(ports ...int) bool {
 	return md.HasTCPPorts(ports...) || md.HasUDPPorts(ports...)
 }
@@ -86,12 +103,25 @@ func (md Metadata) HasFlags(flags ...string) bool {
 	return md.HasASFlags(flags...) || md.HasUserFlags(flags...)
 }
 
+func (md Metadata) HasAllFlags(flags ...string) bool {
+	allFlags := append(md.Flags, md.UserFlags...)
+	return containsAllStr(allFlags, flags...)
+}
+
 func (md Metadata) HasASFlags(flags ...string) bool {
 	return containsStr(md.Flags, flags...)
 }
 
+func (md Metadata) HasAllASFlags(flags ...string) bool {
+	return containsAllStr(md.Flags, flags...)
+}
+
 func (md Metadata) HasUserFlags(flags ...string) bool {
 	return containsStr(md.UserFlags, flags...)
+}
+
+func (md Metadata) HasAllUserFlags(flags ...string) bool {
+	return containsAllStr(md.UserFlags, flags...)
 }
 
 func (md Metadata) HasAnyHostname() bool {

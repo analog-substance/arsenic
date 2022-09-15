@@ -127,7 +127,7 @@ func (s *Script) hosts(args ...tengo.Object) (tengo.Object, error) {
 
 	var hosts []tengo.Object
 	for _, h := range host.All() {
-		if len(flags) > 0 && !h.Metadata.HasFlags(flags...) {
+		if len(flags) > 0 && !h.Metadata.HasAllFlags(flags...) {
 			continue
 		}
 		hosts = append(hosts, makeArsenicHost(h))
