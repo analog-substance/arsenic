@@ -22,6 +22,15 @@ func toStringSlice(array *tengo.Array) ([]string, error) {
 	return slice, nil
 }
 
+func toSlice(array *tengo.Array) []interface{} {
+	var slice []interface{}
+	for _, v := range array.Value {
+		slice = append(slice, v)
+	}
+
+	return slice
+}
+
 func toIntSlice(array *tengo.Array) ([]int, error) {
 	var slice []int
 	for _, v := range array.Value {

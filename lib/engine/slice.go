@@ -55,11 +55,7 @@ func (s *Script) randItem(args ...tengo.Object) (tengo.Object, error) {
 		}), nil
 	}
 
-	slice, err := toStringSlice(array)
-	if err != nil {
-		return toError(err), nil
-	}
-
+	slice := toSlice(array)
 	if len(slice) == 0 {
 		return nil, nil
 	}
@@ -68,7 +64,7 @@ func (s *Script) randItem(args ...tengo.Object) (tengo.Object, error) {
 	r1 := rand.New(s1)
 	i := r1.Intn(len(slice))
 
-	return &tengo.String{Value: slice[i]}, nil
+	return slice[i].(tengo.Object), nil
 }
 
 func (s *Script) unique(args ...tengo.Object) (tengo.Object, error) {
