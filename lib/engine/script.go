@@ -25,7 +25,10 @@ func (s *Script) tengoStop(args ...tengo.Object) (tengo.Object, error) {
 
 func (s *Script) stop(args ...string) {
 	if len(args) == 1 {
-		fmt.Println(args[0])
+		message := args[0]
+		if message != "" {
+			fmt.Println(message)
+		}
 	}
 
 	go func() {
