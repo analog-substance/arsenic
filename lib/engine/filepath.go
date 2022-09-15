@@ -4,6 +4,7 @@ import (
 	"path/filepath"
 
 	"github.com/analog-substance/arsenic/lib/util"
+	"github.com/bmatcuk/doublestar/v4"
 	"github.com/d5/tengo/v2"
 )
 
@@ -124,7 +125,7 @@ func (m *Script) glob(args ...tengo.Object) (tengo.Object, error) {
 		}), nil
 	}
 
-	matches, err := filepath.Glob(pattern)
+	matches, err := doublestar.FilepathGlob(pattern)
 	if err != nil {
 		return toError(err), nil
 	}

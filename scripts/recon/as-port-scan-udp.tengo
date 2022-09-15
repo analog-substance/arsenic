@@ -14,7 +14,6 @@ exec := import("exec")
 os2 := import("os2")
 
 manual := true
-xslRegex := text.re_compile(`"[^"]*nmap\.xsl"`)
 
 action := "scan"
 if args.action {
@@ -102,22 +101,10 @@ scanHost := func(host) {
     script.stop(err)
   }
 
-  xmlFile := filepath.join("recon", "nmap-punched-udp.xml")
-  bytes := os.read_file(xmlFile)
-  if is_error(bytes) {
-    script.stop(bytes)
-  }
-
-  output := xslRegex.replace(string(bytes), `"/static/nmap.xsl"`)
-  err = os2.write_file(xmlFile, output)
+  err = os2.regex_replace_file(filepath.join("recon", "nmap-punched-udp.xml"), `"[^"]*nmap\.xsl"`, `"/static/nmap.xsl"`)
   if is_error(err) {
     script.stop(err)
   }
-
-  // err = arsenic.udp_scan(host)
-  // if is_error(err){
-  //   script.stop(err)
-  // }
 
   err = git.commit(".", format("UDP port scan complete: %s", host.name))
   if is_error(err) {

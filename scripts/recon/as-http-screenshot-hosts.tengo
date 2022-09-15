@@ -33,6 +33,11 @@ if args.proxy {
   proxy = args.proxy
 }
 
+flags := []
+if args.flags {
+  flags = text.split(args.flags, ",")
+}
+
 getURLs := func(host) {
   re := text.re_compile(`\.(png|jpe?g|ico|css|gif|js)$`)
 
@@ -67,7 +72,7 @@ getHosts := func() {
     script.stop(err)
   }
 
-  allHosts := arsenic.hosts(["web-content"])
+  allHosts := arsenic.hosts(append(flags, "web-content"))
   if is_error(allHosts) {
     script.stop(allHosts)
   }
@@ -159,7 +164,17 @@ scanHost := func(host) {
       script.stop(err)
     }
 
-    // find . -name '*.html' -exec sed -i '1s/^\xEF\xBB\xBF//' {} \;
+    htmlFiles := filepath.glob("**/*.html")
+    if is_error(htmlFiles) {
+      script.stop(htmlFiles)
+    }
+
+    for file in htmlFiles {
+      err = os2.regex_replace_file(file, `^\xEF\xBB\xBF`, "")
+      if is_error(err) {
+        script.stop(err)
+      }
+    }
 
     err = git.commit(".", format("Aquatone complete: %s", host.name))
     if is_error(err) {
@@ -175,6 +190,20 @@ scanHost := func(host) {
   log.msg(format("Aquatone / %s / complete", host.name))
   times.sleep(10 * times.second)
 }
+
+htmlFiles := filepath.glob("**/*.html")
+if is_error(htmlFiles) {
+  script.stop(htmlFiles)
+}
+
+for file in htmlFiles {
+  err := os2.regex_replace_file(file, `^\xEF\xBB\xBF`, "")
+  if is_error(err) {
+    script.stop(err)
+  }
+}
+
+script.stop()
 
 err := git.pull()
 if is_error(err) {
