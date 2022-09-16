@@ -1,3 +1,5 @@
+#!/usr/bin/env arsenic
+
 fmt := import("fmt")
 text := import("text")
 os := import("os")
@@ -11,30 +13,26 @@ log := import("log")
 rand := import("rand")
 git := import("git")
 set := import("set")
+cobra := import("cobra")
 
 wordlistFile := ""
 wordlistName := ""
 manual := true
 
-action := "scan"
-if args.action {
-  action = args.action
-}
+// action := "scan"
+// if args.action {
+//   action = args.action
+// }
 
-argHost := ""
-if args.host {
-  argHost = args.host
-}
+// argHost := ""
+// if args.host {
+//   argHost = args.host
+// }
 
-argURL := ""
-if args.url{
-  argURL = args.url
-}
-
-flags := []
-if args.flags {
-  flags = text.split(args.flags, ",")
-}
+// argURL := ""
+// if args.url{
+//   argURL = args.url
+// }
 
 genOutputFileName := func(rawURL) {
   rawURL = text.replace(rawURL, "://", ".", -1)
@@ -42,7 +40,7 @@ genOutputFileName := func(rawURL) {
   return fmt.sprintf("ffuf.%s.%s.json", rawURL, wordlistName)
 }
 
-getHostURLs := func() {
+getHostURLs := func(flags) {
   hosts := arsenic.hosts(flags)
   if is_error(hosts) {
     script.stop(hosts)
@@ -135,69 +133,100 @@ scanHost := func(host, rawURL) {
   }
 }
 
-wordlistFile = filepath.abs("recon/wordlist-content-discover.txt")
-if is_error(wordlistFile) {
-  script.stop(wordlistFile)
-}
+flags := []
 
-if !filepath.exists(wordlistFile) {
-  log.info("Generating wordlist...")
-  err := arsenic.gen_wordlist("web-content", wordlistFile)
+rootCmd := cobra.root_cmd("as-content-discovery.tengo", "Run content enumeration on current scope")
+rootCmd.persistent_flags.string_slicep("flags", "f", [], "Filter hosts by flags")
+
+rootCmd.set_persistent_pre_run(func(cmd, args) {
+  flags = cmd.flags.get_string_slice("flags")
+
+  wordlistFile = filepath.abs("recon/wordlist-content-discover.txt")
+  if is_error(wordlistFile) {
+    script.stop(wordlistFile)
+  }
+
+  if !filepath.exists(wordlistFile) {
+    log.info("Generating wordlist...")
+    err := arsenic.gen_wordlist("web-content", wordlistFile)
+    if is_error(err) {
+      script.stop(err)
+    }
+  }
+
+  wordlistName = filepath.base(wordlistFile)
+  wordlistName = text.trim_suffix(wordlistName, filepath.ext(wordlistName))
+
+  err := git.pull()
   if is_error(err) {
     script.stop(err)
   }
-}
+})
 
-wordlistName = filepath.base(wordlistFile)
-wordlistName = text.trim_suffix(wordlistName, filepath.ext(wordlistName))
+listCmd := cobra.cmd("list", "Lists the hosts that need content enumeration")
+rootCmd.add_command(listCmd)
 
-err := git.pull()
-if is_error(err) {
-  script.stop(err)
-}
-
-if action == "list" {
-  hostURLs := getHostURLs()
+listCmd.set_run(func(cmd, args) {
+	hostURLs := getHostURLs(flags)
   for hostURL in hostURLs {
     fmt.println(hostURL)
   }
-  script.stop()
-}
+})
 
-autoSelect := func() {
-  elem := slice.rand_item(getHostURLs())
-  if !elem {
-    files := arsenic.locked_files("hosts/*/recon/ffuf*.json")
-    if is_error(files) {
-      script.stop(files)
-    }
+scanCmd := cobra.cmd("scan", "Scan hosts that need content enumeration")
+scanCmd.flags.stringp("host", "H", "", "Host to scan. Must be used with --url.")
+scanCmd.flags.stringp("url", "u", "", "URL to scan. Must be used with --host.")
+rootCmd.add_command(scanCmd)
 
-    if len(files) > 0 {
-      log.warn("other ffufs are still running... lets wait before continuing")
-      script.stop()
-    }
+scanCmd.set_run(func(cmd, args) {
+  targetHost := cmd.flags.get_string("host")
+  targetURL := cmd.flags.get_string("url")
 
-    script.stop("No host found")
-  }
-  
-  argHost = text.fields(elem)[0]
-  argURL = text.fields(elem)[1]
+  manual := targetHost != "" && targetURL != ""
 
-  log.warn(format("Auto selected %s %s", argHost, argURL))
-}
-
-if argHost == "" {
-  manual = false
-  log.warn("no args found, autodetecting")
-
-  autoSelect()
-}
-
-for {
-  scanHost(argHost, argURL)
-  if manual {
-    break
+  if (targetHost != "" && targetURL == "") || (targetHost == "" && targetURL != "") {
+    script.stop("[!] Host and URL must not be empty.")
   }
 
-  autoSelect()
+	autoSelect := func() {
+    elem := slice.rand_item(getHostURLs(flags))
+    if !elem {
+      files := arsenic.locked_files("hosts/*/recon/ffuf*.json")
+      if is_error(files) {
+        script.stop(files)
+      }
+
+      if len(files) > 0 {
+        log.warn("other ffufs are still running... lets wait before continuing")
+        script.stop()
+      }
+
+      script.stop("No host found")
+    }
+    
+    targetHost = text.fields(elem)[0]
+    targetURL = text.fields(elem)[1]
+
+    log.warn(format("Auto selected %s %s", targetHost, targetURL))
+  }
+
+  if !manual {
+    log.warn("no args found, autodetecting")
+    
+    autoSelect()
+  }
+
+  for {
+    scanHost(targetHost, targetURL)
+    if manual {
+      break
+    }
+
+    autoSelect()
+  }
+})
+
+err := rootCmd()
+if is_error(err) {
+	script.stop(err)
 }

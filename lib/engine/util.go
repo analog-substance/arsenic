@@ -410,3 +410,33 @@ func funcASBSRBp(fn func(string, bool, string) *bool) tengo.CallableFunc {
 		return tengo.FalseValue, nil
 	}
 }
+
+func funcASRSsE(fn func(string) ([]string, error)) tengo.CallableFunc {
+	return func(args ...tengo.Object) (tengo.Object, error) {
+		if len(args) != 1 {
+			return nil, tengo.ErrWrongNumArguments
+		}
+		s1, ok := tengo.ToString(args[0])
+		if !ok {
+			return nil, tengo.ErrInvalidArgumentType{
+				Name:     "first",
+				Expected: "string(compatible)",
+				Found:    args[0].TypeName(),
+			}
+		}
+
+		res, err := fn(s1)
+		if err != nil {
+			return toError(err), nil
+		}
+
+		arr := &tengo.Array{}
+		for _, r := range res {
+			if len(r) > tengo.MaxStringLen {
+				return nil, tengo.ErrStringLimit
+			}
+			arr.Value = append(arr.Value, &tengo.String{Value: r})
+		}
+		return arr, nil
+	}
+}

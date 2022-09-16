@@ -50,6 +50,38 @@ func makeCobraCmd(cmd *cobra.Command, script *Script) *CobraCmd {
 					Name:  "string_slice",
 					Value: funcASSsSRSsp(cobraCmd.Value.Flags().StringSlice),
 				},
+				"get_string_slice": &tengo.UserFunction{
+					Name:  "get_string_slice",
+					Value: funcASRSsE(cobraCmd.Value.Flags().GetStringSlice),
+				},
+			},
+		},
+		"persistent_flags": &tengo.ImmutableMap{
+			Value: map[string]tengo.Object{
+				"boolp": &tengo.UserFunction{
+					Name:  "boolp",
+					Value: funcASSBSRBp(cobraCmd.Value.PersistentFlags().BoolP),
+				},
+				"bool": &tengo.UserFunction{
+					Name:  "bool",
+					Value: funcASBSRBp(cobraCmd.Value.PersistentFlags().Bool),
+				},
+				"stringp": &tengo.UserFunction{
+					Name:  "stringp",
+					Value: funcASSSSRSp(cobraCmd.Value.PersistentFlags().StringP),
+				},
+				"string": &tengo.UserFunction{
+					Name:  "string",
+					Value: funcASSSRSp(cobraCmd.Value.PersistentFlags().String),
+				},
+				"string_slicep": &tengo.UserFunction{
+					Name:  "string_slicep",
+					Value: funcASSSsSRSsp(cobraCmd.Value.PersistentFlags().StringSliceP),
+				},
+				"string_slice": &tengo.UserFunction{
+					Name:  "string_slice",
+					Value: funcASSsSRSsp(cobraCmd.Value.PersistentFlags().StringSlice),
+				},
 			},
 		},
 		"add_command": &tengo.UserFunction{
@@ -59,6 +91,10 @@ func makeCobraCmd(cmd *cobra.Command, script *Script) *CobraCmd {
 		"set_run": &tengo.UserFunction{
 			Name:  "set_run",
 			Value: cobraCmd.setRun,
+		},
+		"set_persistent_pre_run": &tengo.UserFunction{
+			Name:  "set_persistent_pre_run",
+			Value: cobraCmd.setPersistentPreRun,
 		},
 	}
 
@@ -98,6 +134,27 @@ func (c *CobraCmd) setRun(args ...tengo.Object) (tengo.Object, error) {
 	}
 
 	c.Value.Run = func(cmd *cobra.Command, args []string) {
+		vm := tengo.NewVM(c.script.compiled.Bytecode(), c.script.compiled.Globals(), -1)
+		vm.RunCompiled(fn, c, toStringArray(args))
+	}
+	return nil, nil
+}
+
+func (c *CobraCmd) setPersistentPreRun(args ...tengo.Object) (tengo.Object, error) {
+	if len(args) != 1 {
+		return nil, tengo.ErrWrongNumArguments
+	}
+
+	fn, ok := args[0].(*tengo.CompiledFunction)
+	if !ok {
+		return nil, tengo.ErrInvalidArgumentType{
+			Name:     "persistent_pre_run",
+			Expected: "string",
+			Found:    args[0].TypeName(),
+		}
+	}
+
+	c.Value.PersistentPreRun = func(cmd *cobra.Command, args []string) {
 		vm := tengo.NewVM(c.script.compiled.Bytecode(), c.script.compiled.Globals(), -1)
 		vm.RunCompiled(fn, c, toStringArray(args))
 	}

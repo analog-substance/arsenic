@@ -18,7 +18,10 @@ func (s *Script) cobraRootCmd(args ...tengo.Object) (tengo.Object, error) {
 		return nil, err
 	}
 
-	(cmd.(*CobraCmd)).Value.SetArgs(s.args)
+	cobraCmd := cmd.(*CobraCmd)
+	cobraCmd.Value.SetArgs(s.args)
+	cobraCmd.Value.CompletionOptions.DisableDefaultCmd = true
+
 	return cmd, nil
 }
 
