@@ -11,10 +11,12 @@ import (
 )
 
 type Script struct {
-	ctx    context.Context
-	cancel context.CancelFunc
-	script *tengo.Script
-	isGit  bool
+	ctx      context.Context
+	cancel   context.CancelFunc
+	script   *tengo.Script
+	compiled *tengo.Compiled
+	args     []string
+	isGit    bool
 }
 
 func NewScript(path string) *Script {
@@ -42,6 +44,7 @@ func NewScript(path string) *Script {
 	moduleMap.AddBuiltinModule("exec", script.ExecModuleMap())
 	moduleMap.AddBuiltinModule("os2", script.OS2ModuleMap())
 	moduleMap.AddBuiltinModule("set", script.SetModuleMap())
+	moduleMap.AddBuiltinModule("cobra", script.CobraModuleMap())
 	moduleMap.AddBuiltinModule("log", logModule)
 
 	s.SetImports(moduleMap)
@@ -50,9 +53,9 @@ func NewScript(path string) *Script {
 	return script
 }
 
-func (s *Script) Run(scriptArgs map[string]string) error {
+func (s *Script) Run(mapArgs map[string]string, posArgs []string) error {
 	args := make(map[string]interface{})
-	for key, value := range scriptArgs {
+	for key, value := range mapArgs {
 		args[key] = value
 	}
 
@@ -61,6 +64,14 @@ func (s *Script) Run(scriptArgs map[string]string) error {
 		return err
 	}
 
-	_, err = s.script.RunContext(s.ctx)
-	return err
+	s.args = posArgs
+
+	compiled, err := s.script.Compile()
+	if err != nil {
+		return err
+	}
+
+	s.compiled = compiled
+
+	return s.compiled.RunContext(s.ctx)
 }

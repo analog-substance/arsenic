@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"strings"
 
 	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
@@ -28,9 +29,14 @@ var rootCmd = &cobra.Command{
 `,
 	Args: cobra.ArbitraryArgs,
 	Run: func(cmd *cobra.Command, args []string) {
+		if len(args) == 0 {
+			cmd.Help()
+			return
+		}
+
 		script := engine.NewScript(args[0])
 
-		err := script.Run(map[string]string{})
+		err := script.Run(map[string]string{}, args[1:])
 		if err != nil && err != context.Canceled {
 			panic(err)
 		}
@@ -38,6 +44,10 @@ var rootCmd = &cobra.Command{
 }
 
 func Execute() {
+	if len(os.Args) > 1 && strings.Contains(os.Args[1], fmt.Sprintf("%c", os.PathSeparator)) {
+		rootCmd.DisableFlagParsing = true
+	}
+
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
