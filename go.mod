@@ -1,10 +1,12 @@
 module github.com/analog-substance/arsenic
 
-go 1.13
+go 1.16
 
 require (
 	github.com/NoF0rte/gocdp v0.0.6
 	github.com/ahmetb/go-linq/v3 v3.2.0
+	github.com/bmatcuk/doublestar/v4 v4.2.0
+	github.com/d5/tengo/v2 v2.12.2
 	github.com/gin-contrib/cors v1.3.1
 	github.com/gin-gonic/gin v1.7.7
 	github.com/go-playground/validator/v10 v10.10.1 // indirect

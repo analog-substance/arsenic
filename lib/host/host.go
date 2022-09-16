@@ -70,6 +70,23 @@ func containsStr(i1 []string, i2 ...string) bool {
 	return false
 }
 
+func containsAllStr(i1 []string, i2 ...string) bool {
+	for _, v := range i2 {
+		exists := false
+		for _, i1v := range i1 {
+			if i1v == v {
+				exists = true
+				break
+			}
+		}
+
+		if !exists {
+			return false
+		}
+	}
+	return true
+}
+
 func (md Metadata) HasPorts(ports ...int) bool {
 	return md.HasTCPPorts(ports...) || md.HasUDPPorts(ports...)
 }
@@ -86,12 +103,25 @@ func (md Metadata) HasFlags(flags ...string) bool {
 	return md.HasASFlags(flags...) || md.HasUserFlags(flags...)
 }
 
+func (md Metadata) HasAllFlags(flags ...string) bool {
+	allFlags := append(md.Flags, md.UserFlags...)
+	return containsAllStr(allFlags, flags...)
+}
+
 func (md Metadata) HasASFlags(flags ...string) bool {
 	return containsStr(md.Flags, flags...)
 }
 
+func (md Metadata) HasAllASFlags(flags ...string) bool {
+	return containsAllStr(md.Flags, flags...)
+}
+
 func (md Metadata) HasUserFlags(flags ...string) bool {
 	return containsStr(md.UserFlags, flags...)
+}
+
+func (md Metadata) HasAllUserFlags(flags ...string) bool {
+	return containsAllStr(md.UserFlags, flags...)
 }
 
 func (md Metadata) HasAnyHostname() bool {
@@ -395,6 +425,24 @@ func Get(hostDirsOrHostnames ...string) []*Host {
 	return hosts
 }
 
+func GetFirst(hostDirOrHostname string) *Host {
+	var foundHost *Host
+	for _, hostDir := range getHostDirs() {
+		host := InitHost(hostDir)
+		hostnames := host.Metadata.Hostnames
+		hostnames = append(hostnames, host.Metadata.Name)
+		hostnames = append(hostnames, host.Metadata.IPAddresses...)
+
+		if linq.From(hostnames).AnyWith(func(hostname interface{}) bool {
+			return strings.EqualFold(hostDirOrHostname, hostname.(string))
+		}) {
+			foundHost = host
+			break
+		}
+	}
+	return foundHost
+}
+
 func GetByIp(ips ...string) []*Host {
 	hosts := []*Host{}
 	for _, hostDir := range getHostDirs() {
@@ -459,12 +507,23 @@ func (host Host) flags() []string {
 		flags = append(flags, "nmap-udp")
 	}
 
-	if checkGlob("gobuster.*") {
+	hasGobuster := checkGlob("gobuster.*")
+	if hasGobuster {
 		flags = append(flags, "Gobuster")
 	}
 
-	if checkGlob("ffuf.*") {
+	hasFfuf := checkGlob("ffuf.*")
+	if hasFfuf {
 		flags = append(flags, "Ffuf")
+	}
+
+	hasDirb := checkGlob("dirb.*")
+	if hasDirb {
+		flags = append(flags, "Dirb")
+	}
+
+	if hasGobuster || hasFfuf || hasDirb {
+		flags = append(flags, "web-content")
 	}
 
 	if checkGlob("aquatone-*") {

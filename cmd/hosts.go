@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -218,11 +219,14 @@ Fields:
 				return
 			}
 			for _, host := range hosts {
-				err = t.Execute(os.Stdout, host.Metadata)
+				buf := new(bytes.Buffer)
+				err = t.Execute(buf, host.Metadata)
 				if err != nil {
 					cmd.PrintErrln(err)
 					return
 				}
+
+				fmt.Println(buf.String())
 			}
 		} else {
 			var lines []string

@@ -1,0 +1,26 @@
+#!/usr/local/bin/tengo
+
+os := import("os")
+fmt := import("fmt")
+
+threads := 100
+reconPath := "recon/domains"
+
+dir := os.open(reconPath)
+files := dir.readdirnames(-1)
+
+for fileName in files {
+	path := format("%s/%s", reconPath, fileName)
+	file := os.stat(path)
+	if !file.directory {
+		continue
+	}
+
+	reconFilePath := format("%s/%s", path, "resolv-domains.txt")
+	fileInfo := os.stat(reconFilePath)
+	if is_error(fileInfo) {
+		fmt.println("Error")
+	} else {
+		fmt.println(fileInfo)
+	}
+}

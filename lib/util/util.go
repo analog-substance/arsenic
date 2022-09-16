@@ -190,6 +190,14 @@ func FileExists(filename string) bool {
 	return !info.IsDir()
 }
 
+func DirExists(dir string) bool {
+	info, err := os.Stat(dir)
+	if os.IsNotExist(err) {
+		return false
+	}
+	return info.IsDir()
+}
+
 func Mkdir(dirs ...string) []error {
 	var errors []error
 	for _, dir := range dirs {
@@ -277,4 +285,20 @@ func IsIp(ipOrHostname string) bool {
 	} else {
 		return true
 	}
+}
+
+func LogMsg(args ...interface{}) {
+	Log("[+]", args...)
+}
+func LogWarn(args ...interface{}) {
+	Log("[!]", args...)
+}
+func LogInfo(args ...interface{}) {
+	Log("[-]", args...)
+}
+
+func Log(prefix string, args ...interface{}) {
+	fmt.Printf("%s ", prefix)
+	fmt.Print(args...)
+	fmt.Println()
 }

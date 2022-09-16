@@ -1,15 +1,18 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"reflect"
 
 	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	"github.com/analog-substance/arsenic/lib/engine"
 	"github.com/analog-substance/arsenic/lib/util"
 )
 
@@ -23,6 +26,15 @@ var rootCmd = &cobra.Command{
 
 
 `,
+	Args: cobra.ArbitraryArgs,
+	Run: func(cmd *cobra.Command, args []string) {
+		script := engine.NewScript(args[0])
+
+		err := script.Run(map[string]string{})
+		if err != nil && err != context.Canceled {
+			panic(err)
+		}
+	},
 }
 
 func Execute() {
@@ -155,6 +167,7 @@ func initConfig() {
 	setConfigDefault("blacklist.root-domains", blacklistedRootDomains)
 	setConfigDefault("blacklist.domains", []string{})
 	setConfigDefault("blacklist.ips", []string{})
+	setConfigDefault("scripts-directory", filepath.Join(home, ".config", "arsenic"))
 	setConfigDefault("scripts", defaultScripts)
 	setConfigDefault("wordlists", wordlists)
 	setConfigDefault("wordlist-paths", []string{"/opt/SecLists"})
