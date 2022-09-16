@@ -5,7 +5,7 @@ import (
 	"regexp"
 
 	"github.com/analog-substance/arsenic/lib/util"
-	"github.com/d5/tengo/v2"
+	"github.com/analog-substance/tengo/v2"
 )
 
 func (s *Script) OS2ModuleMap() map[string]tengo.Object {

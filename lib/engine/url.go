@@ -3,7 +3,7 @@ package engine
 import (
 	"net/url"
 
-	"github.com/d5/tengo/v2"
+	"github.com/analog-substance/tengo/v2"
 )
 
 func (s *Script) URLModuleMap() map[string]tengo.Object {

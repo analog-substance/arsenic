@@ -2,8 +2,8 @@ package engine
 
 import (
 	"github.com/analog-substance/arsenic/lib/set"
-	"github.com/d5/tengo/v2"
-	"github.com/d5/tengo/v2/stdlib"
+	"github.com/analog-substance/tengo/v2"
+	"github.com/analog-substance/tengo/v2/stdlib"
 )
 
 func (s *Script) SetModuleMap() map[string]tengo.Object {

@@ -4,8 +4,8 @@ import (
 	"path/filepath"
 
 	"github.com/analog-substance/arsenic/lib/util"
+	"github.com/analog-substance/tengo/v2"
 	"github.com/bmatcuk/doublestar/v4"
-	"github.com/d5/tengo/v2"
 )
 
 func (m *Script) FilePathModuleMap() map[string]tengo.Object {

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/d5/tengo/v2"
+	"github.com/analog-substance/tengo/v2"
 )
 
 func (s *Script) ScriptModuleMap() map[string]tengo.Object {

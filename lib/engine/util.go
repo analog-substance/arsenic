@@ -6,7 +6,7 @@ import (
 	"errors"
 	"os/exec"
 
-	"github.com/d5/tengo/v2"
+	"github.com/analog-substance/tengo/v2"
 )
 
 func toStringSlice(array *tengo.Array) ([]string, error) {

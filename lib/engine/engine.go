@@ -6,8 +6,8 @@ import (
 	"regexp"
 
 	"github.com/analog-substance/arsenic/lib/util"
-	"github.com/d5/tengo/v2"
-	"github.com/d5/tengo/v2/stdlib"
+	"github.com/analog-substance/tengo/v2"
+	"github.com/analog-substance/tengo/v2/stdlib"
 )
 
 type Script struct {

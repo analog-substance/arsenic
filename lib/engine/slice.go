@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/analog-substance/arsenic/lib/set"
-	"github.com/d5/tengo/v2"
+	"github.com/analog-substance/tengo/v2"
 )
 
 func (s *Script) SliceModuleMap() map[string]tengo.Object {
