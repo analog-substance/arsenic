@@ -53,18 +53,8 @@ func NewScript(path string) *Script {
 	return script
 }
 
-func (s *Script) Run(mapArgs map[string]string, posArgs []string) error {
-	args := make(map[string]interface{})
-	for key, value := range mapArgs {
-		args[key] = value
-	}
-
-	err := s.script.Add("args", args)
-	if err != nil {
-		return err
-	}
-
-	s.args = posArgs
+func (s *Script) Run(args []string) error {
+	s.args = args
 
 	compiled, err := s.script.Compile()
 	if err != nil {

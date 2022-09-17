@@ -39,7 +39,7 @@ var scriptCmd = &cobra.Command{
 
 		script := engine.NewScript(path)
 
-		err = script.Run(map[string]string{}, scriptArgs)
+		err = script.Run(scriptArgs)
 		if err != nil && err != context.Canceled {
 			panic(err)
 		}
