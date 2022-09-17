@@ -2,12 +2,14 @@ package cmd
 
 import (
 	"context"
+	"fmt"
 	"io/fs"
 	"path/filepath"
 	"strings"
 
 	"github.com/analog-substance/arsenic/lib/engine"
 	"github.com/analog-substance/arsenic/lib/util"
+	"github.com/google/shlex"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -18,7 +20,17 @@ var scriptCmd = &cobra.Command{
 	Short: "Run arbitrary arsenic scripts",
 	Run: func(cmd *cobra.Command, args []string) {
 		name, _ := cmd.Flags().GetString("name")
-		scriptArgs, _ := cmd.Flags().GetStringToString("script-args")
+		argString, _ := cmd.Flags().GetString("script-args")
+
+		var err error
+		var scriptArgs []string
+		if argString != "" {
+			scriptArgs, err = shlex.Split(argString)
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+		}
 
 		path := filepath.Join(viper.GetString("scripts-directory"), name)
 		if filepath.Ext(path) != ".tengo" {
@@ -27,7 +39,7 @@ var scriptCmd = &cobra.Command{
 
 		script := engine.NewScript(path)
 
-		err := script.Run(scriptArgs, []string{})
+		err = script.Run(map[string]string{}, scriptArgs)
 		if err != nil && err != context.Canceled {
 			panic(err)
 		}
@@ -57,5 +69,5 @@ func init() {
 	})
 	scriptCmd.MarkFlagRequired("name")
 
-	scriptCmd.Flags().StringToStringP("script-args", "a", make(map[string]string), "Args to pass to the script")
+	scriptCmd.Flags().StringP("script-args", "a", "", "Args to pass to the script")
 }

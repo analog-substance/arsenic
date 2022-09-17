@@ -6,41 +6,19 @@ os := import("os")
 filepath := import("filepath")
 slice := import("slice")
 arsenic := import("arsenic")
-url := import("url")
 script := import("script")
-times := import("times")
 log := import("log")
-rand := import("rand")
 git := import("git")
 set := import("set")
 cobra := import("cobra")
 
-wordlistFile := ""
-wordlistName := ""
-manual := true
-
-// action := "scan"
-// if args.action {
-//   action = args.action
-// }
-
-// argHost := ""
-// if args.host {
-//   argHost = args.host
-// }
-
-// argURL := ""
-// if args.url{
-//   argURL = args.url
-// }
-
-genOutputFileName := func(rawURL) {
+genOutputFileName := func(rawURL, wordlistName) {
   rawURL = text.replace(rawURL, "://", ".", -1)
   rawURL = text.replace(rawURL, "/", ".", -1)
   return fmt.sprintf("ffuf.%s.%s.json", rawURL, wordlistName)
 }
 
-getHostURLs := func(flags) {
+getHostURLs := func(flags, wordlistName) {
   hosts := arsenic.hosts(flags)
   if is_error(hosts) {
     script.stop(hosts)
@@ -64,7 +42,7 @@ getHostURLs := func(flags) {
         continue
       }
 
-      outputFile := genOutputFileName(rawURL)
+      outputFile := genOutputFileName(rawURL, wordlistName)
       
       exists := host.file_exists(filepath.join("recon", outputFile))
       if is_error(exists) {
@@ -72,7 +50,7 @@ getHostURLs := func(flags) {
       }
 
       if !exists {
-        hostURLs = append(hostURLs, fmt.sprintf("%s %s", host.name, rawURL))
+        hostURLs = append(hostURLs, format("%s %s", host.name, rawURL))
       }
     }
   }
@@ -80,60 +58,9 @@ getHostURLs := func(flags) {
   return hostURLs
 }
 
-scanHost := func(host, rawURL) {
-  log.msg(format("Content Discovery / %s / %s / checking", host, rawURL))
-  // check if host is a draft
-
-  // do the following only if the host isn't a draft
-  log.info(format("Content Discovery / %s / %s / preparing", host, rawURL))
-
-  previousDir := os.getwd()
-  if is_error(previousDir) {
-    script.stop(previousDir)
-  }
-
-  err := os.chdir(filepath.join("hosts", host))
-  if is_error(err) {
-    script.stop(err)
-  }
-  
-  outputFile := genOutputFileName(rawURL)
-
-  git.pull()
-
-  outputPath := filepath.join("recon", outputFile)
-  if !filepath.exists(outputPath) {
-    log.msg(format("Scanning %s %s", host, rawURL))
-
-    // check if url is S3 bucket
-
-    err = git.lock(outputPath, format("ffuf lock: %s", rawURL))
-    if is_error(err) {
-      script.stop(err)
-    }
-
-    log.info(format("Content Discovery / %s / %s / running", host, rawURL))
-
-    err = arsenic.ffuf("-a", "Firefox", "-u", rawURL, "-w", wordlistFile, "-o", outputFile)
-    if is_error(err) {
-      script.stop(err)
-    }
-
-    log.info(format("Content Discovery / %s / %s / complete", host, rawURL))
-  }
-
-  err = git.commit(".", format("ffuf complete: %s", rawURL))
-  if is_error(err) {
-    script.stop(err)
-  }
-
-  err = os.chdir(previousDir)
-  if is_error(err){
-    script.stop(err)
-  }
-}
-
 flags := []
+wordlistFile := ""
+wordlistName := ""
 
 rootCmd := cobra.root_cmd("as-content-discovery.tengo", "Run content enumeration on current scope")
 rootCmd.persistent_flags.string_slicep("flags", "f", [], "Filter hosts by flags")
@@ -167,7 +94,7 @@ listCmd := cobra.cmd("list", "Lists the hosts that need content enumeration")
 rootCmd.add_command(listCmd)
 
 listCmd.set_run(func(cmd, args) {
-	hostURLs := getHostURLs(flags)
+	hostURLs := getHostURLs(flags, wordlistName)
   for hostURL in hostURLs {
     fmt.println(hostURL)
   }
@@ -189,7 +116,7 @@ scanCmd.set_run(func(cmd, args) {
   }
 
 	autoSelect := func() {
-    elem := slice.rand_item(getHostURLs(flags))
+    elem := slice.rand_item(getHostURLs(flags, wordlistName))
     if !elem {
       files := arsenic.locked_files("hosts/*/recon/ffuf*.json")
       if is_error(files) {
@@ -210,9 +137,62 @@ scanCmd.set_run(func(cmd, args) {
     log.warn(format("Auto selected %s %s", targetHost, targetURL))
   }
 
+  scanHost := func(host, rawURL) {
+    log.msg(format("Content Discovery / %s / %s / checking", host, rawURL))
+    // check if host is a draft
+
+    // do the following only if the host isn't a draft
+    log.info(format("Content Discovery / %s / %s / preparing", host, rawURL))
+
+    previousDir := os.getwd()
+    if is_error(previousDir) {
+      script.stop(previousDir)
+    }
+
+    err := os.chdir(filepath.join("hosts", host))
+    if is_error(err) {
+      script.stop(err)
+    }
+    
+    outputFile := genOutputFileName(rawURL, wordlistName)
+
+    git.pull()
+
+    outputPath := filepath.join("recon", outputFile)
+    if !filepath.exists(outputPath) {
+      log.msg(format("Scanning %s %s", host, rawURL))
+
+      // check if url is S3 bucket
+
+      err = git.lock(outputPath, format("ffuf lock: %s", rawURL))
+      if is_error(err) {
+        script.stop(err)
+      }
+
+      log.info(format("Content Discovery / %s / %s / running", host, rawURL))
+
+      err = arsenic.ffuf("-a", "Firefox", "-u", rawURL, "-w", wordlistFile, "-o", outputFile)
+      if is_error(err) {
+        script.stop(err)
+      }
+
+      log.info(format("Content Discovery / %s / %s / complete", host, rawURL))
+    }
+
+    err = git.commit(".", format("ffuf complete: %s", rawURL))
+    if is_error(err) {
+      script.stop(err)
+    }
+
+    err = os.chdir(previousDir)
+    if is_error(err){
+      script.stop(err)
+    }
+  }
+
   if !manual {
     log.warn("no args found, autodetecting")
-    
+
     autoSelect()
   }
 

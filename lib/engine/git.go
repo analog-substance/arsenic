@@ -35,6 +35,7 @@ func (s *Script) pull(rebase bool) error {
 	if !s.isGit {
 		return nil
 	}
+
 	args := []string{"pull"}
 	if rebase {
 		args = append(args, "--rebase")
@@ -55,36 +56,36 @@ func (s *Script) tengoCommit(args ...tengo.Object) (tengo.Object, error) {
 	}
 
 	if len(args) > 2 && len(args) <= 3 {
-		return toError(tengo.ErrWrongNumArguments), nil
+		return nil, tengo.ErrWrongNumArguments
 	}
 
 	path, ok := tengo.ToString(args[0])
 	if !ok {
-		return toError(tengo.ErrInvalidArgumentType{
+		return nil, tengo.ErrInvalidArgumentType{
 			Name:     "path",
 			Expected: "string",
 			Found:    args[0].TypeName(),
-		}), nil
+		}
 	}
 
 	message, ok := tengo.ToString(args[1])
 	if !ok {
-		return toError(tengo.ErrInvalidArgumentType{
+		return nil, tengo.ErrInvalidArgumentType{
 			Name:     "message",
 			Expected: "string",
 			Found:    args[1].TypeName(),
-		}), nil
+		}
 	}
 
 	mode := ""
 	if len(args) == 3 {
 		mode, ok = tengo.ToString(args[2])
 		if !ok {
-			return toError(tengo.ErrInvalidArgumentType{
+			return nil, tengo.ErrInvalidArgumentType{
 				Name:     "mode",
 				Expected: "string",
 				Found:    args[2].TypeName(),
-			}), nil
+			}
 		}
 	}
 
@@ -152,18 +153,22 @@ func (s *Script) commit(path string, msg string, mode string) error {
 }
 
 func (s *Script) push() error {
-	return runWithError(exec.Command("git", "push"))
-}
-
-func (s *Script) add(path string) error {
-	return runWithError(exec.Command("git", "add", path))
-}
-
-func (s *Script) lock(lockFile string, msg string) error {
 	if !s.isGit {
 		return nil
 	}
 
+	return runWithError(exec.Command("git", "push"))
+}
+
+func (s *Script) add(path string) error {
+	if !s.isGit {
+		return nil
+	}
+
+	return runWithError(exec.Command("git", "add", path))
+}
+
+func (s *Script) lock(lockFile string, msg string) error {
 	if util.FileExists(lockFile) {
 		util.LogWarn("can't lock a file that exists")
 		s.stop()
@@ -190,30 +195,26 @@ func (s *Script) lock(lockFile string, msg string) error {
 }
 
 func (s *Script) tengoLock(args ...tengo.Object) (tengo.Object, error) {
-	if !s.isGit {
-		return nil, nil
-	}
-
 	if len(args) != 2 {
-		return toError(tengo.ErrWrongNumArguments), nil
+		return nil, tengo.ErrWrongNumArguments
 	}
 
 	lockFile, ok := tengo.ToString(args[0])
 	if !ok {
-		return toError(tengo.ErrInvalidArgumentType{
+		return nil, tengo.ErrInvalidArgumentType{
 			Name:     "lockFile",
 			Expected: "string",
 			Found:    args[0].TypeName(),
-		}), nil
+		}
 	}
 
 	msg, ok := tengo.ToString(args[1])
 	if !ok {
-		return toError(tengo.ErrInvalidArgumentType{
+		return nil, tengo.ErrInvalidArgumentType{
 			Name:     "msg",
 			Expected: "string",
 			Found:    args[1].TypeName(),
-		}), nil
+		}
 	}
 
 	err := s.lock(lockFile, msg)

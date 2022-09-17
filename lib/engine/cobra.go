@@ -18,9 +18,18 @@ func (s *Script) cobraRootCmd(args ...tengo.Object) (tengo.Object, error) {
 		return nil, err
 	}
 
-	cobraCmd := cmd.(*CobraCmd)
-	cobraCmd.Value.SetArgs(s.args)
-	cobraCmd.Value.CompletionOptions.DisableDefaultCmd = true
+	c := cmd.(*CobraCmd)
+	c.Value.SetArgs(s.args)
+	c.Value.CompletionOptions.DisableDefaultCmd = true
+	c.Value.SilenceErrors = true
+	c.Value.SilenceUsage = true
+
+	c.Value.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+		c.cobraRootCmdPersistentPreRun(cmd, args)
+		return nil
+	}
+
+	c.Value.PersistentFlags().Bool("disable-git", false, "Disable git commands through the git module.")
 
 	return cmd, nil
 }

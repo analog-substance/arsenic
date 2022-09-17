@@ -1,6 +1,8 @@
 package engine
 
 import (
+	"errors"
+
 	"github.com/analog-substance/tengo/v2"
 	"github.com/analog-substance/tengo/v2/stdlib"
 	"github.com/spf13/cobra"
@@ -88,13 +90,13 @@ func makeCobraCmd(cmd *cobra.Command, script *Script) *CobraCmd {
 			Name:  "add_command",
 			Value: cobraCmd.addCommand,
 		},
-		"set_run": &tengo.UserFunction{
-			Name:  "set_run",
-			Value: cobraCmd.setRun,
-		},
 		"set_persistent_pre_run": &tengo.UserFunction{
 			Name:  "set_persistent_pre_run",
 			Value: cobraCmd.setPersistentPreRun,
+		},
+		"set_run": &tengo.UserFunction{
+			Name:  "set_run",
+			Value: cobraCmd.setRun,
 		},
 	}
 
@@ -133,9 +135,8 @@ func (c *CobraCmd) setRun(args ...tengo.Object) (tengo.Object, error) {
 		}
 	}
 
-	c.Value.Run = func(cmd *cobra.Command, args []string) {
-		vm := tengo.NewVM(c.script.compiled.Bytecode(), c.script.compiled.Globals(), -1)
-		vm.RunCompiled(fn, c, toStringArray(args))
+	c.Value.RunE = func(cmd *cobra.Command, args []string) error {
+		return c.runCompiledFunction(fn, args)
 	}
 	return nil, nil
 }
@@ -154,11 +155,47 @@ func (c *CobraCmd) setPersistentPreRun(args ...tengo.Object) (tengo.Object, erro
 		}
 	}
 
-	c.Value.PersistentPreRun = func(cmd *cobra.Command, args []string) {
-		vm := tengo.NewVM(c.script.compiled.Bytecode(), c.script.compiled.Globals(), -1)
-		vm.RunCompiled(fn, c, toStringArray(args))
+	c.Value.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+		c.cobraRootCmdPersistentPreRun(cmd, args)
+		return c.runCompiledFunction(fn, args)
 	}
 	return nil, nil
+}
+
+func (c *CobraCmd) runCompiledFunction(fn *tengo.CompiledFunction, args []string) error {
+	vm := tengo.NewVM(c.script.compiled.Bytecode(), c.script.compiled.Globals(), -1)
+	ch := make(chan error, 1)
+
+	errEmpty := errors.New("")
+
+	go func() {
+		obj, err := vm.RunCompiled(fn, c, toStringArray(args))
+		if err != nil {
+			ch <- err
+			return
+		}
+
+		errObj, ok := obj.(*tengo.Error)
+		if ok {
+			ch <- errors.New(errObj.String())
+		} else {
+			ch <- errEmpty
+		}
+	}()
+
+	var err error
+	select {
+	case <-c.script.ctx.Done():
+		vm.Abort()
+		err = c.script.ctx.Err()
+	case err = <-ch:
+	}
+
+	if err != nil && err != errEmpty {
+		return err
+	}
+
+	return nil
 }
 
 // TypeName should return the name of the type.
@@ -185,7 +222,7 @@ func (c *CobraCmd) CanIterate() bool {
 // Call should take an arbitrary number of arguments and returns a return
 // value and/or an error, which the VM will consider as a run-time error.
 func (c *CobraCmd) Call(args ...tengo.Object) (tengo.Object, error) {
-	err := c.Value.Execute()
+	err := c.Value.ExecuteContext(c.script.ctx)
 	if err != nil {
 		return toError(err), nil
 	}
@@ -208,4 +245,11 @@ func (c *CobraCmd) IndexGet(index tengo.Object) (tengo.Object, error) {
 		res = tengo.UndefinedValue
 	}
 	return res, nil
+}
+
+func (c *CobraCmd) cobraRootCmdPersistentPreRun(cmd *cobra.Command, args []string) {
+	disableGit, _ := cmd.Flags().GetBool("disable-git")
+	if disableGit {
+		c.script.isGit = false
+	}
 }
