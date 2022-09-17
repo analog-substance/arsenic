@@ -30,7 +30,7 @@ getHosts := func(flags) {
   }
 
   for host in allHosts {
-    files := host.files(filepath.join("recon", "nmap*udp*"))
+    files := host.files(filepath.from_slash("recon/nmap*udp*"))
     if len(files) > 0 {
       continue
     }
@@ -138,7 +138,7 @@ scanCmd.set_run(func(cmd, args) {
       script.stop(err)
     }
 
-    err = os2.regex_replace_file(filepath.join("recon", "nmap-punched-udp.xml"), `"[^"]*nmap\.xsl"`, `"/static/nmap.xsl"`)
+    err = os2.regex_replace_file(filepath.from_slash("recon/nmap-punched-udp.xml"), `"[^"]*nmap\.xsl"`, `"/static/nmap.xsl"`)
     if is_error(err) {
       script.stop(err)
     }

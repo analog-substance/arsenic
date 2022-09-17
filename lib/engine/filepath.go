@@ -10,18 +10,19 @@ import (
 
 func (m *Script) FilePathModuleMap() map[string]tengo.Object {
 	return map[string]tengo.Object{
-		"join":   &tengo.UserFunction{Name: "join", Value: m.join},
-		"exists": &tengo.UserFunction{Name: "exists", Value: m.exists},
-		"base":   &tengo.UserFunction{Name: "base", Value: m.base},
-		"abs":    &tengo.UserFunction{Name: "abs", Value: m.abs},
-		"ext":    &tengo.UserFunction{Name: "ext", Value: m.ext},
-		"glob":   &tengo.UserFunction{Name: "glob", Value: m.glob},
+		"join":       &tengo.UserFunction{Name: "join", Value: m.join},
+		"exists":     &tengo.UserFunction{Name: "exists", Value: m.exists},
+		"base":       &tengo.UserFunction{Name: "base", Value: m.base},
+		"abs":        &tengo.UserFunction{Name: "abs", Value: m.abs},
+		"ext":        &tengo.UserFunction{Name: "ext", Value: m.ext},
+		"glob":       &tengo.UserFunction{Name: "glob", Value: m.glob},
+		"from_slash": &tengo.UserFunction{Name: "from_slash", Value: m.fromSlash},
 	}
 }
 
 func (m *Script) join(args ...tengo.Object) (tengo.Object, error) {
 	if len(args) < 1 {
-		return toError(tengo.ErrWrongNumArguments), nil
+		return nil, tengo.ErrWrongNumArguments
 	}
 
 	var paths []string
@@ -35,16 +36,16 @@ func (m *Script) join(args ...tengo.Object) (tengo.Object, error) {
 
 func (m *Script) exists(args ...tengo.Object) (tengo.Object, error) {
 	if len(args) != 1 {
-		return toError(tengo.ErrWrongNumArguments), nil
+		return nil, tengo.ErrWrongNumArguments
 	}
 
 	path, ok := tengo.ToString(args[0])
 	if !ok {
-		return toError(tengo.ErrInvalidArgumentType{
+		return nil, tengo.ErrInvalidArgumentType{
 			Name:     "path",
 			Expected: "string",
 			Found:    args[0].TypeName(),
-		}), nil
+		}
 	}
 
 	obj := tengo.TrueValue
@@ -57,16 +58,16 @@ func (m *Script) exists(args ...tengo.Object) (tengo.Object, error) {
 
 func (m *Script) base(args ...tengo.Object) (tengo.Object, error) {
 	if len(args) != 1 {
-		return toError(tengo.ErrWrongNumArguments), nil
+		return nil, tengo.ErrWrongNumArguments
 	}
 
 	path, ok := tengo.ToString(args[0])
 	if !ok {
-		return toError(tengo.ErrInvalidArgumentType{
+		return nil, tengo.ErrInvalidArgumentType{
 			Name:     "path",
 			Expected: "string",
 			Found:    args[0].TypeName(),
-		}), nil
+		}
 	}
 
 	return &tengo.String{Value: filepath.Base(path)}, nil
@@ -74,16 +75,16 @@ func (m *Script) base(args ...tengo.Object) (tengo.Object, error) {
 
 func (m *Script) abs(args ...tengo.Object) (tengo.Object, error) {
 	if len(args) != 1 {
-		return toError(tengo.ErrWrongNumArguments), nil
+		return nil, tengo.ErrWrongNumArguments
 	}
 
 	path, ok := tengo.ToString(args[0])
 	if !ok {
-		return toError(tengo.ErrInvalidArgumentType{
+		return nil, tengo.ErrInvalidArgumentType{
 			Name:     "path",
 			Expected: "string",
 			Found:    args[0].TypeName(),
-		}), nil
+		}
 	}
 
 	absPath, err := filepath.Abs(path)
@@ -96,16 +97,16 @@ func (m *Script) abs(args ...tengo.Object) (tengo.Object, error) {
 
 func (m *Script) ext(args ...tengo.Object) (tengo.Object, error) {
 	if len(args) != 1 {
-		return toError(tengo.ErrWrongNumArguments), nil
+		return nil, tengo.ErrWrongNumArguments
 	}
 
 	path, ok := tengo.ToString(args[0])
 	if !ok {
-		return toError(tengo.ErrInvalidArgumentType{
+		return nil, tengo.ErrInvalidArgumentType{
 			Name:     "path",
 			Expected: "string",
 			Found:    args[0].TypeName(),
-		}), nil
+		}
 	}
 
 	return &tengo.String{Value: filepath.Ext(path)}, nil
@@ -113,16 +114,16 @@ func (m *Script) ext(args ...tengo.Object) (tengo.Object, error) {
 
 func (m *Script) glob(args ...tengo.Object) (tengo.Object, error) {
 	if len(args) != 1 {
-		return toError(tengo.ErrWrongNumArguments), nil
+		return nil, tengo.ErrWrongNumArguments
 	}
 
 	pattern, ok := tengo.ToString(args[0])
 	if !ok {
-		return toError(tengo.ErrInvalidArgumentType{
+		return nil, tengo.ErrInvalidArgumentType{
 			Name:     "pattern",
 			Expected: "string",
 			Found:    args[0].TypeName(),
-		}), nil
+		}
 	}
 
 	matches, err := doublestar.FilepathGlob(pattern)
@@ -131,4 +132,21 @@ func (m *Script) glob(args ...tengo.Object) (tengo.Object, error) {
 	}
 
 	return toStringArray(matches), nil
+}
+
+func (m *Script) fromSlash(args ...tengo.Object) (tengo.Object, error) {
+	if len(args) != 1 {
+		return nil, tengo.ErrWrongNumArguments
+	}
+
+	path, ok := tengo.ToString(args[0])
+	if !ok {
+		return nil, tengo.ErrInvalidArgumentType{
+			Name:     "path",
+			Expected: "string",
+			Found:    args[0].TypeName(),
+		}
+	}
+
+	return &tengo.String{Value: filepath.FromSlash(path)}, nil
 }

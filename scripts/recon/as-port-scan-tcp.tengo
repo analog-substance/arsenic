@@ -27,7 +27,7 @@ getHosts := func(flags) {
   }
 
   for host in allHosts {
-    files := host.files(filepath.join("recon", "nmap*tcp*"))
+    files := host.files(filepath.from_slash("recon/nmap*tcp*"))
     if len(files) > 0 {
       continue
     }

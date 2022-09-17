@@ -55,7 +55,7 @@ getHosts := func(flags) {
 
   hosts := []
   for host in allHosts {
-    exists := host.file_exists(filepath.join("recon", "wordlist-content-discover.txt"))
+    exists := host.file_exists(filepath.from_slash("recon/wordlist-content-discover.txt"))
     if is_error(exists) {
       script.stop(exists)
     }
@@ -144,7 +144,7 @@ scanCmd.set_run(func(cmd, args) {
   scanHost := func(host) {
     log.msg(format("Aquatone / %s / checking", host.name))
 
-    contentDiscoverPath := filepath.join("recon", "wordlist-content-discover.txt")
+    contentDiscoverPath := filepath.from_slash("recon/wordlist-content-discover.txt")
     exists := host.file_exists(contentDiscoverPath)
     if is_error(exists) {
       script.stop(exists)
@@ -175,7 +175,7 @@ scanCmd.set_run(func(cmd, args) {
 
       log.msg(format("Aquatone / %s / running", host.name))
 
-      cmdArgs := ["-out", filepath.join("recon", "aquatone-wordlist-content-discover")]
+      cmdArgs := ["-out", filepath.from_slash("recon/aquatone-wordlist-content-discover")]
       if proxy != "" {
         cmdArgs = append(cmdArgs, "-proxy", proxy)
       }
