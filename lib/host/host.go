@@ -27,6 +27,14 @@ const (
 	unreviewedFlag string = "Unreviewed"
 )
 
+// SyncOptions represents the different parts of host metadata to syn
+type SyncOptions struct {
+	IPAddresses bool
+	Hostnames   bool
+	Ports       bool
+	Flags       bool
+}
+
 type Port struct {
 	ID       int
 	Protocol string
@@ -167,18 +175,27 @@ type Host struct {
 	Metadata *Metadata
 }
 
-func InitHost(dir string) *Host {
-	host := &Host{Dir: dir}
+func NewHost(dir string) *Host {
+	metadata := defaultMetadata()
+	return &Host{
+		Dir:      dir,
+		Metadata: &metadata,
+	}
+}
+
+func (h *Host) SyncMetadata(options SyncOptions) error {
 	var metadata Metadata
-	if _, err := os.Stat(host.metadataFile()); !os.IsNotExist(err) {
-		jsonFile, err := os.Open(host.metadataFile())
+	if _, err := os.Stat(h.metadataFile()); !os.IsNotExist(err) {
+		jsonFile, err := os.Open(h.metadataFile())
 		if err != nil {
-			fmt.Println(err)
+			return err
 		}
 		defer jsonFile.Close()
 
 		byteValue, _ := ioutil.ReadAll(jsonFile)
 		json.Unmarshal(byteValue, &metadata)
+	} else if h.Metadata != nil {
+		metadata = *h.Metadata
 	} else {
 		metadata = defaultMetadata()
 		metadata.changed = true
@@ -186,14 +203,22 @@ func InitHost(dir string) *Host {
 
 	existing, err := json.MarshalIndent(metadata, "", "  ")
 	if err != nil {
-		fmt.Println(err)
-		return host
+		return err
 	}
 	metadata.existing = string(existing)
 
-	host.Metadata = &metadata
-	hostnames := host.Hostnames()
-	ipAddresses := host.IPAddresses()
+	h.Metadata = &metadata
+
+	hostnames := h.Metadata.Hostnames
+	if options.Hostnames {
+		hostnames = h.Hostnames()
+	}
+
+	ipAddresses := h.Metadata.IPAddresses
+	if options.IPAddresses {
+		ipAddresses = h.IPAddresses()
+	}
+
 	if metadata.Name == "unknown" || len(metadata.Name) == 0 {
 		if len(hostnames) > 0 {
 			metadata.Name = hostnames[0]
@@ -201,55 +226,112 @@ func InitHost(dir string) *Host {
 			metadata.Name = ipAddresses[0]
 		} else {
 			// If the host doesn't have hostnames.txt or ip-addresses.txt, lets use the name of the host directory
-			metadata.Name = filepath.Base(dir)
+			metadata.Name = filepath.Base(h.Dir)
 
-			if util.IsIp(metadata.Name) {
+			if util.IsIp(metadata.Name) && options.IPAddresses {
 				ipAddresses = append(ipAddresses, metadata.Name)
-			} else {
+			} else if options.Hostnames {
 				hostnames = append(hostnames, metadata.Name)
 			}
 		}
 	}
 
-	metadata.AddFlags(host.flags()...)
-	ports := host.ports()
-
-	tcpPorts := protoPorts(ports, "tcp")
-	udpPorts := protoPorts(ports, "udp")
-	reviewStatus := reviewedFlag
-
-	if len(tcpPorts) > 0 {
-		metadata.AddFlags("open-tcp")
-		if metadata.ReviewedBy == "" {
-			reviewStatus = unreviewedFlag
-		}
+	ports := metadata.Ports
+	tcpPorts := metadata.TCPPorts
+	udpPorts := metadata.UDPPorts
+	if options.Ports {
+		ports = h.ports()
+		tcpPorts = protoPorts(ports, "tcp")
+		udpPorts = protoPorts(ports, "udp")
 	}
 
-	if len(udpPorts) > 0 {
-		metadata.AddFlags("open-udp")
-		if metadata.ReviewedBy == "" {
-			reviewStatus = unreviewedFlag
-		}
-	}
+	if options.Flags {
+		reviewStatus := reviewedFlag
+		metadata := h.Metadata
 
-	if len(ports) > 0 {
-		metadata.AddFlags("OpenPorts")
-		if metadata.ReviewedBy == "" {
-			reviewStatus = unreviewedFlag
-		}
-	}
+		metadata.AddFlags(h.flags()...)
 
-	metadata.RemoveFlags(reviewedFlag, unreviewedFlag)
-	metadata.AddFlags(reviewStatus)
+		if len(metadata.TCPPorts) > 0 {
+			metadata.AddFlags("open-tcp")
+			if metadata.ReviewedBy == "" {
+				reviewStatus = unreviewedFlag
+			}
+		}
+
+		if len(metadata.UDPPorts) > 0 {
+			metadata.AddFlags("open-udp")
+			if metadata.ReviewedBy == "" {
+				reviewStatus = unreviewedFlag
+			}
+		}
+
+		if len(metadata.Ports) > 0 {
+			metadata.AddFlags("OpenPorts")
+			if metadata.ReviewedBy == "" {
+				reviewStatus = unreviewedFlag
+			}
+		}
+
+		metadata.RemoveFlags(reviewedFlag, unreviewedFlag)
+		metadata.AddFlags(reviewStatus)
+	}
 
 	metadata.Hostnames = hostnames
 	metadata.RootDomains = scope.GetRootDomains(hostnames, true)
 	metadata.IPAddresses = ipAddresses
+	metadata.Ports = ports
 	metadata.TCPPorts = tcpPorts
 	metadata.UDPPorts = udpPorts
-	metadata.Ports = ports
+
+	return nil
+}
+
+func InitHost(dir string) *Host {
+	host := &Host{Dir: dir}
+	err := host.SyncMetadata(SyncOptions{
+		IPAddresses: true,
+		Hostnames:   true,
+		Ports:       true,
+		Flags:       true,
+	})
+
+	if err != nil {
+		fmt.Println(err)
+		return host
+	}
 
 	return host
+}
+
+func AddHost(hostnames []string, ips []string) (*Host, error) {
+	name := ""
+	if len(hostnames) > 0 {
+		name = hostnames[0]
+	} else if len(ips) > 1 {
+		name = ips[0]
+	} else {
+		return nil, nil
+	}
+
+	dir := filepath.Join("hosts", name)
+	host := NewHost(dir)
+
+	host.Metadata.Hostnames = hostnames
+	host.Metadata.IPAddresses = ips
+	host.Metadata.changed = true
+
+	err := host.SyncMetadata(SyncOptions{
+		IPAddresses: false,
+		Hostnames:   false,
+		Ports:       true,
+		Flags:       true,
+	})
+	if err != nil {
+		return nil, err
+	}
+	host.SaveMetadata()
+
+	return host, nil
 }
 
 func (host Host) SaveMetadata() {
