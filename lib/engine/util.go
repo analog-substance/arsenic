@@ -1,7 +1,6 @@
 package engine
 
 import (
-	"bufio"
 	"bytes"
 	"errors"
 	"fmt"
@@ -75,26 +74,16 @@ func toError(err error) tengo.Object {
 }
 
 func runWithError(cmd *exec.Cmd) error {
-	stderr, _ := cmd.StderrPipe()
+	buf := new(bytes.Buffer)
+	cmd.Stderr = buf
 
 	if err := cmd.Start(); err != nil {
 		return err
 	}
 
-	errorText := ""
-	go func() {
-		buf := new(bytes.Buffer)
-		scanner := bufio.NewScanner(stderr)
-		for scanner.Scan() {
-			buf.WriteString(scanner.Text() + "\n")
-		}
-
-		errorText = buf.String()
-	}()
-
 	err := cmd.Wait()
 	if err != nil {
-		return errors.New(errorText)
+		return errors.New(buf.String())
 	}
 	return nil
 }
