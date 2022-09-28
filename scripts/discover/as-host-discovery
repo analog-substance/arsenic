@@ -1,0 +1,50 @@
+#! /bin/bash
+
+SCOPE_FILE=scope-all.txt
+
+if [ -n "$1" ]; then
+  SCOPE_FILE="$1"
+fi
+
+if [ ! -f "$SCOPE_FILE" ]; then
+  cat scope-ips-active* scope-domains-generated-resolv* | sort -n | uniq > $SCOPE_FILE
+fi
+
+SCOPE_NAME=$(echo $SCOPE_FILE | cut -d. -f1)
+
+
+nmap -sL -iL $SCOPE_FILE | tee recon/host-discovery-nmap-sl-ipv4.txt  | grep "report for" | awk '{print $NF}' | sed 's/^(//g;s/)$//g' | sort -n | uniq > "$SCOPE_NAME-generated-uniq-ipv4.txt"
+nmap -6 -sL -iL $SCOPE_FILE | tee recon/host-discovery-nmap-sl-ipv6.txt  | grep "report for" | awk '{print $NF}' | sed 's/^(//g;s/)$//g' | sort -n | uniq > "$SCOPE_NAME-generated-uniq-ipv6.txt"
+
+IP_V4_OUT="recon/nmap-host-discovery-ipv4-$SCOPE_NAME"
+IP_V6_OUT="recon/nmap-host-discovery-ipv6-$SCOPE_NAME"
+
+TCP_PORTS=$(echo $(sort -r -k3 /usr/share/nmap/nmap-services | grep "/tcp" | awk '{print $2}' | cut -d/ -f1 | head -n $(arsenic config discover.top-tcp-count)) | sed 's/ /,/g')
+UDP_PORTS=$(echo $(sort -r -k3 /usr/share/nmap/nmap-services | grep "/udp" | awk '{print $2}' | cut -d/ -f1 | head -n $(arsenic config discover.top-tcp-count)) | sed 's/ /,/g')
+TIMING_PROFILE=$(arsenic config discover.timing-profile)
+
+sudo nmap -sn \
+  -PP -PA$TCP_PORTS \
+  -PS$TCP_PORTS \
+  -PU$UDP_PORTS \
+  --randomize-hosts \
+  --scan-delay 50ms \
+  -T$TIMING_PROFILE \
+  -iL "$SCOPE_NAME-generated-uniq-ipv4.txt" \
+  -oA "$IP_V4_OUT"
+
+cat "$IP_V4_OUT.gnmap" | grep Up | awk '{print $2}' > "$SCOPE_NAME-active-ipv4.txt"
+
+sudo nmap -6 -sn \
+  -PA$TCP_PORTS \
+  -PS$TCP_PORTS \
+  -PU$UDP_PORTS \
+  --randomize-hosts \
+  --scan-delay 50ms \
+  -T$TIMING_PROFILE \
+  -iL "$SCOPE_NAME-generated-uniq-ipv6.txt" \
+  -oA "$IP_V6_OUT"
+
+cat "$IP_V6_OUT.gnmap" | grep Up | awk '{print $2}' > "$SCOPE_NAME-active-ipv6.txt"
+
+cat "$SCOPE_NAME-active-"* | sort -n > "$SCOPE_NAME-active.txt"
