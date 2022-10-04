@@ -16,7 +16,7 @@ import (
 	"github.com/analog-substance/arsenic/lib/set"
 	"github.com/spf13/viper"
 
-	"github.com/lair-framework/go-nmap"
+	"github.com/Ullaakut/nmap/v2"
 
 	"github.com/ahmetb/go-linq/v3"
 	"github.com/analog-substance/arsenic/lib/util"
@@ -655,7 +655,7 @@ func (host Host) ports() []Port {
 				if port.State.State != "closed" && port.State.State != "filtered" {
 					ignore := false
 					for _, svc := range ignoreServices {
-						if svc.ShouldIgnore(port.Service.Name, port.PortId) {
+						if svc.ShouldIgnore(port.Service.Name, int(port.ID)) {
 							ignore = true
 							if svc.Flag != "" {
 								host.Metadata.AddFlags(svc.Flag)
@@ -670,14 +670,14 @@ func (host Host) ports() []Port {
 
 					service := port.Service.Name
 
-					if strings.HasPrefix(service, "http") && port.Service.Tunnel == "ssl" || port.PortId == 443 {
+					if strings.HasPrefix(service, "http") && port.Service.Tunnel == "ssl" || port.ID == 443 {
 						service = "https"
 					}
 
-					if port.PortId == 80 {
+					if port.ID == 80 {
 						service = "http"
 					}
-					portMap[fmt.Sprintf("%s/%d", port.Protocol, port.PortId)] = Port{port.PortId, port.Protocol, service}
+					portMap[fmt.Sprintf("%s/%d", port.Protocol, port.ID)] = Port{int(port.ID), port.Protocol, service}
 					if !tcpPorts && port.Protocol == "tcp" {
 						tcpPorts = true
 					}
@@ -704,7 +704,7 @@ func (host Host) ports() []Port {
 					if port.State.State != "closed" && port.State.State != "filtered" {
 						ignore := false
 						for _, svc := range ignoreServices {
-							if svc.ShouldIgnore(port.Service.Name, port.PortId) {
+							if svc.ShouldIgnore(port.Service.Name, int(port.ID)) {
 								ignore = true
 								if svc.Flag != "" {
 									host.Metadata.AddFlags(svc.Flag)
@@ -719,14 +719,14 @@ func (host Host) ports() []Port {
 
 						service := port.Service.Name
 
-						if strings.HasPrefix(service, "http") && port.Service.Tunnel == "ssl" || port.PortId == 443 {
+						if strings.HasPrefix(service, "http") && port.Service.Tunnel == "ssl" || port.ID == 443 {
 							service = "https"
 						}
 
-						if port.PortId == 80 {
+						if port.ID == 80 {
 							service = "http"
 						}
-						portMap[fmt.Sprintf("%s/%d", port.Protocol, port.PortId)] = Port{port.PortId, port.Protocol, service}
+						portMap[fmt.Sprintf("%s/%d", port.Protocol, port.ID)] = Port{int(port.ID), port.Protocol, service}
 						if !tcpPorts && port.Protocol == "tcp" {
 							tcpPorts = true
 						}
