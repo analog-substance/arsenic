@@ -307,7 +307,7 @@ func AddHost(hostnames []string, ips []string) (*Host, error) {
 	name := ""
 	if len(hostnames) > 0 {
 		name = hostnames[0]
-	} else if len(ips) > 1 {
+	} else if len(ips) > 0 {
 		name = ips[0]
 	} else {
 		return nil, nil
