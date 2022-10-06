@@ -19,7 +19,7 @@ fi
 mkdir -p recon/domains recon/discover recon/ips
 
 declare -a root_domain_commands=("whois")
-declare -a dig_commands=("TXT" "NS" "MX" "SOA" "A")
+declare -a dig_commands=("TXT" "dmarc" "NS" "MX" "SOA" "A")
 
 function root_domain_recon {
   domain=$(echo $1 | tr 'A-Z' 'a-z')
@@ -45,8 +45,13 @@ function root_domain_recon {
 
     for cmd in "${dig_commands[@]}";  do
       if [ ! -f "recon/domains/$domain/dig-$cmd.txt" ]; then
-        _ "running dig $domain $cmd"
-        dig $cmd $domain | tr 'A-Z' 'a-z' > "recon/domains/$domain/dig-$cmd.txt" &
+        if [[ "$cmd" == "dmarc" ]]; then
+          _ "running dig _dmarc.$domain TXT"
+          dig TXT _dmarc.$domain | tr 'A-Z' 'a-z' > "recon/domains/$domain/dig-$cmd.txt" &
+        else
+          _ "running dig $domain $cmd"
+          dig $cmd $domain | tr 'A-Z' 'a-z' > "recon/domains/$domain/dig-$cmd.txt" &
+        fi
       else
         _warn "skipping dig $domain $cmd"
       fi
