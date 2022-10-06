@@ -507,7 +507,7 @@ func Get(hostDirsOrHostnames ...string) []*Host {
 	return hosts
 }
 
-func GetFirst(hostDirOrHostname string) *Host {
+func GetFirst(hostDirsOrHostnames ...string) *Host {
 	var foundHost *Host
 	for _, hostDir := range getHostDirs() {
 		host := InitHost(hostDir)
@@ -515,8 +515,10 @@ func GetFirst(hostDirOrHostname string) *Host {
 		hostnames = append(hostnames, host.Metadata.Name)
 		hostnames = append(hostnames, host.Metadata.IPAddresses...)
 
-		if linq.From(hostnames).AnyWith(func(hostname interface{}) bool {
-			return strings.EqualFold(hostDirOrHostname, hostname.(string))
+		if linq.From(hostDirsOrHostnames).AnyWith(func(hostDirOrHostname interface{}) bool {
+			return linq.From(hostnames).AnyWith(func(hostname interface{}) bool {
+				return strings.EqualFold(hostDirOrHostname.(string), hostname.(string))
+			})
 		}) {
 			foundHost = host
 			break
