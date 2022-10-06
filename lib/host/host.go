@@ -670,6 +670,10 @@ func (host Host) ports() []Port {
 						continue
 					}
 
+					if port.Service.Product != "" {
+						host.Metadata.AddFlags(fmt.Sprintf("SVC::%s", port.Service.Product))
+					}
+
 					service := port.Service.Name
 
 					if strings.HasPrefix(service, "http") && port.Service.Tunnel == "ssl" || port.ID == 443 {
