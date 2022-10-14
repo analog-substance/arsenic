@@ -180,7 +180,10 @@ func initConfig() {
 	setConfigDefault("scripts-directory", filepath.Join(home, ".config", "arsenic"))
 	setConfigDefault("scripts", defaultScripts)
 	setConfigDefault("wordlists", wordlists)
-	setConfigDefault("wordlist-paths", []string{"/opt/SecLists"})
+	setConfigDefault("wordlist-paths", []string{
+		"/opt/SecLists",
+		"/usr/share/seclists",
+	})
 
 	if cfgFile != "" {
 		// Use config file from the flag.
