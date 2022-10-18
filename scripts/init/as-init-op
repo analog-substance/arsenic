@@ -35,3 +35,5 @@ fi
 
 touch scope-domains.txt
 touch scope-ips.txt
+
+arsenic config -s
