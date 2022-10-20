@@ -251,21 +251,21 @@ func (h *Host) SyncMetadata(options SyncOptions) error {
 
 		metadata.AddFlags(h.flags()...)
 
-		if len(metadata.TCPPorts) > 0 {
+		if len(tcpPorts) > 0 {
 			metadata.AddFlags("open-tcp")
 			if metadata.ReviewedBy == "" {
 				reviewStatus = unreviewedFlag
 			}
 		}
 
-		if len(metadata.UDPPorts) > 0 {
+		if len(udpPorts) > 0 {
 			metadata.AddFlags("open-udp")
 			if metadata.ReviewedBy == "" {
 				reviewStatus = unreviewedFlag
 			}
 		}
 
-		if len(metadata.Ports) > 0 {
+		if len(ports) > 0 {
 			metadata.AddFlags("OpenPorts")
 			if metadata.ReviewedBy == "" {
 				reviewStatus = unreviewedFlag
