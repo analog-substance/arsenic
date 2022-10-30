@@ -3,8 +3,6 @@ package cmd
 import (
 	"bytes"
 	"fmt"
-	"log"
-	"os"
 	"reflect"
 	"strconv"
 	"strings"
@@ -13,6 +11,8 @@ import (
 	"github.com/spf13/viper"
 	"gopkg.in/yaml.v2"
 )
+
+const defaultConfigFile = "arsenic.yaml"
 
 // configCmd represents the config command
 var configCmd = &cobra.Command{
@@ -26,9 +26,9 @@ Helpful to see what scripts would be executed.`,
 		count := len(args)
 		switch count {
 		case 0:
-			save, _ := cmd.Flags().GetBool("save")
-			if save {
-				saveConfig()
+			saveNew, _ := cmd.Flags().GetBool("save")
+			if saveNew {
+				saveConfig(true)
 				return
 			}
 			subKeysOnly, _ := cmd.Flags().GetBool("sub-keys")
@@ -68,7 +68,7 @@ Helpful to see what scripts would be executed.`,
 					} else {
 						overwriteInMemConfig(viper.AllSettings())
 					}
-					saveConfig()
+					saveConfig(false)
 					return
 				}
 
@@ -105,17 +105,20 @@ Helpful to see what scripts would be executed.`,
 			}
 
 			viper.Set(key, newValue)
-			saveConfig()
+			saveConfig(false)
 		}
 	},
 }
 
-func saveConfig() {
+func saveConfig(saveNew bool) {
 	fmt.Println("Writing Config")
 
-	createConfigIfNotExist()
+	fileName := viper.ConfigFileUsed()
+	if saveNew || fileName == "" {
+		fileName = defaultConfigFile
+	}
 
-	viper.WriteConfig()
+	viper.WriteConfigAs(fileName)
 }
 
 func overwriteInMemConfig(configMap map[string]interface{}) error {
@@ -167,18 +170,7 @@ func matchConfigType(currentValue interface{}, userValue string) (interface{}, e
 }
 
 func createConfigIfNotExist() {
-	fileName := viper.ConfigFileUsed()
-	if fileName == "" {
-		fileName = "arsenic.yaml"
-	}
-	_, err := os.Stat(fileName)
-	if os.IsNotExist(err) {
-		file, err := os.Create(fileName)
-		if err != nil {
-			log.Fatal(err)
-		}
-		defer file.Close()
-	}
+
 }
 
 func printConfig() {
