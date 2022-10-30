@@ -73,7 +73,7 @@ rootCmd.set_persistent_pre_run(func(cmd, args) {
     script.stop(wordlistFile)
   }
 
-  if !filepath.exists(wordlistFile) {
+  if !filepath.file_exists(wordlistFile) {
     log.info("Generating wordlist...")
     err := arsenic.gen_wordlist("web-content", wordlistFile)
     if is_error(err) {
@@ -159,7 +159,7 @@ scanCmd.set_run(func(cmd, args) {
     git.pull()
 
     outputPath := filepath.join("recon", outputFile)
-    if !filepath.exists(outputPath) {
+    if !filepath.file_exists(outputPath) {
       log.msg(format("Scanning %s %s", host, rawURL))
 
       // check if url is S3 bucket
