@@ -30,7 +30,6 @@ blacklist:
   - tds.net
   - wixsite.com
 ```
-
 - **`domains`**: An array of regex strings to filter from the discovered domains. Refer to https://pkg.go.dev/regexp/syntax for the supported syntax.
 - **`ips`**: An array of IP addresses to filter from the discovered IPs.
 - **`root-domains`**: An array of root domains to filter from the discovered domains.
@@ -69,27 +68,27 @@ These scripts aren't part of a phase of testing. They are run when `arsenic init
 
 ```yaml
 scripts:
-	init:
-		as-init-cleanup:
-			count: 1
-			enabled: true
-			order: 300
-			script: as-init-cleanup
-		as-init-hooks:
-			count: 1
-			enabled: true
-			order: 200
-			script: as-init-hooks
-		as-init-op:
-			count: 1
-			enabled: true
-			order: 0
-			script: as-init-op
-		as-setup-hugo:
-			count: 1
-			enabled: true
-			order: 100
-			script: as-setup-hugo
+  init:
+    as-init-cleanup:
+      count: 1
+      enabled: true
+      order: 300
+      script: as-init-cleanup
+    as-init-hooks:
+      count: 1
+      enabled: true
+      order: 200
+      script: as-init-hooks
+    as-init-op:
+      count: 1
+      enabled: true
+      order: 0
+      script: as-init-op
+    as-setup-hugo:
+      count: 1
+      enabled: true
+      order: 100
+      script: as-setup-hugo
 ```
 - **as-init-cleanup**: Runs common cleanup tasks.
 - **as-init-hooks**: Calls `as-init-op.sh` files for custom op initialization.
@@ -102,57 +101,57 @@ The discover phase is for actively and passively discovering new subdomains and 
 
 ```yaml 
 scripts:
-	discover:
-		as-combine-subdomains:
-			count: 2
-			enabled: true
-			order: 250
-			script: as-combine-subdomains
-		as-dns-resolution:
-			count: 2
-			enabled: true
-			order: 300
-			script: as-dns-resolution
-		as-domains-from-domain-ssl-certs:
-			count: 1
-			enabled: true
-			order: 200
-			script: as-domains-from-domain-ssl-certs
-		as-domains-from-ip-ssl-certs:
-			count: 2
-			enabled: true
-			order: 500
-			script: as-domains-from-ip-ssl-certs
-		as-http-screenshot-domains:
-			count: 1
-			enabled: true
-			order: 700
-			script: as-http-screenshot-domains
-		as-ip-recon:
-			count: 2
-			enabled: true
-			order: 400
-			script: as-ip-recon
-		as-ip-resolution:
-			count: 2
-			enabled: true
-			order: 600
-			script: as-ip-resolution
-		as-root-domain-recon:
-			count: 1
-			enabled: true
-			order: 0
-			script: as-root-domain-recon
-		as-subdomain-discovery:
-			count: 1
-			enabled: true
-			order: 50
-			script: as-subdomain-discovery
-		as-subdomain-enumeration:
-			count: 1
-			enabled: true
-			order: 100
-			script: as-subdomain-enumeration
+  discover:
+    as-combine-subdomains:
+      count: 2
+      enabled: true
+      order: 250
+      script: as-combine-subdomains
+    as-dns-resolution:
+      count: 2
+      enabled: true
+      order: 300
+      script: as-dns-resolution
+    as-domains-from-domain-ssl-certs:
+      count: 1
+      enabled: true
+      order: 200
+      script: as-domains-from-domain-ssl-certs
+    as-domains-from-ip-ssl-certs:
+      count: 2
+      enabled: true
+      order: 500
+      script: as-domains-from-ip-ssl-certs
+    as-http-screenshot-domains:
+      count: 1
+      enabled: true
+      order: 700
+      script: as-http-screenshot-domains
+    as-ip-recon:
+      count: 2
+      enabled: true
+      order: 400
+      script: as-ip-recon
+    as-ip-resolution:
+      count: 2
+      enabled: true
+      order: 600
+      script: as-ip-resolution
+    as-root-domain-recon:
+      count: 1
+      enabled: true
+      order: 0
+      script: as-root-domain-recon
+    as-subdomain-discovery:
+      count: 1
+      enabled: true
+      order: 50
+      script: as-subdomain-discovery
+    as-subdomain-enumeration:
+      count: 1
+      enabled: true
+      order: 100
+      script: as-subdomain-enumeration
 ```
 
 - **as-combine-subdomains**: Combines all discovered subdomains for each in scope root domain, removing duplicates and blacklisted domains.
@@ -174,27 +173,27 @@ The recon phase is for running active recon against the discovered hosts. Curren
 
 ```yaml
 scripts:
-	recon:
-		as-content-discovery:
-			count: 1
-			enabled: true
-			order: 100
-			script: as-content-discovery
-		as-http-screenshot-hosts:
-			count: 1
-			enabled: true
-			order: 200
-			script: as-http-screenshot-hosts
-		as-port-scan-tcp:
-			count: 1
-			enabled: true
-			order: 0
-			script: as-port-scan-tcp
-		as-port-scan-udp:
-			count: 1
-			enabled: true
-			order: 300
-			script: as-port-scan-udp
+  recon:
+    as-content-discovery:
+      count: 1
+      enabled: true
+      order: 100
+      script: as-content-discovery
+    as-http-screenshot-hosts:
+      count: 1
+      enabled: true
+      order: 200
+      script: as-http-screenshot-hosts
+    as-port-scan-tcp:
+      count: 1
+      enabled: true
+      order: 0
+      script: as-port-scan-tcp
+    as-port-scan-udp:
+      count: 1
+      enabled: true
+      order: 300
+      script: as-port-scan-udp
 ```
 - **as-content-discovery**: Runs content enumeration scans with `ffuf` on all hosts with web services.
 - **as-http-screenshot-hosts**: Takes screenshots using `aquatone` of the content discovered from `as-content-discovery` that returned a 200 status code.
@@ -207,27 +206,27 @@ The hunt phase is kind of like the recon phase except its to "hunt" for potentia
 
 ```yaml
 scripts:
-	hunt:
-		as-nuclei-cves:
-			count: 1
-			enabled: true
-			order: 300
-			script: as-nuclei-cves
-		as-nuclei-technologies:
-			count: 1
-			enabled: true
-			order: 200
-			script: as-nuclei-technologies
-		as-searchsploit:
-			count: 1
-			enabled: true
-			order: 100
-			script: as-searchsploit
-		as-takeover-aquatone:
-			count: 1
-			enabled: true
-			order: 0
-			script: as-takeover-aquatone
+  hunt:
+    as-nuclei-cves:
+      count: 1
+      enabled: true
+      order: 300
+      script: as-nuclei-cves
+    as-nuclei-technologies:
+      count: 1
+      enabled: true
+      order: 200
+      script: as-nuclei-technologies
+    as-searchsploit:
+      count: 1
+      enabled: true
+      order: 100
+      script: as-searchsploit
+    as-takeover-aquatone:
+      count: 1
+      enabled: true
+      order: 0
+      script: as-takeover-aquatone
 ```
 - **as-nuclei-cves**: Finds common CVE vulnerabilities for all hosts with web services.
 - **as-nuclei-technologies**: Determines the technology stack of all hosts with web services.
@@ -239,10 +238,10 @@ scripts:
 It is possible to add custom scripts to be run during the different phases. The scripts for each phase, follow this schema:
 ```yaml
 name:
-	count: int
-	enabled: boolean
-	order: int
-	script: string
+  count: int
+  enabled: boolean
+  order: int
+  script: string
 ```
 - **name:** The name of the script. This does need to be unique within the phase. Most times it is the same as `script`.
 - **count:** The number of times to run the script. Most often it is set to 1. Some scripts in the discover phase run multiple times to ensure domains have been gathered or resolved.
