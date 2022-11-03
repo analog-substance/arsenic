@@ -2,7 +2,10 @@ package lib
 
 import (
 	"bytes"
+	"fmt"
 	"github.com/analog-substance/arsenic/lib/set"
+	"github.com/spf13/viper"
+	"reflect"
 	"testing"
 )
 
@@ -37,6 +40,18 @@ func Test_cleanLine(t *testing.T) {
 }
 
 func Test_shouldIgnoreLine(t *testing.T) {
+
+	wordlists := make(map[string][]string)
+	wordlists["web-content"] = []string{}
+
+	wordlists["sqli"] = []string{}
+
+	wordlists["xss"] = []string{}
+	setConfigDefault("wordlists", wordlists)
+	//
+	//viper.AutomaticEnv() // read in environment variables that match
+	//viper.ReadInConfig()
+
 	type args struct {
 		wordlistType string
 		line         string
@@ -95,5 +110,32 @@ func Test_readWordlist(t *testing.T) {
 				t.Errorf("readWordlist(), Length() %v, want %v", got, tt.want)
 			}
 		})
+	}
+}
+
+// If no config file exists, all possible keys in the defaults
+// need to be registered with viper otherwise viper will only think
+// the keys explicitly set via viper.SetDefault() exist.
+func setConfigDefault(key string, value interface{}) {
+	valueType := reflect.TypeOf(value)
+	valueValue := reflect.ValueOf(value)
+
+	if valueType.Kind() == reflect.Map {
+		iter := valueValue.MapRange()
+		for iter.Next() {
+			k := iter.Key().Interface()
+			v := iter.Value().Interface()
+			setConfigDefault(fmt.Sprintf("%s.%s", key, k), v)
+		}
+	} else if valueType.Kind() == reflect.Struct {
+		numFields := valueType.NumField()
+		for i := 0; i < numFields; i++ {
+			structField := valueType.Field(i)
+			fieldValue := valueValue.Field(i)
+
+			setConfigDefault(fmt.Sprintf("%s.%s", key, structField.Name), fieldValue.Interface())
+		}
+	} else {
+		viper.SetDefault(key, value)
 	}
 }
