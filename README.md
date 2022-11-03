@@ -102,7 +102,6 @@ source {path_to_arsenic}/arsenic.rc
 ```
 The `arsenic.rc` file automatically adds the `bin/` directory of sibling directories (eg: `opt/arsenic/bin`, `opt/xe/bin`) to your `$PATH`
 
-
 ### Starting an Op
 
 To start an op, run the following:
@@ -114,11 +113,9 @@ arsenic init op_name
 
 #### Customization
 
-If you want to customize the op creation process for whatever reason, there are two ways to do so. The first is by adding custom scripts to the `scripts.init` section of the config file located in your home directory. For more information, on how to do that, click [here](#adding-custom-scripts).
+If you want to customize the op creation process for whatever reason, there are two ways to do so. The first is by adding custom scripts to the `scripts.init` section of the config file located in your home directory. Refer to the "[Adding Custom Scripts](docs/config.md#adding-custom-scripts)" section of the config documentation for more information.
 
 The second way is by creating an init hook script. The `arsenic init` command will run `as-init-op.sh` scripts located at `opt/*/scripts`, where the opt directory is where the Arsenic repository is located. Assuming the Arsenic repository is located at `$HOME/opt/arsenic`, create a script at `$HOME/opt/custom-arsenic/scripts/as-init-op.sh`. Anything in this script will execute when running `arsenic init`.
-
-
 
 ```bash
 echo example.com >> scope-domains.txt
@@ -156,188 +153,8 @@ This will probably take a while... but when its done you should have port scans,
 ******
 
 ### Config
-The configuration file holds many different settings to fine tune commands and scripts run by Arsenic. This is currently the default configuration:
-```yaml
-blacklist:
-  domains: []
-  ips: []
-  root-domains:
-  - 1e100.net
-  - akamaitechnologies.com
-  - amazonaws.com
-  - azure.com
-  - azurewebsites.net
-  - azurewebsites.windows.net
-  - c7dc.com
-  - cas.ms
-  - cloudapp.net
-  - cloudfront.net
-  - googlehosted.com
-  - googleusercontent.com
-  - hscoscdn10.net
-  - my.jobs
-  - readthedocs.io
-  - readthedocs.org
-  - sites.hubspot.net
-  - tds.net
-  - wixsite.com
-ignore-services:
-- name: msrpc
-  ports: 40000-65535
-  flag: ignored::ephemeral-msrpc
-- name: tcpwrapped
-  ports: all
-  flag: ""
-- name: unknown
-  ports: all
-  flag: ""
-scripts:
-  discover:
-    as-combine-subdomains:
-      count: 2
-      enabled: true
-      order: 250
-      script: as-combine-subdomains
-    as-dns-resolution:
-      count: 2
-      enabled: true
-      order: 300
-      script: as-dns-resolution
-    as-domains-from-domain-ssl-certs:
-      count: 1
-      enabled: true
-      order: 200
-      script: as-domains-from-domain-ssl-certs
-    as-domains-from-ip-ssl-certs:
-      count: 2
-      enabled: true
-      order: 500
-      script: as-domains-from-ip-ssl-certs
-    as-http-screenshot-domains:
-      count: 1
-      enabled: true
-      order: 700
-      script: as-http-screenshot-domains
-    as-ip-recon:
-      count: 2
-      enabled: true
-      order: 400
-      script: as-ip-recon
-    as-ip-resolution:
-      count: 2
-      enabled: true
-      order: 600
-      script: as-ip-resolution
-    as-root-domain-recon:
-      count: 1
-      enabled: true
-      order: 0
-      script: as-root-domain-recon
-    as-subdomain-discovery:
-      count: 1
-      enabled: true
-      order: 50
-      script: as-subdomain-discovery
-    as-subdomain-enumeration:
-      count: 1
-      enabled: true
-      order: 100
-      script: as-subdomain-enumeration
-  hunt:
-    as-nuclei-cves:
-      count: 1
-      enabled: true
-      order: 300
-      script: as-nuclei-cves
-    as-nuclei-technologies:
-      count: 1
-      enabled: true
-      order: 200
-      script: as-nuclei-technologies
-    as-searchsploit:
-      count: 1
-      enabled: true
-      order: 100
-      script: as-searchsploit
-    as-takeover-aquatone:
-      count: 1
-      enabled: true
-      order: 0
-      script: as-takeover-aquatone
-  init:
-    as-init-cleanup:
-      count: 1
-      enabled: true
-      order: 300
-      script: as-init-cleanup
-    as-init-hooks:
-      count: 1
-      enabled: true
-      order: 200
-      script: as-init-hooks
-    as-init-op:
-      count: 1
-      enabled: true
-      order: 0
-      script: as-init-op
-    as-setup-hugo:
-      count: 1
-      enabled: true
-      order: 100
-      script: as-setup-hugo
-  recon:
-    as-content-discovery:
-      count: 1
-      enabled: true
-      order: 100
-      script: as-content-discovery
-    as-http-screenshot-hosts:
-      count: 1
-      enabled: true
-      order: 200
-      script: as-http-screenshot-hosts
-    as-port-scan-tcp:
-      count: 1
-      enabled: true
-      order: 0
-      script: as-port-scan-tcp
-    as-port-scan-udp:
-      count: 1
-      enabled: true
-      order: 300
-      script: as-port-scan-udp
-scripts-directory: /home/kali/.config/arsenic
-wordlist-paths:
-- /opt/SecLists
-- /usr/share/seclists
-wordlists:
-  web-content:
-  - Discovery/Web-Content/AdobeCQ-AEM.txt
-  - Discovery/Web-Content/apache.txt
-  - Discovery/Web-Content/Common-DB-Backups.txt
-  - Discovery/Web-Content/Common-PHP-Filenames.txt
-  - Discovery/Web-Content/common.txt
-  - Discovery/Web-Content/confluence-administration.txt
-  - Discovery/Web-Content/default-web-root-directory-linux.txt
-  - Discovery/Web-Content/default-web-root-directory-windows.txt
-  - Discovery/Web-Content/frontpage.txt
-  - Discovery/Web-Content/graphql.txt
-  - Discovery/Web-Content/jboss.txt
-  - Discovery/Web-Content/Jenkins-Hudson.txt
-  - Discovery/Web-Content/nginx.txt
-  - Discovery/Web-Content/oracle.txt
-  - Discovery/Web-Content/quickhits.txt
-  - Discovery/Web-Content/raft-large-directories.txt
-  - Discovery/Web-Content/raft-medium-words.txt
-  - Discovery/Web-Content/reverse-proxy-inconsistencies.txt
-  - Discovery/Web-Content/RobotsDisallowed-Top1000.txt
-  - Discovery/Web-Content/websphere.txt
-```
 
-
-#### Adding Custom Scripts
-
-TODO
+Refer to the [config](docs/config.md) documentation for more information.
 
 ## Collaboration
 

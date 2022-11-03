@@ -40,17 +40,18 @@
 #   Hide                            Hide the subsequent commands from the output
 #   Show                            Show the subsequent commands in the output
 
-Output arsenic-init.gif
+Output docs/examples/arsenic-init.gif
 
 Set FontSize 15
 Set FontFamily "DroidSansMono Nerd Font"
 Set Width 1200
-Set Height 800
+Set Height 650
+Set Padding 10
 
 Hide
 Type 'export PATH="/usr/local/go/bin:$PATH"' Enter Sleep 500ms
 Type "export GOPATH=$HOME/go" Enter Sleep 500ms
-Type "source ../../arsenic.rc" Enter Sleep 500ms
+Type "source arsenic.rc" Enter Sleep 500ms
 Type "clear" Enter Sleep 500ms
 
 Show
