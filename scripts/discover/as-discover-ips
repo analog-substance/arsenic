@@ -13,7 +13,7 @@ nmap -iL scope-ips.txt -sL -n -6 \
   > scope-ips-expanded-ipv6.txt
 
 TCP_PORTS=$(echo $(sort -r -k3 /usr/share/nmap/nmap-services | grep "/tcp" | awk '{print $2}' | cut -d/ -f1 | head -n $(arsenic config discover.top-tcp-count)) | sed 's/ /,/g')
-UDP_PORTS=$(echo $(sort -r -k3 /usr/share/nmap/nmap-services | grep "/udp" | awk '{print $2}' | cut -d/ -f1 | head -n $(arsenic config discover.top-tcp-count)) | sed 's/ /,/g')
+UDP_PORTS=$(echo $(sort -r -k3 /usr/share/nmap/nmap-services | grep "/udp" | awk '{print $2}' | cut -d/ -f1 | head -n $(arsenic config discover.top-udp-count)) | sed 's/ /,/g')
 TIMING_PROFILE=$(arsenic config discover.timing-profile)
 
 sudo nmap -sn \

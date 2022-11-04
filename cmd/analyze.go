@@ -2,8 +2,9 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/lair-framework/go-nmap"
+	"github.com/Ullaakut/nmap/v2"
 	"github.com/spf13/viper"
+	"log"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -80,11 +81,20 @@ func (svc *service) save(baseDir string) {
 	util.Mkdir(reconDir)
 
 	if svc.diffs.Length() > 0 {
-		util.WriteLines(filepath.Join(baseDir, "domains-with-resolv-differences"), svc.diffs.SortedStringSlice())
+		err := util.WriteLines(filepath.Join(baseDir, "domains-with-resolv-differences"), svc.diffs.SortedStringSlice())
+		if err != nil {
+			log.Fatalln(err)
+		}
 	}
 
-	util.WriteLines(filepath.Join(reconDir, "other-hostnames.txt"), svc.hostnames.SortedStringSlice())
-	util.WriteLines(filepath.Join(reconDir, "ip-addresses.txt"), svc.ipAddresses.SortedStringSlice())
+	err := util.WriteLines(filepath.Join(reconDir, "other-hostnames.txt"), svc.hostnames.SortedStringSlice())
+	if err != nil {
+		log.Fatalln(err)
+	}
+	err = util.WriteLines(filepath.Join(reconDir, "ip-addresses.txt"), svc.ipAddresses.SortedStringSlice())
+	if err != nil {
+		log.Fatalln(err)
+	}
 }
 
 type serviceMap map[string]*service
@@ -181,7 +191,7 @@ This will create a single host for hostnames that resolve to the same IPs`,
 	Run: func(cmd *cobra.Command, args []string) {
 		create, _ := cmd.Flags().GetBool("create")
 		update, _ := cmd.Flags().GetBool("update")
-		nmap, _ := cmd.Flags().GetBool("nmap")
+		nmapFlag, _ := cmd.Flags().GetBool("nmap")
 		keepPrivateIPs, _ := cmd.Flags().GetBool("private-ips")
 
 		// mode := "dry-run"
@@ -206,7 +216,7 @@ This will create a single host for hostnames that resolve to the same IPs`,
 		reviewIps(keepPrivateIPs)
 		fmt.Println("\n[+] IP review complete")
 
-		if nmap {
+		if nmapFlag {
 			getDiscoverNmaps()
 		}
 
@@ -240,7 +250,7 @@ This will create a single host for hostnames that resolve to the same IPs`,
 			} else if hostLen == 1 {
 				h = hosts[0]
 			} else {
-				fmt.Printf("[+] more than one host (%s) found for %s", hostLen, domain)
+				fmt.Printf("[+] more than one host (%d) found for %s", hostLen, domain)
 				for _, host := range hosts {
 					fmt.Println(host.Dir)
 				}
@@ -286,7 +296,7 @@ This will create a single host for hostnames that resolve to the same IPs`,
 
 		fmt.Println("\n[+] Domain processing complete")
 
-		if !nmap {
+		if !nmapFlag {
 			fmt.Println("\n[+] IP processing started")
 
 			scopeIps, err := util.ReadLines("scope-ips.txt")
@@ -368,7 +378,7 @@ func getDiscoverNmaps() {
 					}
 				}
 
-				if inScope == false {
+				if !inScope {
 					for _, hostname := range nmapHost.Hostnames {
 						if scope.IsInScope(hostname.Name, false) {
 							inScope = true
@@ -377,15 +387,13 @@ func getDiscoverNmaps() {
 					}
 				}
 
-				if inScope == false {
+				if !inScope {
 					continue
 				}
 			}
 
 			if !requireOpenPorts || len(nmapHost.Ports) > 0 {
-				var svc *service
-
-				svc = serviceByDomain.getOrInitByNmapHost(nmapHost)
+				svc := serviceByDomain.getOrInitByNmapHost(nmapHost)
 				for _, s := range nmapHost.Hostnames {
 					svc.hostnames.Add(s.Name)
 
@@ -584,10 +592,6 @@ func reviewIps(keepPrivateIPs bool) {
 	for _, domain := range domains {
 		serviceByDomain[domain].save(filepath.Join(analyzeDir, "services", domain))
 	}
-}
-
-func analyzeNmaps() {
-
 }
 
 // func normalizeDomain(domain string) string {

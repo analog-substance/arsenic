@@ -12,7 +12,6 @@ require (
 	github.com/gin-gonic/gin v1.7.7
 	github.com/go-playground/validator/v10 v10.10.1 // indirect
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
-	github.com/lair-framework/go-nmap v0.0.0-20191202052157-3507e0b03523 // indirect
 	github.com/magiconair/properties v1.8.6 // indirect
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/ryanuber/columnize v2.1.2+incompatible
