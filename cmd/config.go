@@ -169,10 +169,6 @@ func matchConfigType(currentValue interface{}, userValue string) (interface{}, e
 	return nil, fmt.Errorf("cannot set keys that are not of type int, string, []string or bool")
 }
 
-func createConfigIfNotExist() {
-
-}
-
 func printConfig() {
 	t, err := yaml.Marshal(viper.AllSettings())
 	if err != nil {

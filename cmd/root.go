@@ -18,6 +18,7 @@ import (
 )
 
 var cfgFile string
+var configInitialized bool = false
 
 var rootCmd = &cobra.Command{
 	Use:     "arsenic",
@@ -135,6 +136,33 @@ func initConfig() {
 		"Discovery/Web-Content/websphere.txt",
 	}
 
+	wordlists["sqli"] = []string{
+		"Fuzzing/Databases/sqli.auth.bypass.txt",
+		"Fuzzing/Databases/MSSQL.fuzzdb.txt",
+		"Fuzzing/Databases/MSSQL-Enumeration.fuzzdb.txt",
+		"Fuzzing/Databases/MySQL.fuzzdb.txt",
+		"Fuzzing/Databases/NoSQL.txt",
+		"Fuzzing/Databases/db2enumeration.fuzzdb.txt",
+		"Fuzzing/Databases/Oracle.fuzzdb.txt",
+		"Fuzzing/Databases/MySQL-Read-Local-Files.fuzzdb.txt",
+		"Fuzzing/Databases/Postgres-Enumeration.fuzzdb.txt",
+		"Fuzzing/Databases/MySQL-SQLi-Login-Bypass.fuzzdb.txt",
+		"Fuzzing/SQLi/Generic-BlindSQLi.fuzzdb.txt",
+		"Fuzzing/SQLi/Generic-SQLi.txt",
+		"Fuzzing/SQLi/quick-SQLi.txt",
+	}
+
+	wordlists["xss"] = []string{
+		"Fuzzing/XSS/XSS-Somdev.txt",
+		"Fuzzing/XSS/XSS-Bypass-Strings-BruteLogic.txt",
+		"Fuzzing/XSS/XSS-Jhaddix.txt",
+		"Fuzzing/XSS/xss-without-parentheses-semi-colons-portswigger.txt",
+		"Fuzzing/XSS/XSS-RSNAKE.txt",
+		"Fuzzing/XSS/XSS-Cheat-Sheet-PortSwigger.txt",
+		"Fuzzing/XSS/XSS-BruteLogic.txt",
+		"Fuzzing/XSS-Fuzzing",
+	}
+
 	blacklistedRootDomains := []string{
 		"1e100.net",
 		"akamaitechnologies.com",
@@ -198,6 +226,8 @@ func initConfig() {
 
 	viper.AutomaticEnv() // read in environment variables that match
 	viper.ReadInConfig()
+
+	configInitialized = true
 }
 
 // If no config file exists, all possible keys in the defaults
