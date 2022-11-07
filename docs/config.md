@@ -269,10 +269,24 @@ wordlist-paths:
 
 ## Wordlists
 
-The `wordlist` section contains lists of different wordlists to be combined to generated wordlists for specific purposes.
+The `wordlist` section contains sets of different wordlist file paths to be combined to generate wordlists for specific purposes.
 
 ```yaml
 wordlists:
+  sqli:
+  - Fuzzing/Databases/sqli.auth.bypass.txt
+  - Fuzzing/Databases/MSSQL.fuzzdb.txt
+  - Fuzzing/Databases/MSSQL-Enumeration.fuzzdb.txt
+  - Fuzzing/Databases/MySQL.fuzzdb.txt
+  - Fuzzing/Databases/NoSQL.txt
+  - Fuzzing/Databases/db2enumeration.fuzzdb.txt
+  - Fuzzing/Databases/Oracle.fuzzdb.txt
+  - Fuzzing/Databases/MySQL-Read-Local-Files.fuzzdb.txt
+  - Fuzzing/Databases/Postgres-Enumeration.fuzzdb.txt
+  - Fuzzing/Databases/MySQL-SQLi-Login-Bypass.fuzzdb.txt
+  - Fuzzing/SQLi/Generic-BlindSQLi.fuzzdb.txt
+  - Fuzzing/SQLi/Generic-SQLi.txt
+  - Fuzzing/SQLi/quick-SQLi.txt
   web-content:
   - Discovery/Web-Content/AdobeCQ-AEM.txt
   - Discovery/Web-Content/apache.txt
@@ -294,6 +308,15 @@ wordlists:
   - Discovery/Web-Content/reverse-proxy-inconsistencies.txt
   - Discovery/Web-Content/RobotsDisallowed-Top1000.txt
   - Discovery/Web-Content/websphere.txt
+  xss:
+  - Fuzzing/XSS/XSS-Somdev.txt
+  - Fuzzing/XSS/XSS-Bypass-Strings-BruteLogic.txt
+  - Fuzzing/XSS/XSS-Jhaddix.txt
+  - Fuzzing/XSS/xss-without-parentheses-semi-colons-portswigger.txt
+  - Fuzzing/XSS/XSS-RSNAKE.txt
+  - Fuzzing/XSS/XSS-Cheat-Sheet-PortSwigger.txt
+  - Fuzzing/XSS/XSS-BruteLogic.txt
+  - Fuzzing/XSS-Fuzzing
 ```
 
-Currently Arsenic can only generate the `web-content` wordlist. In the future, it will support being able to generate any wordlist defined in this section.
+Currently, there are three default wordlist sets: sqli, web-content, and xss. Other wordlists paths can be added to the existing ones or used to create new sets of wordlists.
