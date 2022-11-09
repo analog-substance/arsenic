@@ -1,8 +1,0 @@
-fast-resolv
-amass
-gobuster
-searchsploit
-jq
-SecLists
-nmap
-git
