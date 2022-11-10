@@ -212,6 +212,7 @@ func initConfig() {
 	setConfigDefault("discover.top-udp-count", 30)
 	setConfigDefault("discover.timing-profile", 4)
 	setConfigDefault("analyze.require-open-ports", true)
+	setConfigDefault("hosts.nmap-xml-glob", "nmap-*-??p.xml")
 	setConfigDefault("dns.resolvconf", "")
 	setConfigDefault("wordlist-paths", []string{
 		"/opt/SecLists",

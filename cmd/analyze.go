@@ -217,6 +217,7 @@ This will create a single host for hostnames that resolve to the same IPs`,
 		fmt.Println("\n[+] IP review complete")
 
 		if nmapFlag {
+			fmt.Println("[+] Process recon/nmap-*.xml files")
 			getDiscoverNmaps()
 		}
 
@@ -358,13 +359,17 @@ func getDiscoverNmaps() {
 	nmapServiceMap := make(serviceMap)
 
 	for _, file := range files {
+
+		fmt.Printf("[+] Processing %s\n", file)
 		data, err := os.ReadFile(file)
 		if err != nil {
+			fmt.Printf("[!] Failed to open file: %s\n", file)
 			continue
 		}
 
 		nmapRun, err := nmap.Parse(data)
 		if err != nil {
+			fmt.Printf("[!] Failed to parse nmap.xml file: %s\n", file)
 			continue
 		}
 
@@ -372,9 +377,11 @@ func getDiscoverNmaps() {
 			if !ignoreScope {
 				inScope := false
 				for _, addr := range nmapHost.Addresses {
-					if scope.IsInScope(addr.Addr, false) {
-						inScope = true
-						break
+					if addr.AddrType != "mac" {
+						if scope.IsInScope(addr.Addr, false) {
+							inScope = true
+							break
+						}
 					}
 				}
 
@@ -403,10 +410,13 @@ func getDiscoverNmaps() {
 				}
 
 				for _, s := range nmapHost.Addresses {
-					svc.ipAddresses.Add(s.Addr)
 
-					if dms, ok := domainsByIp[s.Addr]; ok {
-						svc.hostnames.AddRange(dms.StringSlice())
+					if s.AddrType != "mac" {
+						svc.ipAddresses.Add(s.Addr)
+
+						if dms, ok := domainsByIp[s.Addr]; ok {
+							svc.hostnames.AddRange(dms.StringSlice())
+						}
 					}
 				}
 

@@ -643,7 +643,7 @@ func (host Host) ports() []Port {
 	viper.UnmarshalKey("ignore-services", &ignoreServices)
 
 	portMap := make(map[string]Port)
-	globbed, _ := filepath.Glob(fmt.Sprintf("%s/recon/%s", host.Dir, "nmap-*-??p.xml"))
+	globbed, _ := filepath.Glob(fmt.Sprintf("%s/recon/%s", host.Dir, viper.GetString("hosts.nmap-xml-glob")))
 	quick := []string{}
 
 	tcpPorts := false
