@@ -1,0 +1,16 @@
+a.ns.hackerone.com
+api.hackerone.com
+b.ns.hackerone.com
+docs.hackerone.com
+gslink.hackerone.com
+hackerone.com
+mta-sts.forwarding.hackerone.com
+mta-sts.hackerone.com
+mta-sts.managed.hackerone.com
+resources.hackerone.com
+support.hackerone.com
+www.hackerone.com
+zendesk1.hackerone.com
+zendesk2.hackerone.com
+zendesk3.hackerone.com
+zendesk4.hackerone.com

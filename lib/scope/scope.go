@@ -30,8 +30,8 @@ func getScope() *scope {
 
 func (s *scope) loadDomainInfo() {
 	if !s.domainInfoLoaded {
-		domainSet := set.NewSet("")
-		rootDomainSet := set.NewSet("")
+		domainSet := set.NewStringSet()
+		rootDomainSet := set.NewStringSet()
 		s.blacklistedRootDomains = viper.GetStringSlice("blacklist.root-domains")
 		s.blacklistedDomains = viper.GetStringSlice("blacklist.domains")
 

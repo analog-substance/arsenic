@@ -117,30 +117,32 @@ If you want to customize the op creation process for whatever reason, there are 
 
 The second way is by creating an init hook script. The `arsenic init` command will run `as-init-op.sh` scripts located at `opt/*/scripts`, where the opt directory is where the Arsenic repository is located. Assuming the Arsenic repository is located at `$HOME/opt/arsenic`, create a script at `$HOME/opt/custom-arsenic/scripts/as-init-op.sh`. Anything in this script will execute when running `arsenic init`.
 
+### Running an Op
+
+With the op initialized, we must fill out the `scope-domains.txt` and `scope-ips.txt` files with the op's scope. These files contain the hosts that will be used to discover new domains and IPs and will always be regarded as in scope.
+
 ```bash
 echo example.com >> scope-domains.txt
-arsenic discover
+echo 127.0.0.1 >> scope-ips.txt
 ```
 
-Next we check what hosts we have.
-```bash
-arsenic analyze
-```
+After the scope has been filled out, we can now run `arsenic discover` which will use the scope to discover subdomains and IP addresses using various tools/services.
 
-If there is something you dont want to scan, blacklist it and re run until you have what you want.
+![Arsenic Discover](docs/examples/arsenic-discover.gif)
 
+To see everything that was discovered, run `arsenic scope`
 
-Now you can review things, blacklist things.
+![Arsenic Discover Scope](docs/examples/arsenic-discover-scope.gif)
 
-```bash
-arsenic config -s
-```
-Then simply add the domain to the `blacklist.domains` array
+There may be subdomains and IPs that were discovered but that are not in scope. Refer to the [blacklist](docs/config.md#blacklist) section of the config documentation for more information on how to update the blacklisted domains and IPs. If you do want to re-run the `discover` command after updating the blacklist, remove the `scope-domains-*` and `scope-ips-*` files along with the `recon/domains/*` and `recon/ips/*` directories.
 
-Once you have everything you want, run:
+Now that we have discovered more subdomains and IPs, we can use Arsenic to analyze the data and group the hosts by common IP.
+
 ```bash
 arsenic analyze -c
 ```
+
+![Arsenic Analyze](docs/examples/arsenic-analyze.gif)
 
 This will create your directories in `hosts/`. Now you can run.
 

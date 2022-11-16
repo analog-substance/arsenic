@@ -40,7 +40,7 @@
 #   Hide                            Hide the subsequent commands from the output
 #   Show                            Show the subsequent commands in the output
 
-Output docs/examples/arsenic-init.gif
+Output docs/examples/arsenic-config.gif
 
 Set FontSize 15
 Set FontFamily "DroidSansMono Nerd Font"
@@ -57,12 +57,43 @@ Type "cd /tmp" Enter Sleep 500ms
 Type "clear" Enter Sleep 500ms
 
 Show
-Type "arsenic init example_op" Sleep 500ms Enter
+Type "arsenic config" Sleep 500ms Enter
 Sleep 3s
 
-Type "tree example_op" Sleep 500ms Enter
+Type "arsenic config example_key example_value" Sleep 500ms Enter
+Sleep 2s
 
-Sleep 5s
+Type "arsenic config example_key" Sleep 500ms Enter
+Sleep 2s
+
+Type "arsenic config --remove-reset example_key" Sleep 500ms Enter
+Sleep 2s
+
+Type "arsenic config example_key" Sleep 500ms Enter
+Sleep 2s
+
+Type "arsenic config --sub-keys" Sleep 500ms Enter
+Sleep 2s
+
+Type "arsenic config scripts.discover --sub-keys" Sleep 500ms Enter
+Sleep 2s
+
+Type "arsenic config scripts.discover.as-subdomain-discovery.enabled false" Sleep 500ms Enter
+Sleep 1s
+
+Type "arsenic config scripts.discover.as-subdomain-discovery" Sleep 500ms Enter
+Sleep 3s
+
+Type "arsenic config scripts.discover.example-script.count 1" Sleep 500ms Enter
+Sleep 1s
+Type "arsenic config scripts.discover.example-script.enabled true" Sleep 500ms Enter
+Sleep 1s
+Type "arsenic config scripts.discover.example-script.order 500" Sleep 500ms Enter
+Sleep 1s
+Type "arsenic config scripts.discover.example-script.script path/to/example.sh" Sleep 500ms Enter
+Sleep 1s
+Type "arsenic config scripts.discover.example-script" Sleep 500ms Enter
+Sleep 3s
 
 Hide
-Type "rm -rf example_op" Enter
+Type "rm arsenic.yaml" Enter Sleep 500ms

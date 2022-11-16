@@ -1,0 +1,52 @@
+scripts:
+  discover:
+    as-combine-subdomains:
+      count: 2
+      enabled: true
+      order: 250
+      script: as-combine-subdomains
+    as-dns-resolution:
+      count: 2
+      enabled: true
+      order: 300
+      script: as-dns-resolution
+    as-domains-from-domain-ssl-certs:
+      count: 1
+      enabled: false
+      order: 200
+      script: as-domains-from-domain-ssl-certs
+    as-domains-from-ip-ssl-certs:
+      count: 2
+      enabled: false
+      order: 500
+      script: as-domains-from-ip-ssl-certs
+    as-http-screenshot-domains:
+      count: 1
+      enabled: false
+      order: 700
+      script: as-http-screenshot-domains
+    as-ip-recon:
+      count: 2
+      enabled: false
+      order: 400
+      script: as-ip-recon
+    as-ip-resolution:
+      count: 2
+      enabled: true
+      order: 600
+      script: as-ip-resolution
+    as-root-domain-recon:
+      count: 1
+      enabled: true
+      order: 0
+      script: as-root-domain-recon
+    as-subdomain-discovery:
+      count: 1
+      enabled: true
+      order: 50
+      script: as-subdomain-discovery
+    as-subdomain-enumeration:
+      count: 1
+      enabled: false
+      order: 100
+      script: as-subdomain-enumeration

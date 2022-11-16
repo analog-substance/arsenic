@@ -40,7 +40,7 @@
 #   Hide                            Hide the subsequent commands from the output
 #   Show                            Show the subsequent commands in the output
 
-Output docs/examples/arsenic-init.gif
+Output docs/examples/arsenic-discover.gif
 
 Set FontSize 15
 Set FontFamily "DroidSansMono Nerd Font"
@@ -53,16 +53,18 @@ Hide
 Type 'export PATH="/usr/local/go/bin:$PATH"' Enter Sleep 500ms
 Type "export GOPATH=$HOME/go" Enter Sleep 500ms
 Type "source arsenic.rc" Enter Sleep 500ms
-Type "cd /tmp" Enter Sleep 500ms
+Type "cp -r docs/examples/before-discover /tmp/arsenic-discover" Enter Sleep 500ms
+Type "cd /tmp/arsenic-discover" Enter Sleep 500ms
 Type "clear" Enter Sleep 500ms
 
 Show
-Type "arsenic init example_op" Sleep 500ms Enter
-Sleep 3s
+Type 'echo "hackerone.com" >> scope-domains.txt' Sleep 500ms Enter
+Type 'echo "104.16.100.52" >> scope-ips.txt' Sleep 500ms Enter
+Type 'arsenic discover' Sleep 500ms Enter
 
-Type "tree example_op" Sleep 500ms Enter
-
-Sleep 5s
+Sleep 30s
 
 Hide
-Type "rm -rf example_op" Enter
+Ctrl+C
+Type "cd ../" Enter Sleep 500ms
+Type "rm -rf /tmp/arsenic-discover" Enter Sleep 2s

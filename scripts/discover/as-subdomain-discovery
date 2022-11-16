@@ -22,11 +22,6 @@ function root_domain_recon {
   domain=$(echo $1 | tr 'A-Z' 'a-z')
   mkdir -p "recon/domains/$domain"
 
-#  if ! echo "$domain" | arsenic scope prune | grep "$domain" > /dev/null ; then
-#    _warn "Skipping domain for crtsh: $domain"
-#  else
-#  fi
-
   # only amass domains that are not a part of blacklisted root domains
   if ! echo "$domain" | arsenic scope prune -r | grep "$domain" > /dev/null ; then
     _warn "Skipping domain for amass: $domain"

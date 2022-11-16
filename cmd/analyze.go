@@ -130,10 +130,10 @@ This will create a single host for hostnames that resolve to the same IPs`,
 		}
 
 		reviewDomains(resolvResults)
-		fmt.Println("[+] Domain review complete")
+		fmt.Println("\n[+] Domain review complete")
 
 		reviewIps(keepPrivateIPs)
-		fmt.Println("[+] IP review complete")
+		fmt.Println("\n[+] IP review complete")
 
 		domains := serviceByDomain.keys()
 		for _, domain := range domains {
