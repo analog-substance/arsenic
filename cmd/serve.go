@@ -20,7 +20,12 @@ var serveCmd = &cobra.Command{
 
 		if hugoPath != "" {
 			go func() {
-				cmd := exec.CommandContext(context.Background(), "hugo", "server")
+				hugoArgs := []string{"server"}
+				if len(args) != 0 {
+					hugoArgs = append(hugoArgs, args...)
+				}
+
+				cmd := exec.CommandContext(context.Background(), "hugo", hugoArgs...)
 
 				cmd.Stderr = os.Stderr
 				cmd.Stdout = os.Stdout
