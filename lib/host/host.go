@@ -99,12 +99,24 @@ func (md Metadata) HasPorts(ports ...int) bool {
 	return md.HasTCPPorts(ports...) || md.HasUDPPorts(ports...)
 }
 
+func (md Metadata) HasAnyPort() bool {
+	return len(md.Ports) > 0
+}
+
 func (md Metadata) HasTCPPorts(ports ...int) bool {
 	return containsInt(md.TCPPorts, ports...)
 }
 
+func (md Metadata) HasAnyTCPPort() bool {
+	return len(md.TCPPorts) > 0
+}
+
 func (md Metadata) HasUDPPorts(ports ...int) bool {
 	return containsInt(md.UDPPorts, ports...)
+}
+
+func (md Metadata) HasAnyUDPPort() bool {
+	return len(md.UDPPorts) > 0
 }
 
 func (md Metadata) HasFlags(flags ...string) bool {

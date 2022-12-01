@@ -44,30 +44,40 @@ Show hosts who are in a CIDR block
 
   $ arsenic hosts -q '.InCIDR "10.1.1.0/24"'
 
-Currently Metadata has the following methods and fields:
+Metadata:
+	Methods:
+	- HasPorts(ports ...int) bool
+	- HasAnyPort() bool
+	- HasTCPPorts(ports ...int) bool
+	- HasAnyTCPPort() bool
+	- HasUDPPorts(ports ...int) bool
+	- HasAnyUDPPort() bool
+	- HasFlags(flags ...string) bool
+	- HasAllFlags(flags ...string) bool
+	- HasASFlags(flags ...string) bool
+	- HasAllASFlags(flags ...string) bool
+	- HasUserFlags(flags ...string) bool
+	- HasAllUserFlags(flags ...string) bool
+	- HasAnyHostname() bool
+	- InCIDR(cidrStr string) bool
 
-Methods:
-- HasPorts(ports ...int) bool
-- HasTCPPorts(ports ...int) bool
-- HasUDPPorts(ports ...int) bool
-- HasFlags(flags ...string) bool
-- HasASFlags(flags ...string) bool
-- HasUserFlags(flags ...string) bool
-- HasAnyHostname() bool
-- InCIDR(cidrStr string) bool
+	Fields:
+	- Name        string
+	- Hostnames   []string
+	- RootDomains []string
+	- IPAddresses []string
+	- Flags       []string
+	- UserFlags   []string
+	- TCPPorts    []int
+	- UDPPorts    []int
+	- Ports       []Port
+	- ReviewedBy  string
 
-Fields:
-- Name        string
-- Hostnames   []string
-- RootDomains []string
-- IPAddresses []string
-- Flags       []string
-- UserFlags   []string
-- TCPPorts    []int
-- UDPPorts    []int
-- Ports       []Port
-- ReviewedBy  string
-
+Port:
+	Fields:
+	- ID       int // The port number
+	- Protocol string
+	- Service  string
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 		hostsArgs, _ := cmd.Flags().GetStringSlice("host")
@@ -218,6 +228,7 @@ Fields:
 				cmd.PrintErrln(err)
 				return
 			}
+
 			for _, host := range hosts {
 				buf := new(bytes.Buffer)
 				err = t.Execute(buf, host.Metadata)
@@ -226,7 +237,14 @@ Fields:
 					return
 				}
 
-				fmt.Println(buf.String())
+				line := buf.String()
+				if line != "" {
+					if strings.HasSuffix(line, "\n") {
+						fmt.Print(line)
+					} else {
+						fmt.Println(line)
+					}
+				}
 			}
 		} else {
 			var lines []string
