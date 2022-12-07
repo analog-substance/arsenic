@@ -38,9 +38,16 @@ func (set *Set) Add(item interface{}) bool {
 	set.Set[item] = true
 	return !found
 }
+
 func (set *Set) AddRange(items interface{}) {
 	linq.From(items).ForEach(func(i interface{}) { set.Add(i) })
 }
+
+func (set *Set) Contains(item interface{}) bool {
+	_, found := set.Set[item]
+	return found
+}
+
 func (set *Set) Slice() interface{} {
 	sliceType := reflect.SliceOf(set.itemType)
 	values := reflect.MakeSlice(sliceType, 0, len(set.Set))

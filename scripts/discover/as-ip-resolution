@@ -17,6 +17,11 @@ fi
 ####
 
 FR_THREADS=100
+FR_RESOLVCONF=""
+AS_DNS_RESOLVECONF=$(arsenic config dns.resolvconf)
+if [ ! -z "$AS_DNS_RESOLVECONF" ] ; then
+  FR_RESOLVCONF="-r $AS_DNS_RESOLVECONF"
+fi
 
 if [ ! -z "$1" ]; then
   FR_THREADS="$1"
@@ -29,7 +34,7 @@ if [ ! -f "$RECON_FILE" ] ; then
   mkdir -p "$(dirname $RECON_FILE)"
 
   _ 'Resolving IP Addresses'
-  fast-resolv -c $FR_THREADS -d scope-ips-generated-public*.txt | tee "$RECON_FILE"
+  cat scope-ips-generated-public*.txt | sort -u | fast-resolv $FR_RESOLVCONF -c $FR_THREADS | tee "$RECON_FILE"
   cat "$RECON_FILE" | sort > sorted
   mv sorted "$RECON_FILE"
 fi

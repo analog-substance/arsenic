@@ -2,6 +2,9 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/Ullaakut/nmap/v2"
+	"github.com/spf13/viper"
+	"log"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -34,6 +37,7 @@ var (
 	domainsByIp         = make(stringSetMap)
 	ipsByIpResolvDomain = make(stringSetMap)
 	serviceByDomain     = make(serviceMap)
+	ignoreScope         = false
 )
 
 type stringSetMap map[string]*set.Set
@@ -77,11 +81,20 @@ func (svc *service) save(baseDir string) {
 	util.Mkdir(reconDir)
 
 	if svc.diffs.Length() > 0 {
-		util.WriteLines(filepath.Join(baseDir, "domains-with-resolv-differences"), svc.diffs.SortedStringSlice())
+		err := util.WriteLines(filepath.Join(baseDir, "domains-with-resolv-differences"), svc.diffs.SortedStringSlice())
+		if err != nil {
+			log.Fatalln(err)
+		}
 	}
 
-	util.WriteLines(filepath.Join(reconDir, "other-hostnames.txt"), svc.hostnames.SortedStringSlice())
-	util.WriteLines(filepath.Join(reconDir, "ip-addresses.txt"), svc.ipAddresses.SortedStringSlice())
+	err := util.WriteLines(filepath.Join(reconDir, "other-hostnames.txt"), svc.hostnames.SortedStringSlice())
+	if err != nil {
+		log.Fatalln(err)
+	}
+	err = util.WriteLines(filepath.Join(reconDir, "ip-addresses.txt"), svc.ipAddresses.SortedStringSlice())
+	if err != nil {
+		log.Fatalln(err)
+	}
 }
 
 type serviceMap map[string]*service
@@ -94,6 +107,50 @@ func (sm serviceMap) getOrInit(key string) *service {
 	}
 	return service
 }
+
+func (sm serviceMap) getOrInitByNmapHost(nmapHost nmap.Host) *service {
+	domains := []string{}
+	for _, s := range nmapHost.Hostnames {
+		domains = append(domains, s.Name)
+	}
+
+	service := sm.findByDomains(domains)
+	if service != nil {
+		return service
+	}
+
+	IPAddresses := []string{}
+	for _, s := range nmapHost.Addresses {
+		IPAddresses = append(IPAddresses, s.Addr)
+	}
+	service = sm.findByIPAddrs(IPAddresses)
+	if service != nil {
+		return service
+	}
+
+	service = newService()
+	if len(domains) > 0 {
+		sm[domains[0]] = service
+	} else {
+		sm[IPAddresses[0]] = service
+	}
+	return service
+}
+
+func (sm serviceMap) add(service *service) {
+	var key string
+	if service.hostnames.Length() > 0 {
+		key = service.hostnames.SortedStringSlice()[0]
+	} else if service.ipAddresses.Length() > 0 {
+		key = service.ipAddresses.SortedStringSlice()[0]
+	}
+
+	_, found := sm[key]
+	if !found {
+		sm[key] = service
+	}
+}
+
 func (sm serviceMap) keys() []string {
 	var keys []string
 	for key := range sm {
@@ -101,6 +158,28 @@ func (sm serviceMap) keys() []string {
 	}
 	sort.Strings(keys)
 	return keys
+}
+
+func (sm serviceMap) findByDomains(domains []string) *service {
+	for _, s := range sm {
+		for _, d := range domains {
+			if s.hostnames.Contains(d) {
+				return s
+			}
+		}
+	}
+	return nil
+}
+
+func (sm serviceMap) findByIPAddrs(addrs []string) *service {
+	for _, s := range sm {
+		for _, a := range addrs {
+			if s.ipAddresses.Contains(a) {
+				return s
+			}
+		}
+	}
+	return nil
 }
 
 var analyzeCmd = &cobra.Command{
@@ -111,6 +190,8 @@ var analyzeCmd = &cobra.Command{
 This will create a single host for hostnames that resolve to the same IPs`,
 	Run: func(cmd *cobra.Command, args []string) {
 		create, _ := cmd.Flags().GetBool("create")
+		update, _ := cmd.Flags().GetBool("update")
+		nmapFlag, _ := cmd.Flags().GetBool("nmap")
 		keepPrivateIPs, _ := cmd.Flags().GetBool("private-ips")
 
 		// mode := "dry-run"
@@ -135,9 +216,14 @@ This will create a single host for hostnames that resolve to the same IPs`,
 		reviewIps(keepPrivateIPs)
 		fmt.Println("\n[+] IP review complete")
 
+		if nmapFlag {
+			fmt.Println("[+] Process recon/nmap-*.xml files")
+			getDiscoverNmaps()
+		}
+
 		domains := serviceByDomain.keys()
 		for _, domain := range domains {
-			if !scope.IsInScope(domain, false) {
+			if !ignoreScope && !scope.IsInScope(domain, false) {
 				continue
 			}
 
@@ -153,65 +239,95 @@ This will create a single host for hostnames that resolve to the same IPs`,
 				}
 			}
 
-			if len(hosts) == 0 {
+			hostLen := len(hosts)
+			msgs := []string{}
+			if hostLen == 0 {
+				if update {
+					continue
+				}
 				// Still no host, lets create a new one
-				fmt.Printf("[+] Creating new service %s\n", domain)
+				msgs = append(msgs, fmt.Sprintf("[+] Creating new service %s\n", domain))
 				h = host.InitHost(filepath.Join("hosts", domain))
-			} else {
+			} else if hostLen == 1 {
 				h = hosts[0]
-				if h.Metadata.Name != domain {
-					fmt.Printf("[+] Adding domains to %s from %s\n", h.Metadata.Name, domain)
-				} else {
-					fmt.Printf("[+] Updating existing %s\n", domain)
+			} else {
+				fmt.Printf("[+] more than one host (%d) found for %s", hostLen, domain)
+				for _, host := range hosts {
+					fmt.Println(host.Dir)
 				}
 			}
 
 			for _, hostname := range h.Metadata.Hostnames {
 				if scope.IsInScope(hostname, false) {
-					service.hostnames.Add(hostname)
+					if service.hostnames.Add(hostname) {
+						msgs = append(msgs, fmt.Sprintf("[+] Adding domain (%s) to service (%s)\n", hostname, domain))
+					}
 				}
 			}
 			h.Metadata.Hostnames = service.hostnames.SortedStringSlice()
 
 			for _, IPAddr := range h.Metadata.IPAddresses {
 				if scope.IsInScope(IPAddr, false) {
-					service.ipAddresses.Add(IPAddr)
+					if service.ipAddresses.Add(IPAddr) {
+						msgs = append(msgs, fmt.Sprintf("[+] Adding IP Address (%s) to service (%s)\n", IPAddr, domain))
+					}
 				}
 			}
 			h.Metadata.IPAddresses = service.ipAddresses.SortedStringSlice()
 
-			if create {
-				h.SaveMetadata()
+			if create || update {
+				exists := false
+				if _, err := os.Stat(h.Dir); !os.IsNotExist(err) {
+					exists = true
+				}
+
+				if update && exists || !update {
+
+					for _, msg := range msgs {
+						fmt.Print(msg)
+					}
+					h.SaveMetadata()
+				}
+			} else {
+				for _, msg := range msgs {
+					fmt.Print(msg)
+				}
 			}
 		}
 
 		fmt.Println("\n[+] Domain processing complete")
-		fmt.Println("\n[+] IP processing started")
 
-		scopeIps, err := util.ReadLines("scope-ips.txt")
-		if err != nil {
-			fmt.Println(err)
-			return
+		if !nmapFlag {
+			fmt.Println("\n[+] IP processing started")
+
+			scopeIps, err := util.ReadLines("scope-ips.txt")
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+			linq.From(scopeIps).
+				ForEach(func(i interface{}) {
+					ip := i.(string)
+					if strings.Contains(ip, "/") {
+						return
+					}
+
+					if len(host.GetByIp(ip)) > 0 {
+						return
+					}
+
+					fmt.Printf("[+] Creating new service for IP %s\n", ip)
+					if create {
+						h := host.InitHost(filepath.Join("hosts", ip))
+						h.Metadata.Hostnames = make([]string, 0)
+						h.Metadata.RootDomains = make([]string, 0)
+
+						h.SaveMetadata()
+					}
+				})
+
+			fmt.Println("\n[+] IP processing complete")
 		}
-		linq.From(scopeIps).
-			ForEach(func(i interface{}) {
-				ip := i.(string)
-
-				if len(host.GetByIp(ip)) > 0 {
-					return
-				}
-
-				fmt.Printf("[+] Creating new service %s\n", ip)
-				if create {
-					h := host.InitHost(filepath.Join("hosts", ip))
-					h.Metadata.Hostnames = make([]string, 0)
-					h.Metadata.RootDomains = make([]string, 0)
-
-					h.SaveMetadata()
-				}
-			})
-
-		fmt.Println("\n[+] IP processing complete")
 	},
 }
 
@@ -235,6 +351,81 @@ func getResolvResults() ([]string, error) {
 	}
 
 	return stringSet.SortedStringSlice(), nil
+}
+
+func getDiscoverNmaps() {
+	files, _ := filepath.Glob("recon/nmap-*.xml")
+	requireOpenPorts := viper.GetBool("analyze.require-open-ports")
+	nmapServiceMap := make(serviceMap)
+
+	for _, file := range files {
+
+		fmt.Printf("[+] Processing %s\n", file)
+		data, err := os.ReadFile(file)
+		if err != nil {
+			fmt.Printf("[!] Failed to open file: %s\n", file)
+			continue
+		}
+
+		nmapRun, err := nmap.Parse(data)
+		if err != nil {
+			fmt.Printf("[!] Failed to parse nmap.xml file: %s\n", file)
+			continue
+		}
+
+		for _, nmapHost := range nmapRun.Hosts {
+			if !ignoreScope {
+				inScope := false
+				for _, addr := range nmapHost.Addresses {
+					if addr.AddrType != "mac" {
+						if scope.IsInScope(addr.Addr, false) {
+							inScope = true
+							break
+						}
+					}
+				}
+
+				if !inScope {
+					for _, hostname := range nmapHost.Hostnames {
+						if scope.IsInScope(hostname.Name, false) {
+							inScope = true
+							break
+						}
+					}
+				}
+
+				if !inScope {
+					continue
+				}
+			}
+
+			if !requireOpenPorts || len(nmapHost.Ports) > 0 {
+				svc := serviceByDomain.getOrInitByNmapHost(nmapHost)
+				for _, s := range nmapHost.Hostnames {
+					svc.hostnames.Add(s.Name)
+
+					if ips, ok := ipsByDomain[s.Name]; ok {
+						svc.ipAddresses.AddRange(ips.StringSlice())
+					}
+				}
+
+				for _, s := range nmapHost.Addresses {
+
+					if s.AddrType != "mac" {
+						svc.ipAddresses.Add(s.Addr)
+
+						if dms, ok := domainsByIp[s.Addr]; ok {
+							svc.hostnames.AddRange(dms.StringSlice())
+						}
+					}
+				}
+
+				nmapServiceMap.add(svc)
+			}
+		}
+	}
+
+	serviceByDomain = nmapServiceMap
 }
 
 func reviewDomains(resolvResults []string) {
@@ -422,5 +613,8 @@ func init() {
 	rootCmd.AddCommand(analyzeCmd)
 
 	analyzeCmd.Flags().BoolP("create", "c", false, "really create hosts")
+	analyzeCmd.Flags().BoolP("update", "u", false, "only update existing hosts, dont create new ones")
+	analyzeCmd.Flags().BoolVarP(&ignoreScope, "ignore-scope", "i", false, "ignore scope")
 	analyzeCmd.Flags().Bool("private-ips", false, "keep private IPs")
+	analyzeCmd.Flags().Bool("nmap", false, "import hosts from recon/nmap-*.xml files")
 }

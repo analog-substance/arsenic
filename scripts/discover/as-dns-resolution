@@ -17,6 +17,11 @@ fi
 ####
 
 FR_THREADS=50
+FR_RESOLVCONF=""
+AS_DNS_RESOLVECONF=$(arsenic config dns.resolvconf)
+if [ ! -z "$AS_DNS_RESOLVECONF" ] ; then
+  FR_RESOLVCONF="-r $AS_DNS_RESOLVECONF"
+fi
 
 if [ ! -z "$1" ]; then
   FR_THREADS="$1"
@@ -31,7 +36,7 @@ find recon/domains/ -maxdepth 1 -type d  | tail -n +2 | while read domain_path; 
       mkdir -p "$(dirname $RECON_FILE)"
       root_domain=$(basename "$domain_path")
       _ 'Resoving domains for "'$root_domain'"'
-      fast-resolv -c $FR_THREADS -d "$domain_path/subdomains.txt" | tee "$RECON_FILE"
+      fast-resolv $FR_RESOLVCONF -c $FR_THREADS -d "$domain_path/subdomains.txt" | tee "$RECON_FILE"
       cat "$RECON_FILE" | sort > sorted
       mv sorted "$RECON_FILE"
     fi

@@ -8,6 +8,7 @@ import (
 	"github.com/analog-substance/arsenic/lib/util"
 	"github.com/spf13/viper"
 	"golang.org/x/net/publicsuffix"
+	"net"
 )
 
 type scope struct {
@@ -116,8 +117,14 @@ func (s *scope) IsRootDomainInScope(checkRootDomain string) bool {
 
 func (s *scope) IsIPInScope(checkHostIP string) bool {
 	s.loadExplicitScopeIPs()
+	parsedIP := net.ParseIP(checkHostIP)
 	for _, hostIP := range s.hostIPsExplicitlyInScope {
-		if checkHostIP == hostIP {
+		if strings.Contains(hostIP, "/") {
+			_, inScopeIPNet, _ := net.ParseCIDR(hostIP)
+			if inScopeIPNet.Contains(parsedIP) {
+				return true
+			}
+		} else if checkHostIP == hostIP {
 			return true
 		}
 	}
