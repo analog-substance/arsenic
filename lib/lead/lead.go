@@ -308,13 +308,8 @@ func (l *Lead) Save() error {
 
 		if l.ExternalData.Nessus.ReportItem.SeeAlso != "" {
 			links := strings.Split(l.ExternalData.Nessus.ReportItem.SeeAlso, "\n")
-			for _, link := range links {
-				references = append(references, link)
-			}
+			references = append(references, links...)
 		}
-
-	} else {
-		// generate random ID
 	}
 
 	leadDir := path.Join("recon", "leads", ID)

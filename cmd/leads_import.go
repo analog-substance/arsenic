@@ -38,8 +38,6 @@ var importCmd = &cobra.Command{
 				if err != nil {
 					log.Fatalln(err)
 				}
-				fmt.Println(nessusData.Policy.PolicyName)
-				fmt.Println(nessusData.Report.Name)
 
 				for _, host := range nessusData.Report.ReportHosts {
 					for _, item := range host.ReportItems {
@@ -57,7 +55,6 @@ var importCmd = &cobra.Command{
 
 						if !ok {
 							findings[item.PluginID] = &lead.NessusFinding{ReportItem: item, AffectedAssets: []lead.AffectedAsset{a}}
-							finding = findings[item.PluginID]
 						} else {
 							finding.AffectedAssets = append(finding.AffectedAssets, a)
 						}
