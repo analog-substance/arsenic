@@ -66,6 +66,7 @@ type service struct {
 	hostnames   *set.Set
 	ipAddresses *set.Set
 	diffs       *set.Set
+	ports       *set.Set
 }
 
 func newService() *service {
@@ -374,58 +375,66 @@ func getDiscoverNmaps() {
 		}
 
 		for _, nmapHost := range nmapRun.Hosts {
-			if !ignoreScope {
-				inScope := false
-				for _, addr := range nmapHost.Addresses {
-					if addr.AddrType != "mac" {
-						if scope.IsInScope(addr.Addr, false) {
-							inScope = true
-							break
-						}
-					}
-				}
+			svc := serviceByDomain.getOrInitByNmapHost(nmapHost)
+			for _, s := range nmapHost.Hostnames {
+				svc.hostnames.Add(s.Name)
 
-				if !inScope {
-					for _, hostname := range nmapHost.Hostnames {
-						if scope.IsInScope(hostname.Name, false) {
-							inScope = true
-							break
-						}
-					}
-				}
-
-				if !inScope {
-					continue
+				if ips, ok := ipsByDomain[s.Name]; ok {
+					svc.ipAddresses.AddRange(ips.StringSlice())
 				}
 			}
 
-			if !requireOpenPorts || len(nmapHost.Ports) > 0 {
-				svc := serviceByDomain.getOrInitByNmapHost(nmapHost)
-				for _, s := range nmapHost.Hostnames {
-					svc.hostnames.Add(s.Name)
+			for _, s := range nmapHost.Addresses {
 
-					if ips, ok := ipsByDomain[s.Name]; ok {
-						svc.ipAddresses.AddRange(ips.StringSlice())
+				if s.AddrType != "mac" {
+					svc.ipAddresses.Add(s.Addr)
+
+					if dms, ok := domainsByIp[s.Addr]; ok {
+						svc.hostnames.AddRange(dms.StringSlice())
 					}
 				}
-
-				for _, s := range nmapHost.Addresses {
-
-					if s.AddrType != "mac" {
-						svc.ipAddresses.Add(s.Addr)
-
-						if dms, ok := domainsByIp[s.Addr]; ok {
-							svc.hostnames.AddRange(dms.StringSlice())
-						}
-					}
-				}
-
-				nmapServiceMap.add(svc)
 			}
+
+			for _, s := range nmapHost.Ports {
+				svc.ports.Add(fmt.Sprintf("%d/%s", s.ID, s.Protocol))
+			}
+			nmapServiceMap.add(svc)
 		}
 	}
 
-	serviceByDomain = nmapServiceMap
+	validNmapServiceMap := make(serviceMap)
+
+	for _, nmapService := range nmapServiceMap {
+
+		if !ignoreScope {
+			inScope := false
+			for _, addr := range nmapService.ipAddresses.StringSlice() {
+				if scope.IsInScope(addr, false) {
+					inScope = true
+					break
+				}
+			}
+
+			if !inScope {
+				for _, hostname := range nmapService.hostnames.StringSlice() {
+					if scope.IsInScope(hostname, false) {
+						inScope = true
+						break
+					}
+				}
+			}
+
+			if !inScope {
+				continue
+			}
+		}
+
+		if !requireOpenPorts || nmapService.ports.Length() > 0 {
+			validNmapServiceMap.add(nmapService)
+		}
+	}
+
+	serviceByDomain = validNmapServiceMap
 }
 
 func reviewDomains(resolvResults []string) {
