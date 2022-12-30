@@ -74,6 +74,7 @@ func newService() *service {
 		hostnames:   set.NewStringSet(),
 		ipAddresses: set.NewStringSet(),
 		diffs:       set.NewStringSet(),
+		ports:       set.NewStringSet(),
 	}
 }
 
