@@ -228,10 +228,13 @@ type NessusFinding struct {
 }
 
 func FromNessusFinding(finding *NessusFinding) *Lead {
+
+	cweRefs := append([]string{}, finding.ReportItem.CWE...)
+
 	return &Lead{
 		Title:        finding.ReportItem.PluginName,
 		Description:  finding.ReportItem.Synopsis,
-		CweRefs:      finding.ReportItem.CWE,
+		CweRefs:      cweRefs,
 		ExternalUUID: "",
 		Cvss: CVSS{
 			finding.ReportItem.RiskFactor,
@@ -273,11 +276,6 @@ type Lead struct {
 func (l *Lead) Save() error {
 	isNessus := l.ExternalData.Nessus.ReportItem.PluginID != ""
 
-	out, err := json.MarshalIndent(l, "", "  ")
-	if err != nil {
-		return err
-	}
-
 	var ID string
 	var summary string
 	var recommendations string
@@ -291,6 +289,7 @@ func (l *Lead) Save() error {
 			log.Fatalln(err)
 		}
 		ID = fmt.Sprintf("deadbeef-cafe-babe-f007-%012d", pluginInt)
+		l.ExternalUUID = ID
 		summary = l.ExternalData.Nessus.ReportItem.Description
 		recommendations = l.ExternalData.Nessus.ReportItem.Solution
 
@@ -314,6 +313,11 @@ func (l *Lead) Save() error {
 
 	leadDir := path.Join("recon", "leads", ID)
 	os.MkdirAll(leadDir, 0755)
+
+	out, err := json.MarshalIndent(l, "", "  ")
+	if err != nil {
+		return err
+	}
 
 	//00-metadata.md  01-summary.md  02-affected_assets.md  03-recommendations.md  04-references.md  05-steps_to_reproduce.md
 	err = os.WriteFile(path.Join(leadDir, "00-metadata.md"), out, 0644)
