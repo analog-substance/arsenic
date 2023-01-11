@@ -78,6 +78,7 @@ To use arsenic, the following are required:
 - exploitdb (searchsploit)
 - ffuf
 - nuclei
+- fast-resolv (https://github.com/defektive/fast-resolv)
 
 #### Optional Prerequisites
 
