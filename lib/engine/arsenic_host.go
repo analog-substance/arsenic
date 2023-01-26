@@ -44,6 +44,15 @@ func makeArsenicHost(h *host.Host) *tengo.ImmutableMap {
 					return value, nil
 				},
 			},
+			"has_any_port": &tengo.UserFunction{
+				Name: "has_any_port",
+				Value: func(args ...tengo.Object) (tengo.Object, error) {
+					if h.Metadata.HasAnyPort() {
+						return tengo.TrueValue, nil
+					}
+					return tengo.FalseValue, nil
+				},
+			},
 			"files": &tengo.UserFunction{
 				Name: "files",
 				Value: func(args ...tengo.Object) (tengo.Object, error) {
