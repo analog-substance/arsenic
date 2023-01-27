@@ -13,21 +13,18 @@ log := import("log")
 rand := import("rand")
 git := import("git")
 cobra := import("cobra")
+check_err := import("check_err")
 
 getHosts := func(flags) {
   err := git.pull()
-  if is_error(err) {
-    script.stop(err)
-  }
+  check_err(err)
   
   hosts := []
   allHosts := arsenic.hosts(flags)
-  if is_error(allHosts) {
-    script.stop(allHosts)
-  }
+  check_err(allHosts)
 
   for host in allHosts {
-    files := host.files(filepath.from_slash("recon/nmap*tcp*"))
+    files := host.files(filepath.from_slash("recon/nmap-punched*tcp*"))
     if len(files) > 0 {
       continue
     }
@@ -47,9 +44,7 @@ rootCmd.set_persistent_pre_run(func(cmd, args) {
   flags = cmd.flags.get_string_slice("flags")
 
   err := git.pull()
-  if is_error(err) {
-    script.stop(err)
-  }
+  check_err(err)
 })
 
 listCmd := cobra.cmd("list", "Lists the hosts that need nmap TCP scans.")
@@ -76,9 +71,7 @@ scanCmd.set_run(func(cmd, args) {
     targetHost = slice.rand_item(getHosts(flags))
     if !targetHost {
       files := arsenic.locked_files("hosts/*/recon/nmap-punched-quick-tcp.nmap")
-      if is_error(files) {
-        script.stop(files)
-      }
+      check_err(files)
 
       if len(files) > 0 {
         log.warn("other TCP port scans are still running... lets wait before continuing")
@@ -101,9 +94,7 @@ scanCmd.set_run(func(cmd, args) {
     reconPath := filepath.join(host.dir, "recon")
 
     files := host.files(filepath.join(reconPath, "nmap-punched*tcp*"))
-    if is_error(files) {
-      script.stop(files)
-    }
+    check_err(files)
 
     if len(files) != 0 {
       return
@@ -114,45 +105,31 @@ scanCmd.set_run(func(cmd, args) {
     os.mkdir_all(reconPath, 0755)
 
     err := git.lock(filepath.join(reconPath, "nmap-punched-quick-tcp.nmap"), format("TCP port scan lock: %s", host.name))
-    if is_error(err) {
-      script.stop(err)
-    }
+    check_err(err)
 
     previousDir := os.getwd()
-    if is_error(previousDir) {
-      script.stop(previousDir)
-    }
+    check_err(previousDir)
 
     err = os.chdir(host.dir)
-    if is_error(err) {
-      script.stop(err)
-    }
+    check_err(err)
 
     log.info(format("Port Scan / TCP / %s / running", host.name))
 
     err = arsenic.tcp_scan(host.name)
-    if is_error(err){
-      script.stop(err)
-    }
+    check_err(err)
 
     err = git.commit(".", format("TCP port scan complete: %s", host.name))
-    if is_error(err) {
-      script.stop(err)
-    }
+    check_err(err)
 
     err = os.chdir(previousDir)
-    if is_error(err){
-      script.stop(err)
-    }
+    check_err(err)
 
     log.info(format("Port Scan / TCP / %s / complete", host.name))
   }
 
   if manual {
     targetHost = arsenic.host(targetHostName)
-    if is_error(targetHost) {
-      script.stop(targetHost)
-    }
+    check_err(targetHost)
   } else {
     log.warn("no args found, autodetecting")
 
@@ -171,6 +148,4 @@ scanCmd.set_run(func(cmd, args) {
 })
 
 err := rootCmd()
-if is_error(err) {
-	script.stop(err)
-}
+check_err(err)

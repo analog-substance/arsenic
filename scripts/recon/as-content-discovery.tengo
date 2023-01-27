@@ -11,6 +11,7 @@ log := import("log")
 git := import("git")
 set := import("set")
 cobra := import("cobra")
+check_err := import("check_err")
 
 genOutputFileName := func(rawURL, wordlistName) {
   rawURL = text.replace(rawURL, "://", ".", -1)
@@ -20,23 +21,17 @@ genOutputFileName := func(rawURL, wordlistName) {
 
 getHostURLs := func(flags, wordlistName) {
   hosts := arsenic.hosts(flags)
-  if is_error(hosts) {
-    script.stop(hosts)
-  }
+  check_err(hosts)
 
   hostURLs := []
   urlSet := set.new_string_set()
   for host in hosts {
     urls := host.urls("http")
-    if is_error(urls) {
-      script.stop(urls)
-    }
+    check_err(urls)
 
     for rawURL in urls {
       success := urlSet.add(rawURL)
-      if is_error(success) {
-        script.stop(success)
-      }
+      check_err(success)
 
       if !success {
         continue
@@ -45,9 +40,7 @@ getHostURLs := func(flags, wordlistName) {
       outputFile := genOutputFileName(rawURL, wordlistName)
       
       exists := host.file_exists(filepath.join("recon", outputFile))
-      if is_error(exists) {
-        script.stop(exists)
-      }
+      check_err(exists)
 
       if !exists {
         hostURLs = append(hostURLs, format("%s %s", host.name, rawURL))
@@ -69,25 +62,19 @@ rootCmd.set_persistent_pre_run(func(cmd, args) {
   flags = cmd.flags.get_string_slice("flags")
 
   wordlistFile = filepath.abs("recon/wordlist-content-discover.txt")
-  if is_error(wordlistFile) {
-    script.stop(wordlistFile)
-  }
+  check_err(wordlistFile)
 
   if !filepath.file_exists(wordlistFile) {
     log.info("Generating wordlist...")
     err := arsenic.gen_wordlist("web-content", wordlistFile)
-    if is_error(err) {
-      script.stop(err)
-    }
+    check_err(err)
   }
 
   wordlistName = filepath.base(wordlistFile)
   wordlistName = text.trim_suffix(wordlistName, filepath.ext(wordlistName))
 
   err := git.pull()
-  if is_error(err) {
-    script.stop(err)
-  }
+  check_err(err)
 })
 
 listCmd := cobra.cmd("list", "Lists the hosts that need content enumeration")
@@ -119,9 +106,7 @@ scanCmd.set_run(func(cmd, args) {
     elem := slice.rand_item(getHostURLs(flags, wordlistName))
     if !elem {
       files := arsenic.locked_files("hosts/*/recon/ffuf*.json")
-      if is_error(files) {
-        script.stop(files)
-      }
+      check_err(files)
 
       if len(files) > 0 {
         log.warn("other ffufs are still running... lets wait before continuing")
@@ -145,14 +130,10 @@ scanCmd.set_run(func(cmd, args) {
     log.info(format("Content Discovery / %s / %s / preparing", host, rawURL))
 
     previousDir := os.getwd()
-    if is_error(previousDir) {
-      script.stop(previousDir)
-    }
+    check_err(previousDir)
 
     err := os.chdir(filepath.join("hosts", host))
-    if is_error(err) {
-      script.stop(err)
-    }
+    check_err(err)
     
     outputFile := genOutputFileName(rawURL, wordlistName)
 
@@ -165,29 +146,21 @@ scanCmd.set_run(func(cmd, args) {
       // check if url is S3 bucket
 
       err = git.lock(outputPath, format("ffuf lock: %s", rawURL))
-      if is_error(err) {
-        script.stop(err)
-      }
+      check_err(err)
 
       log.info(format("Content Discovery / %s / %s / running", host, rawURL))
 
       err = arsenic.ffuf("-a", "Firefox", "-u", rawURL, "-w", wordlistFile, "-o", outputFile)
-      if is_error(err) {
-        script.stop(err)
-      }
+      check_err(err)
 
       log.info(format("Content Discovery / %s / %s / complete", host, rawURL))
     }
 
     err = git.commit(".", format("ffuf complete: %s", rawURL))
-    if is_error(err) {
-      script.stop(err)
-    }
+    check_err(err)
 
     err = os.chdir(previousDir)
-    if is_error(err){
-      script.stop(err)
-    }
+    check_err(err)
   }
 
   if !manual {
@@ -207,6 +180,4 @@ scanCmd.set_run(func(cmd, args) {
 })
 
 err := rootCmd()
-if is_error(err) {
-	script.stop(err)
-}
+check_err(err)

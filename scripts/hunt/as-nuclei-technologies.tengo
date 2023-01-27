@@ -10,19 +10,15 @@ log := import("log")
 git := import("git")
 exec := import("exec")
 cobra := import("cobra")
-
+check_err := import("check_err")
 
 getHosts := func(flags) {
   err := git.pull()
-  if is_error(err) {
-    script.stop(err)
-  }
+  check_err(err)
   
   hosts := []
   allHosts := arsenic.hosts(flags)
-  if is_error(allHosts) {
-    script.stop(allHosts)
-  }
+  check_err(allHosts)
 
   for host in allHosts {
     if !host.has_any_port() {
@@ -49,9 +45,7 @@ rootCmd.set_persistent_pre_run(func(cmd, args) {
   flags = cmd.flags.get_string_slice("flags")
 
   err := git.pull()
-  if is_error(err) {
-    script.stop(err)
-  }
+  check_err(err)
 })
 
 listCmd := cobra.cmd("list", "Run Nuclei technology templates on hosts that need it.")
@@ -95,9 +89,7 @@ runCmd.set_run(func(cmd, args) {
     reconPath := filepath.join(host.dir, "recon")
 
     files := host.files(filepath.join(reconPath, "nuclei-technologies.txt"))
-    if is_error(files) {
-      script.stop(files)
-    }
+    check_err(files)
 
     if len(files) != 0 {
       return
@@ -110,9 +102,7 @@ runCmd.set_run(func(cmd, args) {
     outputName := filepath.join(reconPath, "nuclei-technologies.txt")
 
     err := git.lock(outputName, format("Nuclei Technologies lock: %s", host.name))
-    if is_error(err) {
-      script.stop(err)
-    }
+    check_err(err)
 
     log.info(format("Nuclei / Technologies / %s / running", host.name))
 
@@ -122,32 +112,24 @@ runCmd.set_run(func(cmd, args) {
     }
 
     hostURLs := host.urls()
-    if is_error(hostURLs) {
-      script.stop(hostURLs)
-    }
+    check_err(hostURLs)
 
     for u in hostURLs {
       nucleiArgs = append(nucleiArgs, "-u", u)
     }
 
     err = exec.run_with_sig_handler(nucleiArgs...)
-    if is_error(err) {
-      script.stop(err)
-    }
+    check_err(err)
 
     err = git.commit(".", format("Nuclei Technologies complete: %s", host.name))
-    if is_error(err) {
-      script.stop(err)
-    }
+    check_err(err)
 
     log.info(format("Nuclei / Technologies / %s / complete", host.name))
   }
 
   if manual {
     targetHost = arsenic.host(targetHostName)
-    if is_error(targetHost) {
-      script.stop(targetHost)
-    }
+    check_err(targetHost)
   } else {
     log.warn("no args found, autodetecting")
 
@@ -166,6 +148,4 @@ runCmd.set_run(func(cmd, args) {
 })
 
 err := rootCmd()
-if is_error(err) {
-	script.stop(err)
-}
+check_err(err)

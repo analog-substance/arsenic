@@ -10,6 +10,16 @@ import (
 	"github.com/analog-substance/tengo/v2/stdlib"
 )
 
+const checkErrSrcModule = `
+script := import("script")
+
+export func(err) {
+	if is_error(err) {
+		script.stop(err)
+	}
+}
+`
+
 type Script struct {
 	ctx      context.Context
 	cancel   context.CancelFunc
@@ -46,6 +56,7 @@ func NewScript(path string) *Script {
 	moduleMap.AddBuiltinModule("set", script.SetModuleMap())
 	moduleMap.AddBuiltinModule("cobra", script.CobraModuleMap())
 	moduleMap.AddBuiltinModule("log", logModule)
+	moduleMap.AddSourceModule("check_err", []byte(checkErrSrcModule))
 
 	s.SetImports(moduleMap)
 	script.script = s
