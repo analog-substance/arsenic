@@ -18,6 +18,25 @@ import (
 	"github.com/spf13/cobra"
 )
 
+func defaultFuncMap() template.FuncMap {
+	funcMap := make(template.FuncMap)
+
+	funcMap["in"] = func(s1 []string, s2 ...string) bool {
+		// Loop through s1 then s2 and check whether any values of s2 are equal to any values in s1
+		return linq.From(s1).AnyWith(func(s1Item interface{}) bool {
+			return linq.From(s2).AnyWith(func(s2Item interface{}) bool {
+				return s1Item == s2Item
+			})
+		})
+	}
+
+	funcMap["join"] = func(sep string, v interface{}) string {
+		return strings.Join(util.ToStringSlice(v), sep)
+	}
+
+	return funcMap
+}
+
 // hostsCmd represents the flags command
 var hostsCmd = &cobra.Command{
 	Use:   "hosts",
@@ -89,15 +108,7 @@ Port:
 			hosts = host.Get(hostsArgs...)
 		} else if query != "" {
 			hostTemplate := template.New("host")
-			funcMap := make(template.FuncMap)
-			funcMap["in"] = func(s1 []string, s2 ...string) bool {
-				// Loop through s1 then s2 and check whether any values of s2 are equal to any values in s1
-				return linq.From(s1).AnyWith(func(s1Item interface{}) bool {
-					return linq.From(s2).AnyWith(func(s2Item interface{}) bool {
-						return s1Item == s2Item
-					})
-				})
-			}
+			funcMap := defaultFuncMap()
 
 			funcMap["appendMatch"] = func(match *host.Host) string {
 				hosts = append(hosts, match)
@@ -223,7 +234,9 @@ Port:
 			}
 		} else if format != "" {
 			t := template.New("format")
-			_, err := t.Parse(format)
+			funcMap := defaultFuncMap()
+
+			_, err := t.Funcs(funcMap).Parse(format)
 			if err != nil {
 				cmd.PrintErrln(err)
 				return
