@@ -1,7 +1,11 @@
 package engine
 
 import (
+	"bytes"
+	"context"
+	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -228,9 +232,28 @@ func (s *Script) ffuf(args ...tengo.Object) (tengo.Object, error) {
 		cmdArgs = append(cmdArgs, cmdArg)
 	}
 
-	err := s.runWithSigHandler("as-ffuf", cmdArgs...)
+	cmd := exec.CommandContext(context.Background(), "as-ffuf", cmdArgs...)
+
+	cmd.Stdout = os.Stdout
+	cmd.Stdin = os.Stdin
+
+	errBuf := new(bytes.Buffer)
+	cmd.Stderr = io.MultiWriter(errBuf, os.Stderr)
+
+	err := s.runCmdWithSigHandler(cmd)
 	if err != nil {
 		return toError(err), nil
+	}
+
+	warnRe := regexp.MustCompile(`(?m)\[WARN\]\s*(.*)$`)
+	matches := warnRe.FindAllStringSubmatch(errBuf.String(), -1)
+	if len(matches) != 0 {
+		var warnings []tengo.Object
+		for _, match := range matches {
+			warnings = append(warnings, toWarning(match[1]))
+		}
+
+		return &tengo.Array{Value: warnings}, nil
 	}
 
 	return nil, nil

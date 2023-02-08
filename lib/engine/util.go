@@ -73,6 +73,14 @@ func toError(err error) tengo.Object {
 	}
 }
 
+func toWarning(value string) tengo.Object {
+	return &Warning{
+		Value: &tengo.String{
+			Value: value,
+		},
+	}
+}
+
 func runWithError(cmd *exec.Cmd) error {
 	buf := new(bytes.Buffer)
 	cmd.Stderr = buf
