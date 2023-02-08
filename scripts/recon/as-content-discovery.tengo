@@ -3,6 +3,8 @@
 fmt := import("fmt")
 text := import("text")
 os := import("os")
+os2 := import("os2")
+json := import("json")
 filepath := import("filepath")
 slice := import("slice")
 arsenic := import("arsenic")
@@ -152,6 +154,26 @@ scanCmd.set_run(func(cmd, args) {
 
       err = arsenic.ffuf("-a", "Firefox", "-u", rawURL, "-w", wordlistFile, "-o", outputFile)
       check_err(err)
+
+      // If there were warnings (i.e. ffuf exited due to errors), let's add them to the JSON file
+      if type_name(err) == "array" && len(err) != 0 && type_name(err[0]) == "warning" {
+        content := os.read_file(outputPath)
+        check_err(content)
+
+        obj := json.decode(content)
+
+        warnings := []
+        for warning in err {
+          warnings = append(warnings, warning.value)
+        }
+        obj.warnings = warnings
+
+        content = json.encode(obj)
+        content = json.indent(content, "", "  ")
+
+        err = os2.write_file(outputPath, content)
+        check_err(err)
+      }
 
       log.info(format("Content Discovery / %s / %s / complete", host, rawURL))
     }
