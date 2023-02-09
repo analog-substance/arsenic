@@ -2,6 +2,7 @@
 
 fmt := import("fmt")
 os := import("os")
+os2 := import("os2")
 filepath := import("filepath")
 slice := import("slice")
 arsenic := import("arsenic")
@@ -106,19 +107,26 @@ runCmd.set_run(func(cmd, args) {
 
     log.info(format("Nuclei / Technologies / %s / running", host.name))
 
-    nucleiArgs := ["nuclei", "-project", "-t", "technologies", "-o", outputName]
+    tempDir := os2.mkdir_temp(os.temp_dir(), "nuclei-technologies-*")
+    check_err(tempDir)
+
+    nucleiArgs := ["nuclei", "-project", "-project-path", tempDir, "-t", "technologies", "-o", outputName]
     if proxy != "" {
       nucleiArgs = append(nucleiArgs, "-p", proxy)
     }
 
     hostURLs := host.urls()
-    check_err(hostURLs)
+    if is_error(hostURLs) {
+      os.remove_all(tempDir)
+      script.stop(hostURLs)
+    }
 
     for u in hostURLs {
       nucleiArgs = append(nucleiArgs, "-u", u)
     }
 
     err = exec.run_with_sig_handler(nucleiArgs...)
+    os.remove_all(tempDir)
     check_err(err)
 
     err = git.commit(".", format("Nuclei Technologies complete: %s", host.name))
