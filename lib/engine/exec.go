@@ -2,6 +2,7 @@ package engine
 
 import (
 	"context"
+	"errors"
 	"os"
 	"os/exec"
 	"os/signal"
@@ -10,8 +11,15 @@ import (
 	"github.com/analog-substance/tengo/v2"
 )
 
+var ErrSignaled error = errors.New("process signaled to close")
+
 func (s *Script) ExecModuleMap() map[string]tengo.Object {
 	return map[string]tengo.Object{
+		"err_signaled": &tengo.Error{
+			Value: &tengo.String{
+				Value: ErrSignaled.Error(),
+			},
+		},
 		"run_with_sig_handler": &tengo.UserFunction{Name: "run_with_sig_handler", Value: s.tengoRunWithSigHandler},
 		"cmd":                  &tengo.UserFunction{Name: "cmd", Value: s.tengoCmd},
 	}
@@ -144,8 +152,10 @@ func (s *Script) runCmdWithSigHandler(cmd *exec.Cmd) error {
 	signal.Notify(sigs, os.Interrupt, syscall.SIGTERM)
 
 	// relay trapped signals to the spawned process
+	signaled := false
 	go func() {
 		for sig := range sigs {
+			signaled = true
 			cmd.Process.Signal(sig)
 		}
 	}()
@@ -160,9 +170,20 @@ func (s *Script) runCmdWithSigHandler(cmd *exec.Cmd) error {
 	}
 
 	if err := cmd.Wait(); err != nil {
-		if _, ok := err.(*exec.ExitError); !ok {
+		exiterr, ok := err.(*exec.ExitError)
+		if !ok {
 			return err
 		}
+
+		if status, ok := exiterr.Sys().(syscall.WaitStatus); ok {
+			if !signaled {
+				signaled = status.Signaled()
+			}
+		}
+	}
+
+	if signaled {
+		return ErrSignaled
 	}
 
 	return nil
