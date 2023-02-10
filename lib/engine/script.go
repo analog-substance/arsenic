@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"os/exec"
 	"os/signal"
 	"strings"
 	"syscall"
@@ -25,6 +26,10 @@ func (s *Script) ScriptModuleMap() map[string]tengo.Object {
 		"run_script_with_sig_handler": &tengo.UserFunction{
 			Name:  "run_script_with_sig_handler",
 			Value: s.tengoRunScriptWithSigHandler,
+		},
+		"find": &tengo.UserFunction{
+			Name:  "find",
+			Value: s.tengoFindScript,
 		},
 		"args": &tengo.UserFunction{
 			Name: "args",
@@ -82,7 +87,12 @@ func (s *Script) tengoRunScriptWithSigHandler(args ...tengo.Object) (tengo.Objec
 }
 
 func (s *Script) runScript(path string, args ...string) error {
-	script, err := NewScript(path)
+	scriptPath, err := s.findScript(path)
+	if err != nil {
+		return err
+	}
+
+	script, err := NewScript(scriptPath)
 	if err != nil {
 		return err
 	}
@@ -90,7 +100,12 @@ func (s *Script) runScript(path string, args ...string) error {
 }
 
 func (s *Script) runScriptWithSigHandler(path string, args ...string) error {
-	script, err := NewScript(path)
+	scriptPath, err := s.findScript(path)
+	if err != nil {
+		return err
+	}
+
+	script, err := NewScript(scriptPath)
 	if err != nil {
 		return err
 	}
@@ -122,6 +137,42 @@ func (s *Script) runScriptWithSigHandler(path string, args ...string) error {
 	}
 
 	return nil
+}
+
+func (s *Script) tengoFindScript(args ...tengo.Object) (tengo.Object, error) {
+	if len(args) != 1 {
+		return nil, tengo.ErrWrongNumArguments
+	}
+
+	path, ok := tengo.ToString(args[0])
+	if !ok {
+		return nil, tengo.ErrInvalidArgumentType{
+			Name:     "path",
+			Expected: "string",
+			Found:    args[0].TypeName(),
+		}
+	}
+
+	fullPath, err := s.findScript(path)
+	if err != nil {
+		return toError(err), nil
+	}
+
+	return &tengo.String{Value: fullPath}, nil
+}
+
+func (s *Script) findScript(path string) (string, error) {
+	if _, err := os.Stat(path); !os.IsNotExist(err) {
+		return path, nil
+	}
+
+	fullPath, err := exec.LookPath(path)
+	if err == nil {
+		return fullPath, nil
+	}
+
+	// Look within the script install directory
+	return "", os.ErrNotExist
 }
 
 func (s *Script) tengoStop(args ...tengo.Object) (tengo.Object, error) {
