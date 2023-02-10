@@ -17,6 +17,7 @@ func (s *Script) OS2ModuleMap() map[string]tengo.Object {
 		"regex_replace_file": &tengo.UserFunction{Name: "regex_replace_file", Value: s.regexReplaceFile},
 		"mkdir_temp":         &tengo.UserFunction{Name: "mkdir_temp", Value: s.mkdirTemp},
 		"read_stdin":         &tengo.UserFunction{Name: "read_stdin", Value: s.readStdin},
+		"temp_chdir":         &tengo.UserFunction{Name: "temp_chdir", Value: s.tempChdir},
 	}
 }
 
@@ -170,4 +171,57 @@ func (s *Script) readStdin(args ...tengo.Object) (tengo.Object, error) {
 	}
 
 	return toStringArray(lines), nil
+}
+
+func (s *Script) tempChdir(args ...tengo.Object) (tengo.Object, error) {
+	if len(args) != 2 {
+		return nil, tengo.ErrWrongNumArguments
+	}
+
+	path, ok := tengo.ToString(args[0])
+	if !ok {
+		return nil, tengo.ErrInvalidArgumentType{
+			Name:     "path",
+			Expected: "string",
+			Found:    args[0].TypeName(),
+		}
+	}
+
+	fn, ok := args[1].(*tengo.CompiledFunction)
+	if !ok {
+		return nil, tengo.ErrInvalidArgumentType{
+			Name:     "fn",
+			Expected: "function",
+			Found:    args[1].TypeName(),
+		}
+	}
+
+	var err error
+	previousDir := ""
+
+	if path != "" {
+		previousDir, err = os.Getwd()
+		if err != nil {
+			return toError(err), nil
+		}
+
+		err = os.Chdir(path)
+		if err != nil {
+			return toError(err), nil
+		}
+	}
+
+	err = s.runCompiledFunction(fn)
+	if err != nil {
+		return toError(err), nil
+	}
+
+	if path != "" {
+		err = os.Chdir(previousDir)
+		if err != nil {
+			return toError(err), nil
+		}
+	}
+
+	return nil, nil
 }

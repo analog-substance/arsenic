@@ -71,6 +71,27 @@ func (s *NmapScanner) addOptionAI(fn func(int) nmap.Option) tengo.CallableFunc {
 	}
 }
 
+func (s *NmapScanner) addOptionAI16(fn func(int16) nmap.Option) tengo.CallableFunc {
+	return func(args ...tengo.Object) (tengo.Object, error) {
+		if len(args) != 1 {
+			return nil, tengo.ErrWrongNumArguments
+		}
+		i1, ok := tengo.ToInt(args[0])
+		if !ok {
+			return nil, tengo.ErrInvalidArgumentType{
+				Name:     "first",
+				Expected: "int(compatible)",
+				Found:    args[0].TypeName(),
+			}
+		}
+
+		option := fn(int16(i1))
+
+		s.Value.AddOptions(option)
+		return s, nil
+	}
+}
+
 func (s *NmapScanner) addOptionAD(fn func(time.Duration) nmap.Option) tengo.CallableFunc {
 	return func(args ...tengo.Object) (tengo.Object, error) {
 		if len(args) != 1 {
@@ -218,6 +239,10 @@ func makeNmapScanner(s *Script) (*NmapScanner, error) {
 			Value: nmapScanner.addOptionA(nmap.WithUDPScan),
 		},
 		"sU": nmapScanner.aliasFunc("sU", "udp_scan"),
+		"version_intensity": &tengo.UserFunction{
+			Name:  "version_intensity",
+			Value: nmapScanner.addOptionAI16(nmap.WithVersionIntensity),
+		},
 		"grep_output": &tengo.UserFunction{
 			Name:  "grep_output",
 			Value: nmapScanner.addOptionAS(nmap.WithGrepOutput),
@@ -294,6 +319,10 @@ func makeNmapScanner(s *Script) (*NmapScanner, error) {
 		"max_rate": &tengo.UserFunction{
 			Name:  "max_rate",
 			Value: nmapScanner.addOptionAI(nmap.WithMaxRate),
+		},
+		"min_rate": &tengo.UserFunction{
+			Name:  "min_rate",
+			Value: nmapScanner.addOptionAI(nmap.WithMinRate),
 		},
 		"top_ports": &tengo.UserFunction{
 			Name:  "top_ports",
@@ -401,6 +430,32 @@ func makeNmapScanner(s *Script) (*NmapScanner, error) {
 					if err != nil {
 						return toError(err), nil
 					}
+				}
+				return makeNmapRun(run), nil
+			},
+		},
+		"run_direct": &tengo.UserFunction{
+			Name: "run_direct",
+			Value: func(args ...tengo.Object) (tengo.Object, error) {
+				xmlOutput := nmapScanner.xmlOutputName
+				if xmlOutput == "" {
+					file, err := os.CreateTemp(os.TempDir(), "*")
+					if err != nil {
+						return toError(err), nil
+					}
+
+					file.Close()
+					xmlOutput = file.Name()
+				}
+
+				run, warnings, err := nmapScanner.Value.RunDirect(xmlOutput)
+				if err != nil {
+					return toError(fmt.Errorf("%v: %s", err, strings.Join(warnings, "\n"))), nil
+				}
+
+				// If xmlOutputName is empty, let's remove the temp file
+				if nmapScanner.xmlOutputName == "" {
+					os.Remove(xmlOutput)
 				}
 				return makeNmapRun(run), nil
 			},

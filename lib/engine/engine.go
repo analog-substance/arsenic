@@ -2,6 +2,7 @@ package engine
 
 import (
 	"context"
+	"errors"
 	"os"
 	"regexp"
 
@@ -76,4 +77,40 @@ func (s *Script) Run(args []string) error {
 	s.compiled = compiled
 
 	return s.compiled.RunContext(s.ctx)
+}
+
+func (s *Script) runCompiledFunction(fn *tengo.CompiledFunction, args ...tengo.Object) error {
+	vm := tengo.NewVM(s.compiled.Bytecode(), s.compiled.Globals(), -1)
+	ch := make(chan error, 1)
+
+	errEmpty := errors.New("")
+
+	go func() {
+		obj, err := vm.RunCompiled(fn, args...)
+		if err != nil {
+			ch <- err
+			return
+		}
+
+		errObj, ok := obj.(*tengo.Error)
+		if ok {
+			ch <- errors.New(errObj.String())
+		} else {
+			ch <- errEmpty
+		}
+	}()
+
+	var err error
+	select {
+	case <-s.ctx.Done():
+		vm.Abort()
+		err = s.ctx.Err()
+	case err = <-ch:
+	}
+
+	if err != nil && err != errEmpty {
+		return err
+	}
+
+	return nil
 }

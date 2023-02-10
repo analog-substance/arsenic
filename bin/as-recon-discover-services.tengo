@@ -2,27 +2,40 @@
 
 // arsenic := import("arsenic")
 cobra := import("cobra")
-fmt := import("fmt")
 os := import("os")
 os2 := import("os2")
 filepath := import("filepath")
 check_err := import("check_err")
 nmap := import("nmap")
 script := import("script")
+log := import("log")
 
+topPorts := 0
 targets := []
 
 setupHost := func(target) {
-  baseDir := "."
+  baseDir := ""
   if filepath.dir_exists("hosts") {
     baseDir = filepath.join("hosts", target)
   }
 
-  err := os.mkdir_all(filepath.join(baseDir, "loot"), 0644)
+  err := os.mkdir_all(filepath.join(baseDir, "loot"), 0755)
   check_err(err)
 
-  err = os.mkdir_all(filepath.join(baseDir, "recon"), 0644)
+  err = os.mkdir_all(filepath.join(baseDir, "recon"), 0755)
   check_err(err)
+
+  return baseDir
+}
+
+defaultScanner := func(target) {
+  return nmap.scanner().
+    stylesheet("/static/nmap.xsl").
+    open().
+    Pn().
+    n().
+    system_dns().
+    targets(target)
 }
 
 rootCmd := cobra.root_cmd("as-recon-discover-services.tengo", "Run nmap scans on targets")
@@ -50,6 +63,8 @@ rootCmd.set_persistent_pre_run(func(cmd, args) {
   if len(targets) == 0 {
     script.stop("No targets specified")
   }
+
+  topPorts = cmd.flags.get_int("top")
 })
 
 // TCP Command
@@ -58,22 +73,70 @@ tcpCmd := cobra.cmd("tcp", "Run TCP scans")
 rootCmd.add_command(tcpCmd)
 
 tcpCmd.set_run(func(cmd, args){
-  quickScan := func(target) {
+  topScan := func(target) {
+    log.msg(format("Scanning %s: top %d TCP ports", target, topPorts))
+
+    scanner := defaultScanner(target).
+      privileged().
+      oA(filepath.from_slash(format("recon/nmap-top-%d-tcp", topPorts))).
+      host_timeout("30m").
+      A().
+      top_ports(topPorts)
     
+    run := scanner.run_direct()
+    check_err(run)
   }
-  scan := func(target) {
-    scanner := nmap.scanner().
-      top_ports(1000).
-      targets(target).
-      oA("output")
+
+  quickScan := func(target) {
+    scanner := defaultScanner(target).
+      T3().
+      host_timeout("30m").
+      ports("-").
+      oA(filepath.from_slash("recon/nmap-punched-quick-tcp"))
 
     run := scanner.run()
-    check_err(run)
+    if is_error(run) {
+      log.warn(format("Error running quick TCP nmap scan: %v", run))
+      return []
+    }
 
-    fmt.println(run.ports)
+    return run.ports
   }
 
-  scan(targets[0])
+  fullScan := func(target) {
+    log.msg(format("Scanning %s: all TCP ports", target))
+
+    ports := quickScan(target)
+    if len(ports) == 0 {
+      log.msg(format("%s: No open ports"))
+      return
+    }
+
+    log.msg(format("Version scanning %v", ports))
+
+    scanner := defaultScanner(target).
+      privileged().
+      oA(filepath.from_slash("recon/nmap-punched-tcp")).
+      host_timeout("30m").
+      A().
+      ports(ports...)
+    
+    run := scanner.run_direct()
+    check_err(run)
+  }
+
+  for target in targets { 
+    baseDir := setupHost(target)
+
+    err := os2.temp_chdir(baseDir, func(){
+      if topPorts > 0 {
+        topScan(target)
+      } else {
+        fullScan(target)
+      }
+    })
+    check_err(err)
+  }
 })
 
 // UDP Command
@@ -82,7 +145,48 @@ udpCmd := cobra.cmd("udp", "Run UDP scans")
 rootCmd.add_command(udpCmd)
 
 udpCmd.set_run(func(cmd, args){
-  
+  udpScanner := func(target) {
+    return defaultScanner(target).
+      privileged().
+      sU().
+      sV().
+      min_rate(1000).
+      max_rtt_timeout("100ms").
+      version_intensity(0)
+  }
+
+  topScan := func(target) {
+    log.msg(format("Scanning %s: top %d UDP ports", target, topPorts))
+    scanner := udpScanner(target).
+      top_ports(topPorts).
+      oA(filepath.from_slash(format("recon/nmap-top-%d-udp", topPorts)))
+    
+    run := scanner.run_direct()
+    check_err(run)
+  }
+
+  fullScan := func(target) {
+    log.msg(format("Scanning %s: all UDP ports", target))
+    scanner := udpScanner(target).
+      ports("-").
+      oA(filepath.from_slash("recon/nmap-punched-udp"))
+    
+    run := scanner.run_direct()
+    check_err(run)
+  }
+
+  for target in targets {
+    baseDir := setupHost(target)
+
+    err := os2.temp_chdir(baseDir, func(){
+      if topPorts > 0 {
+        topScan(target)
+      } else {
+        fullScan(target)
+      }
+    })
+    check_err(err)
+  }
 })
 
 err := rootCmd()

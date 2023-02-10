@@ -1,8 +1,6 @@
 package engine
 
 import (
-	"errors"
-
 	"github.com/analog-substance/tengo/v2"
 	"github.com/analog-substance/tengo/v2/stdlib"
 	"github.com/spf13/cobra"
@@ -160,7 +158,7 @@ func (c *CobraCmd) setRun(args ...tengo.Object) (tengo.Object, error) {
 	}
 
 	c.Value.RunE = func(cmd *cobra.Command, args []string) error {
-		return c.runCompiledFunction(fn, args)
+		return c.script.runCompiledFunction(fn, c, toStringArray(args))
 	}
 	return nil, nil
 }
@@ -181,45 +179,9 @@ func (c *CobraCmd) setPersistentPreRun(args ...tengo.Object) (tengo.Object, erro
 
 	c.Value.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
 		c.cobraRootCmdPersistentPreRun(cmd, args)
-		return c.runCompiledFunction(fn, args)
+		return c.script.runCompiledFunction(fn, c, toStringArray(args))
 	}
 	return nil, nil
-}
-
-func (c *CobraCmd) runCompiledFunction(fn *tengo.CompiledFunction, args []string) error {
-	vm := tengo.NewVM(c.script.compiled.Bytecode(), c.script.compiled.Globals(), -1)
-	ch := make(chan error, 1)
-
-	errEmpty := errors.New("")
-
-	go func() {
-		obj, err := vm.RunCompiled(fn, c, toStringArray(args))
-		if err != nil {
-			ch <- err
-			return
-		}
-
-		errObj, ok := obj.(*tengo.Error)
-		if ok {
-			ch <- errors.New(errObj.String())
-		} else {
-			ch <- errEmpty
-		}
-	}()
-
-	var err error
-	select {
-	case <-c.script.ctx.Done():
-		vm.Abort()
-		err = c.script.ctx.Err()
-	case err = <-ch:
-	}
-
-	if err != nil && err != errEmpty {
-		return err
-	}
-
-	return nil
 }
 
 // TypeName should return the name of the type.
