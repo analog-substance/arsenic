@@ -1,0 +1,73 @@
+#! /usr/bin/env arsenic
+
+// arsenic := import("arsenic")
+cobra := import("cobra")
+fmt := import("fmt")
+os := import("os")
+os2 := import("os2")
+filepath := import("filepath")
+
+targets := []
+
+setupHost := func(target) {
+  baseDir := "."
+  if filepath.dir_exists("hosts") {
+    baseDir = filepath.join("hosts", target)
+  }
+
+  err := os.mkdir_all(filepath.join(baseDir, "loot"), 0644)
+  if is_error(err) {
+    script.stop(err)
+  }
+
+  err = os.mkdir_all(filepath.join(baseDir, "recon"), 0644)
+  if is_error(err) {
+    script.stop(err)
+  }
+}
+
+rootCmd := cobra.root_cmd("as-recon-discover-services.tengo", "Run nmap scans on targets")
+rootCmd.persistent_flags.string_slicep("targets", "t", [], "The target to scan. Can be used multiple times to specify multiple targets")
+rootCmd.persistent_flags.stringp("target-file", "f", "", "The file containing the targets to scan.")
+
+rootCmd.set_persistent_pre_run(func(cmd, args) {
+  targets = cmd.flags.get_string_slice("targets")
+  file := cmd.flags.get_string("target-file")
+
+  lines := os2.read_file_lines(file)
+  if is_error(lines) {
+    script.stop(lines)
+  }
+
+  for line in lines {
+    targets = append(targets, line)
+  }
+
+  for line in os2.read_stdin() {
+    targets = append(targets, line)
+  }
+})
+
+tcpCmd := cobra.cmd("tcp", "Run TCP scans")
+rootCmd.add_command(tcpCmd)
+
+tcpCmd.set_run(func(cmd, args){
+  quickScan := func(target) {
+    
+  }
+  scan := func(target) {
+
+  }
+})
+
+udpCmd := cobra.cmd("udp", "Run UDP scans")
+rootCmd.add_command(udpCmd)
+
+udpCmd.set_run(func(cmd, args){
+  
+})
+
+err := rootCmd()
+if is_error(err) {
+	script.stop(err)
+}
