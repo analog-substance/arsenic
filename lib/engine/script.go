@@ -2,6 +2,7 @@ package engine
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/analog-substance/tengo/v2"
@@ -27,6 +28,8 @@ func (s *Script) stop(args ...string) {
 	if len(args) == 1 {
 		message := args[0]
 		if message != "" {
+			message = strings.ReplaceAll(message, `\n`, "\n")
+			message = strings.ReplaceAll(message, `\t`, "\t")
 			fmt.Println(message)
 		}
 	}

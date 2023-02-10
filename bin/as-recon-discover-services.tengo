@@ -62,14 +62,14 @@ tcpCmd.set_run(func(cmd, args){
     
   }
   scan := func(target) {
-    scanner := nmap.scanner()
-    scanner.most_common_ports(1000)
-    scanner.targets(target)
-    scanner.all_output("output")
+    scanner := nmap.scanner().
+      top_ports(1000).
+      targets(target).
+      oA("output")
 
     run := scanner.run()
     check_err(run)
-    
+
     fmt.println(run.ports)
   }
 

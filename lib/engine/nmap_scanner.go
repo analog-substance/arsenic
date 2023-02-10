@@ -24,7 +24,7 @@ func (s *NmapScanner) addOptionA(fn func() nmap.Option) tengo.CallableFunc {
 		option := fn()
 
 		s.Value.AddOptions(option)
-		return nil, nil
+		return s, nil
 	}
 }
 
@@ -45,7 +45,7 @@ func (s *NmapScanner) addOptionAS(fn func(string) nmap.Option) tengo.CallableFun
 		option := fn(s1)
 
 		s.Value.AddOptions(option)
-		return nil, nil
+		return s, nil
 	}
 }
 
@@ -66,7 +66,7 @@ func (s *NmapScanner) addOptionAI(fn func(int) nmap.Option) tengo.CallableFunc {
 		option := fn(i1)
 
 		s.Value.AddOptions(option)
-		return nil, nil
+		return s, nil
 	}
 }
 
@@ -93,7 +93,7 @@ func (s *NmapScanner) addOptionAD(fn func(time.Duration) nmap.Option) tengo.Call
 		option := fn(dur)
 
 		s.Value.AddOptions(option)
-		return nil, nil
+		return s, nil
 	}
 }
 
@@ -119,7 +119,16 @@ func (s *NmapScanner) addOptionASv(fn func(...string) nmap.Option) tengo.Callabl
 		option := fn(strings...)
 
 		s.Value.AddOptions(option)
-		return nil, nil
+		return s, nil
+	}
+}
+
+func (s *NmapScanner) aliasFunc(name string, src string) *tengo.UserFunction {
+	return &tengo.UserFunction{
+		Name: name,
+		Value: func(args ...tengo.Object) (tengo.Object, error) {
+			return (s.objectMap[src].(*tengo.UserFunction)).Value(args...)
+		},
 	}
 }
 
@@ -205,10 +214,12 @@ func makeNmapScanner(s *Script) (*NmapScanner, error) {
 			Name:  "grep_output",
 			Value: nmapScanner.addOptionAS(nmap.WithGrepOutput),
 		},
+		"oG": nmapScanner.aliasFunc("oG", "grep_output"),
 		"nmap_output": &tengo.UserFunction{
 			Name:  "nmap_output",
 			Value: nmapScanner.addOptionAS(nmap.WithNmapOutput),
 		},
+		"oN": nmapScanner.aliasFunc("oN", "nmap_output"),
 		"xml_output": &tengo.UserFunction{
 			Name: "xml_output",
 			Value: func(args ...tengo.Object) (tengo.Object, error) {
@@ -226,9 +237,10 @@ func makeNmapScanner(s *Script) (*NmapScanner, error) {
 
 				nmapScanner.xmlOutputName = s1
 
-				return nil, nil
+				return nmapScanner, nil
 			},
 		},
+		"oX": nmapScanner.aliasFunc("oX", "xml_output"),
 		"all_output": &tengo.UserFunction{
 			Name: "all_output",
 			Value: func(args ...tengo.Object) (tengo.Object, error) {
@@ -250,9 +262,10 @@ func makeNmapScanner(s *Script) (*NmapScanner, error) {
 				)
 				nmapScanner.xmlOutputName = fmt.Sprintf("%s.xml", s1)
 
-				return nil, nil
+				return nmapScanner, nil
 			},
 		},
+		"oA": nmapScanner.aliasFunc("oA", "all_output"),
 		"stylesheet": &tengo.UserFunction{
 			Name:  "stylesheet",
 			Value: nmapScanner.addOptionAS(nmap.WithStylesheet),
@@ -273,8 +286,8 @@ func makeNmapScanner(s *Script) (*NmapScanner, error) {
 			Name:  "max_rate",
 			Value: nmapScanner.addOptionAI(nmap.WithMaxRate),
 		},
-		"most_common_ports": &tengo.UserFunction{
-			Name:  "most_common_ports",
+		"top_ports": &tengo.UserFunction{
+			Name:  "top_ports",
 			Value: nmapScanner.addOptionAI(nmap.WithMostCommonPorts),
 		},
 		"ports": &tengo.UserFunction{
@@ -302,7 +315,55 @@ func makeNmapScanner(s *Script) (*NmapScanner, error) {
 
 				option := nmap.WithTimingTemplate(nmap.Timing(i1))
 				nmapScanner.Value.AddOptions(option)
-				return nil, nil
+				return nmapScanner, nil
+			},
+		},
+		"t0": &tengo.UserFunction{
+			Name: "t0",
+			Value: func(args ...tengo.Object) (tengo.Object, error) {
+				option := nmap.WithTimingTemplate(nmap.TimingSlowest)
+				nmapScanner.Value.AddOptions(option)
+				return nmapScanner, nil
+			},
+		},
+		"t1": &tengo.UserFunction{
+			Name: "t1",
+			Value: func(args ...tengo.Object) (tengo.Object, error) {
+				option := nmap.WithTimingTemplate(nmap.TimingSneaky)
+				nmapScanner.Value.AddOptions(option)
+				return nmapScanner, nil
+			},
+		},
+		"t2": &tengo.UserFunction{
+			Name: "t2",
+			Value: func(args ...tengo.Object) (tengo.Object, error) {
+				option := nmap.WithTimingTemplate(nmap.TimingPolite)
+				nmapScanner.Value.AddOptions(option)
+				return nmapScanner, nil
+			},
+		},
+		"t3": &tengo.UserFunction{
+			Name: "t3",
+			Value: func(args ...tengo.Object) (tengo.Object, error) {
+				option := nmap.WithTimingTemplate(nmap.TimingNormal)
+				nmapScanner.Value.AddOptions(option)
+				return nmapScanner, nil
+			},
+		},
+		"t4": &tengo.UserFunction{
+			Name: "t4",
+			Value: func(args ...tengo.Object) (tengo.Object, error) {
+				option := nmap.WithTimingTemplate(nmap.TimingAggressive)
+				nmapScanner.Value.AddOptions(option)
+				return nmapScanner, nil
+			},
+		},
+		"t5": &tengo.UserFunction{
+			Name: "t5",
+			Value: func(args ...tengo.Object) (tengo.Object, error) {
+				option := nmap.WithTimingTemplate(nmap.TimingFastest)
+				nmapScanner.Value.AddOptions(option)
+				return nmapScanner, nil
 			},
 		},
 		"args": &tengo.UserFunction{
