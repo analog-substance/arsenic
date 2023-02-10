@@ -120,6 +120,31 @@ func makeCobraCmd(cmd *cobra.Command, script *Script) *CobraCmd {
 			Name:  "set_run",
 			Value: cobraCmd.setRun,
 		},
+		"name": &tengo.UserFunction{
+			Name:  "name",
+			Value: stdlib.FuncARS(cobraCmd.Value.Name),
+		},
+		"has_parent": &tengo.UserFunction{
+			Name:  "has_parent",
+			Value: stdlib.FuncARB(cobraCmd.Value.HasParent),
+		},
+		"parent": &tengo.UserFunction{
+			Name: "parent",
+			Value: func(args ...tengo.Object) (tengo.Object, error) {
+				return makeCobraCmd(cobraCmd.Value.Parent(), cobraCmd.script), nil
+			},
+		},
+		"called_as": &tengo.UserFunction{
+			Name:  "called_as",
+			Value: stdlib.FuncARS(cobraCmd.Value.CalledAs),
+		},
+		"enable_completion": &tengo.UserFunction{
+			Name: "enable_completion",
+			Value: func(args ...tengo.Object) (tengo.Object, error) {
+				cobraCmd.Value.CompletionOptions.DisableDefaultCmd = false
+				return nil, nil
+			},
+		},
 	}
 
 	cobraCmd.objectMap = objectMap
@@ -178,6 +203,13 @@ func (c *CobraCmd) setPersistentPreRun(args ...tengo.Object) (tengo.Object, erro
 	}
 
 	c.Value.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+		// If completion command isn't disabled and the current command is one of the "completion" sub commands
+		// or __complete, don't run the set persistent pre run
+		if !cmd.CompletionOptions.DisableDefaultCmd &&
+			(cmd.Name() == "__complete" || (cmd.HasParent() && cmd.Parent().Name() == "completion")) {
+			return nil
+		}
+
 		c.cobraRootCmdPersistentPreRun(cmd, args)
 		return c.script.runCompiledFunction(fn, makeCobraCmd(cmd, c.script), toStringArray(args))
 	}
