@@ -310,6 +310,10 @@ This will create a single host for hostnames that resolve to the same IPs`,
 			linq.From(scopeIps).
 				ForEach(func(i interface{}) {
 					ip := i.(string)
+					ip = strings.TrimSpace(ip)
+					if len(ip) == 0 {
+						return
+					}
 					if strings.Contains(ip, "/") {
 						return
 					}
