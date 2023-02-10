@@ -29,6 +29,7 @@ type Script struct {
 	compiled *tengo.Compiled
 	args     []string
 	isGit    bool
+	signaled bool
 }
 
 func NewScript(path string) (*Script, error) {
@@ -86,6 +87,11 @@ func (s *Script) Run(args []string) error {
 	s.compiled = compiled
 
 	return s.compiled.RunContext(s.ctx)
+}
+
+func (s *Script) Signal() {
+	s.signaled = true
+	s.stop(ErrSignaled.Error())
 }
 
 func (s *Script) runCompiledFunction(fn *tengo.CompiledFunction, args ...tengo.Object) error {
