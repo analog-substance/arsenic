@@ -27,3 +27,5 @@ require (
 	gopkg.in/ini.v1 v1.66.4 // indirect
 	gopkg.in/yaml.v2 v2.4.0
 )
+
+replace github.com/Ullaakut/nmap/v2 v2.2.1 => github.com/analog-substance/nmap/v2 v2.2.2
