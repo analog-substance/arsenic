@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"os"
+	"path/filepath"
 	"regexp"
 
 	"github.com/analog-substance/arsenic/lib/util"
@@ -61,6 +62,10 @@ func NewScript(path string) *Script {
 	moduleMap.AddSourceModule("check_err", []byte(checkErrSrcModule))
 
 	s.SetImports(moduleMap)
+
+	s.Add("SCRIPT_PATH", path)
+	s.Add("SCRIPT_NAME", filepath.Base(path))
+
 	script.script = s
 
 	return script
