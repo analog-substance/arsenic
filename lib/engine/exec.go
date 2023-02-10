@@ -148,7 +148,7 @@ func (s *Script) runWithSigHandler(name string, args ...string) error {
 }
 
 func (s *Script) runCmdWithSigHandler(cmd *exec.Cmd) error {
-	sigs := make(chan os.Signal)
+	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, os.Interrupt, syscall.SIGTERM)
 
 	// relay trapped signals to the spawned process

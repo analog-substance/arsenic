@@ -37,7 +37,8 @@ var scriptCmd = &cobra.Command{
 			path = path + ".tengo"
 		}
 
-		script := engine.NewScript(path)
+		script, err := engine.NewScript(path)
+		cobra.CheckErr(err)
 
 		err = script.Run(scriptArgs)
 		if err != nil && err != context.Canceled {

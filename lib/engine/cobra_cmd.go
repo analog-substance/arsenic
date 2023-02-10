@@ -183,7 +183,7 @@ func (c *CobraCmd) setRun(args ...tengo.Object) (tengo.Object, error) {
 	}
 
 	c.Value.RunE = func(cmd *cobra.Command, args []string) error {
-		return c.script.runCompiledFunction(fn, makeCobraCmd(cmd, c.script), toStringArray(args))
+		return c.script.runCompiledFunction(fn, makeCobraCmd(cmd, c.script), sliceToStringArray(args))
 	}
 	return nil, nil
 }
@@ -211,7 +211,7 @@ func (c *CobraCmd) setPersistentPreRun(args ...tengo.Object) (tengo.Object, erro
 		}
 
 		c.cobraRootCmdPersistentPreRun(cmd, args)
-		return c.script.runCompiledFunction(fn, makeCobraCmd(cmd, c.script), toStringArray(args))
+		return c.script.runCompiledFunction(fn, makeCobraCmd(cmd, c.script), sliceToStringArray(args))
 	}
 	return nil, nil
 }

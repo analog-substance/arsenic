@@ -521,7 +521,7 @@ func makeNmapRun(run *nmap.Run) *NmapRun {
 
 	// Currently only need ports, probably will want to implement more
 	objectMap := map[string]tengo.Object{
-		"ports": toIntArray(ports),
+		"ports": sliceToIntArray(ports),
 	}
 
 	nmapRun.objectMap = objectMap

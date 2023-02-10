@@ -9,7 +9,7 @@ import (
 	"github.com/analog-substance/tengo/v2"
 )
 
-func toStringSlice(array *tengo.Array) ([]string, error) {
+func arrayToStringSlice(array *tengo.Array) ([]string, error) {
 	var slice []string
 	for _, v := range array.Value {
 		str, ok := tengo.ToString(v)
@@ -27,7 +27,7 @@ func toStringSlice(array *tengo.Array) ([]string, error) {
 	return slice, nil
 }
 
-func toSlice(array *tengo.Array) []interface{} {
+func arrayToSlice(array *tengo.Array) []interface{} {
 	var slice []interface{}
 	for _, v := range array.Value {
 		slice = append(slice, v)
@@ -36,7 +36,7 @@ func toSlice(array *tengo.Array) []interface{} {
 	return slice
 }
 
-func toIntSlice(array *tengo.Array) ([]int, error) {
+func arrayToIntSlice(array *tengo.Array) ([]int, error) {
 	var slice []int
 	for _, v := range array.Value {
 		i, ok := tengo.ToInt(v)
@@ -54,7 +54,7 @@ func toIntSlice(array *tengo.Array) ([]int, error) {
 	return slice, nil
 }
 
-func toStringArray(slice []string) tengo.Object {
+func sliceToStringArray(slice []string) tengo.Object {
 	var values []tengo.Object
 	for _, s := range slice {
 		values = append(values, &tengo.String{Value: s})
@@ -65,7 +65,7 @@ func toStringArray(slice []string) tengo.Object {
 	}
 }
 
-func toIntArray(slice []int) tengo.Object {
+func sliceToIntArray(slice []int) tengo.Object {
 	var values []tengo.Object
 	for _, i := range slice {
 		values = append(values, &tengo.Int{Value: int64(i)})
@@ -74,6 +74,15 @@ func toIntArray(slice []int) tengo.Object {
 	return &tengo.Array{
 		Value: values,
 	}
+}
+
+func sliceToStringSlice(slice []tengo.Object) []string {
+	var strSlice []string
+	for _, obj := range slice {
+		path, _ := tengo.ToString(obj)
+		strSlice = append(strSlice, path)
+	}
+	return strSlice
 }
 
 func toError(err error) tengo.Object {

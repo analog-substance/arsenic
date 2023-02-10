@@ -31,7 +31,7 @@ type Script struct {
 	isGit    bool
 }
 
-func NewScript(path string) *Script {
+func NewScript(path string) (*Script, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	script := &Script{
 		ctx:    ctx,
@@ -40,7 +40,11 @@ func NewScript(path string) *Script {
 	}
 
 	shebangRe := regexp.MustCompile(`#!\s*/usr/bin/env arsenic\s*`)
-	bytes, _ := os.ReadFile(path)
+	bytes, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+
 	bytes = shebangRe.ReplaceAll(bytes, []byte{})
 
 	s := tengo.NewScript(bytes)
@@ -68,7 +72,7 @@ func NewScript(path string) *Script {
 
 	script.script = s
 
-	return script
+	return script, nil
 }
 
 func (s *Script) Run(args []string) error {

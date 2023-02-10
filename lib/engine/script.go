@@ -10,8 +10,52 @@ import (
 
 func (s *Script) ScriptModuleMap() map[string]tengo.Object {
 	return map[string]tengo.Object{
-		"stop": &tengo.UserFunction{Name: "stop", Value: s.tengoStop},
+		"stop": &tengo.UserFunction{
+			Name:  "stop",
+			Value: s.tengoStop,
+		},
+		"run_script": &tengo.UserFunction{
+			Name:  "run_script",
+			Value: s.tengoRunScript,
+		},
+		"args": &tengo.UserFunction{
+			Name: "args",
+			Value: func(args ...tengo.Object) (tengo.Object, error) {
+				return sliceToStringArray(s.args), nil
+			},
+		},
 	}
+}
+
+func (s *Script) tengoRunScript(args ...tengo.Object) (tengo.Object, error) {
+	if len(args) == 0 {
+		return nil, tengo.ErrWrongNumArguments
+	}
+
+	path, ok := tengo.ToString(args[0])
+	if !ok {
+		return nil, tengo.ErrInvalidArgumentType{
+			Name:     "path",
+			Expected: "string",
+			Found:    args[0].TypeName(),
+		}
+	}
+
+	scriptArgs := sliceToStringSlice(args[1:])
+
+	err := s.runScript(path, scriptArgs...)
+	if err != nil {
+		return toError(err), nil
+	}
+	return nil, nil
+}
+
+func (s *Script) runScript(path string, args ...string) error {
+	script, err := NewScript(path)
+	if err != nil {
+		return err
+	}
+	return script.Run(args)
 }
 
 func (s *Script) tengoStop(args ...tengo.Object) (tengo.Object, error) {

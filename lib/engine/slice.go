@@ -31,14 +31,14 @@ func (s *Script) sortStrings(args ...tengo.Object) (tengo.Object, error) {
 		}), nil
 	}
 
-	slice, err := toStringSlice(array)
+	slice, err := arrayToStringSlice(array)
 	if err != nil {
 		return toError(err), nil
 	}
 
 	sort.Strings(slice)
 
-	return toStringArray(slice), nil
+	return sliceToStringArray(slice), nil
 }
 
 func (s *Script) randItem(args ...tengo.Object) (tengo.Object, error) {
@@ -55,7 +55,7 @@ func (s *Script) randItem(args ...tengo.Object) (tengo.Object, error) {
 		}), nil
 	}
 
-	slice := toSlice(array)
+	slice := arrayToSlice(array)
 	if len(slice) == 0 {
 		return nil, nil
 	}
@@ -81,11 +81,11 @@ func (s *Script) unique(args ...tengo.Object) (tengo.Object, error) {
 		}), nil
 	}
 
-	slice, err := toStringSlice(array)
+	slice, err := arrayToStringSlice(array)
 	if err != nil {
 		return toError(err), nil
 	}
 
 	itemSet := set.NewStringSet(slice)
-	return toStringArray(itemSet.SortedStringSlice()), nil
+	return sliceToStringArray(itemSet.SortedStringSlice()), nil
 }

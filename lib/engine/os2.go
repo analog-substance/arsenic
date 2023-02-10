@@ -156,7 +156,7 @@ func (s *Script) readFileLines(args ...tengo.Object) (tengo.Object, error) {
 		return toError(err), nil
 	}
 
-	return toStringArray(lines), nil
+	return sliceToStringArray(lines), nil
 }
 
 func (s *Script) readStdin(args ...tengo.Object) (tengo.Object, error) {
@@ -170,7 +170,7 @@ func (s *Script) readStdin(args ...tengo.Object) (tengo.Object, error) {
 		lines = append(lines, scanner.Text())
 	}
 
-	return toStringArray(lines), nil
+	return sliceToStringArray(lines), nil
 }
 
 func (s *Script) tempChdir(args ...tengo.Object) (tengo.Object, error) {
