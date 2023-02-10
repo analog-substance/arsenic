@@ -65,6 +65,17 @@ func toStringArray(slice []string) tengo.Object {
 	}
 }
 
+func toIntArray(slice []int) tengo.Object {
+	var values []tengo.Object
+	for _, i := range slice {
+		values = append(values, &tengo.Int{Value: int64(i)})
+	}
+
+	return &tengo.Array{
+		Value: values,
+	}
+}
+
 func toError(err error) tengo.Object {
 	return &tengo.Error{
 		Value: &tengo.String{
@@ -408,6 +419,88 @@ func funcASBSRBp(fn func(string, bool, string) *bool) tengo.CallableFunc {
 	}
 }
 
+func funcASSISRIp(fn func(string, string, int, string) *int) tengo.CallableFunc {
+	return func(args ...tengo.Object) (tengo.Object, error) {
+		if len(args) != 4 {
+			return nil, tengo.ErrWrongNumArguments
+		}
+		s1, ok := tengo.ToString(args[0])
+		if !ok {
+			return nil, tengo.ErrInvalidArgumentType{
+				Name:     "first",
+				Expected: "string(compatible)",
+				Found:    args[0].TypeName(),
+			}
+		}
+		s2, ok := tengo.ToString(args[1])
+		if !ok {
+			return nil, tengo.ErrInvalidArgumentType{
+				Name:     "second",
+				Expected: "string(compatible)",
+				Found:    args[1].TypeName(),
+			}
+		}
+
+		i1, ok := tengo.ToInt(args[2])
+		if !ok {
+			return nil, tengo.ErrInvalidArgumentType{
+				Name:     "third",
+				Expected: "int(compatible)",
+				Found:    args[2].TypeName(),
+			}
+		}
+
+		s4, ok := tengo.ToString(args[3])
+		if !ok {
+			return nil, tengo.ErrInvalidArgumentType{
+				Name:     "fourth",
+				Expected: "string(compatible)",
+				Found:    args[3].TypeName(),
+			}
+		}
+
+		i := fn(s1, s2, i1, s4)
+		return &tengo.Int{Value: int64(*i)}, nil
+	}
+}
+
+func funcASISRIp(fn func(string, int, string) *int) tengo.CallableFunc {
+	return func(args ...tengo.Object) (tengo.Object, error) {
+		if len(args) != 3 {
+			return nil, tengo.ErrWrongNumArguments
+		}
+		s1, ok := tengo.ToString(args[0])
+		if !ok {
+			return nil, tengo.ErrInvalidArgumentType{
+				Name:     "first",
+				Expected: "string(compatible)",
+				Found:    args[0].TypeName(),
+			}
+		}
+
+		i1, ok := tengo.ToInt(args[1])
+		if !ok {
+			return nil, tengo.ErrInvalidArgumentType{
+				Name:     "second",
+				Expected: "int(compatible)",
+				Found:    args[1].TypeName(),
+			}
+		}
+
+		s4, ok := tengo.ToString(args[2])
+		if !ok {
+			return nil, tengo.ErrInvalidArgumentType{
+				Name:     "third",
+				Expected: "string(compatible)",
+				Found:    args[2].TypeName(),
+			}
+		}
+
+		i := fn(s1, i1, s4)
+		return &tengo.Int{Value: int64(*i)}, nil
+	}
+}
+
 func funcASRSsE(fn func(string) ([]string, error)) tengo.CallableFunc {
 	return func(args ...tengo.Object) (tengo.Object, error) {
 		if len(args) != 1 {
@@ -435,5 +528,31 @@ func funcASRSsE(fn func(string) ([]string, error)) tengo.CallableFunc {
 			arr.Value = append(arr.Value, &tengo.String{Value: r})
 		}
 		return arr, nil
+	}
+}
+
+func funcASRBE(fn func(string) (bool, error)) tengo.CallableFunc {
+	return func(args ...tengo.Object) (tengo.Object, error) {
+		if len(args) != 1 {
+			return nil, tengo.ErrWrongNumArguments
+		}
+		s1, ok := tengo.ToString(args[0])
+		if !ok {
+			return nil, tengo.ErrInvalidArgumentType{
+				Name:     "first",
+				Expected: "string(compatible)",
+				Found:    args[0].TypeName(),
+			}
+		}
+
+		res, err := fn(s1)
+		if err != nil {
+			return toError(err), nil
+		}
+
+		if res {
+			return tengo.TrueValue, nil
+		}
+		return tengo.FalseValue, nil
 	}
 }

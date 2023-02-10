@@ -6,6 +6,9 @@ fmt := import("fmt")
 os := import("os")
 os2 := import("os2")
 filepath := import("filepath")
+check_err := import("check_err")
+nmap := import("nmap")
+script := import("script")
 
 targets := []
 
@@ -16,37 +19,40 @@ setupHost := func(target) {
   }
 
   err := os.mkdir_all(filepath.join(baseDir, "loot"), 0644)
-  if is_error(err) {
-    script.stop(err)
-  }
+  check_err(err)
 
   err = os.mkdir_all(filepath.join(baseDir, "recon"), 0644)
-  if is_error(err) {
-    script.stop(err)
-  }
+  check_err(err)
 }
 
 rootCmd := cobra.root_cmd("as-recon-discover-services.tengo", "Run nmap scans on targets")
 rootCmd.persistent_flags.string_slicep("targets", "t", [], "The target to scan. Can be used multiple times to specify multiple targets")
 rootCmd.persistent_flags.stringp("target-file", "f", "", "The file containing the targets to scan.")
+rootCmd.persistent_flags.int("top", 0, "Scan # most common ports")
 
 rootCmd.set_persistent_pre_run(func(cmd, args) {
   targets = cmd.flags.get_string_slice("targets")
   file := cmd.flags.get_string("target-file")
 
-  lines := os2.read_file_lines(file)
-  if is_error(lines) {
-    script.stop(lines)
-  }
+  if file != "" {
+    lines := os2.read_file_lines(file)
+    check_err(lines)
 
-  for line in lines {
-    targets = append(targets, line)
+    for line in lines {
+      targets = append(targets, line)
+    }
   }
 
   for line in os2.read_stdin() {
     targets = append(targets, line)
   }
+
+  if len(targets) == 0 {
+    script.stop("No targets specified")
+  }
 })
+
+// TCP Command
 
 tcpCmd := cobra.cmd("tcp", "Run TCP scans")
 rootCmd.add_command(tcpCmd)
@@ -56,9 +62,21 @@ tcpCmd.set_run(func(cmd, args){
     
   }
   scan := func(target) {
+    scanner := nmap.scanner()
+    scanner.most_common_ports(1000)
+    scanner.targets(target)
+    scanner.all_output("output")
 
+    run := scanner.run()
+    check_err(run)
+    
+    fmt.println(run.ports)
   }
+
+  scan(targets[0])
 })
+
+// UDP Command
 
 udpCmd := cobra.cmd("udp", "Run UDP scans")
 rootCmd.add_command(udpCmd)
@@ -68,6 +86,4 @@ udpCmd.set_run(func(cmd, args){
 })
 
 err := rootCmd()
-if is_error(err) {
-	script.stop(err)
-}
+check_err(err)

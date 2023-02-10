@@ -1,18 +1,22 @@
 package engine
 
 import (
+	"bufio"
 	"os"
 	"regexp"
 
 	"github.com/analog-substance/arsenic/lib/util"
 	"github.com/analog-substance/tengo/v2"
+	"github.com/andrew-d/go-termutil"
 )
 
 func (s *Script) OS2ModuleMap() map[string]tengo.Object {
 	return map[string]tengo.Object{
 		"write_file":         &tengo.UserFunction{Name: "write_file", Value: s.writeFile},
+		"read_file_lines":    &tengo.UserFunction{Name: "read_file_lines", Value: s.readFileLines},
 		"regex_replace_file": &tengo.UserFunction{Name: "regex_replace_file", Value: s.regexReplaceFile},
 		"mkdir_temp":         &tengo.UserFunction{Name: "mkdir_temp", Value: s.mkdirTemp},
+		"read_stdin":         &tengo.UserFunction{Name: "read_stdin", Value: s.readStdin},
 	}
 }
 
@@ -130,4 +134,40 @@ func (s *Script) mkdirTemp(args ...tengo.Object) (tengo.Object, error) {
 	return &tengo.String{
 		Value: tempDir,
 	}, nil
+}
+
+func (s *Script) readFileLines(args ...tengo.Object) (tengo.Object, error) {
+	if len(args) != 1 {
+		return nil, tengo.ErrWrongNumArguments
+	}
+
+	path, ok := tengo.ToString(args[0])
+	if !ok {
+		return nil, tengo.ErrInvalidArgumentType{
+			Name:     "path",
+			Expected: "string",
+			Found:    args[0].TypeName(),
+		}
+	}
+
+	lines, err := util.ReadLines(path)
+	if err != nil {
+		return toError(err), nil
+	}
+
+	return toStringArray(lines), nil
+}
+
+func (s *Script) readStdin(args ...tengo.Object) (tengo.Object, error) {
+	if termutil.Isatty(os.Stdin.Fd()) {
+		return nil, nil
+	}
+
+	var lines []string
+	scanner := bufio.NewScanner(os.Stdin)
+	for scanner.Scan() {
+		lines = append(lines, scanner.Text())
+	}
+
+	return toStringArray(lines), nil
 }

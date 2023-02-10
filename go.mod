@@ -7,6 +7,7 @@ require (
 	github.com/Ullaakut/nmap/v2 v2.2.1
 	github.com/ahmetb/go-linq/v3 v3.2.0
 	github.com/analog-substance/tengo/v2 v2.12.2
+	github.com/andrew-d/go-termutil v0.0.0-20150726205930-009166a695a2
 	github.com/bmatcuk/doublestar/v4 v4.2.0
 	github.com/gin-contrib/cors v1.3.1
 	github.com/gin-gonic/gin v1.7.7

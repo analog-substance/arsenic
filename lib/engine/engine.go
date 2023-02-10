@@ -55,6 +55,7 @@ func NewScript(path string) *Script {
 	moduleMap.AddBuiltinModule("os2", script.OS2ModuleMap())
 	moduleMap.AddBuiltinModule("set", script.SetModuleMap())
 	moduleMap.AddBuiltinModule("cobra", script.CobraModuleMap())
+	moduleMap.AddBuiltinModule("nmap", script.NmapModuleMap())
 	moduleMap.AddBuiltinModule("log", logModule)
 	moduleMap.AddSourceModule("check_err", []byte(checkErrSrcModule))
 

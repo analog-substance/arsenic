@@ -32,6 +32,22 @@ func makeCobraCmd(cmd *cobra.Command, script *Script) *CobraCmd {
 					Name:  "bool",
 					Value: funcASBSRBp(cobraCmd.Value.Flags().Bool),
 				},
+				"get_bool": &tengo.UserFunction{
+					Name:  "get_bool",
+					Value: funcASRBE(cobraCmd.Value.Flags().GetBool),
+				},
+				"intp": &tengo.UserFunction{
+					Name:  "intp",
+					Value: funcASSISRIp(cobraCmd.Value.Flags().IntP),
+				},
+				"int": &tengo.UserFunction{
+					Name:  "int",
+					Value: funcASISRIp(cobraCmd.Value.Flags().Int),
+				},
+				"get_int": &tengo.UserFunction{
+					Name:  "get_int",
+					Value: stdlib.FuncASRIE(cobraCmd.Value.Flags().GetInt),
+				},
 				"stringp": &tengo.UserFunction{
 					Name:  "stringp",
 					Value: funcASSSSRSp(cobraCmd.Value.Flags().StringP),
@@ -67,6 +83,14 @@ func makeCobraCmd(cmd *cobra.Command, script *Script) *CobraCmd {
 				"bool": &tengo.UserFunction{
 					Name:  "bool",
 					Value: funcASBSRBp(cobraCmd.Value.PersistentFlags().Bool),
+				},
+				"intp": &tengo.UserFunction{
+					Name:  "intp",
+					Value: funcASSISRIp(cobraCmd.Value.PersistentFlags().IntP),
+				},
+				"int": &tengo.UserFunction{
+					Name:  "int",
+					Value: funcASISRIp(cobraCmd.Value.PersistentFlags().Int),
 				},
 				"stringp": &tengo.UserFunction{
 					Name:  "stringp",
