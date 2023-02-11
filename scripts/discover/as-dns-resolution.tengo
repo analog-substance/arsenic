@@ -1,4 +1,4 @@
-#!/usr/local/bin/tengo
+#!/usr/bin/env arsenic
 
 os := import("os")
 fmt := import("fmt")

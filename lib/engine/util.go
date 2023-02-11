@@ -593,3 +593,33 @@ func funcASRBE(fn func(string) (bool, error)) tengo.CallableFunc {
 		return tengo.FalseValue, nil
 	}
 }
+
+// funcASvRSsE transform a function of 'func(...string) ([]string, error)' signature
+// into tengo CallableFunc type.
+func funcASvRSsE(fn func(...string) ([]string, error)) tengo.CallableFunc {
+	return func(args ...tengo.Object) (tengo.Object, error) {
+		if len(args) == 0 {
+			return nil, tengo.ErrWrongNumArguments
+		}
+		var strings []string
+		for i, arg := range args {
+			str, ok := tengo.ToString(arg)
+			if !ok {
+				return nil, tengo.ErrInvalidArgumentType{
+					Name:     fmt.Sprintf("#%d arg", i),
+					Expected: "string(compatible)",
+					Found:    arg.TypeName(),
+				}
+			}
+
+			strings = append(strings, str)
+		}
+
+		res, err := fn(strings...)
+		if err != nil {
+			return toError(err), nil
+		}
+
+		return sliceToStringArray(res), nil
+	}
+}

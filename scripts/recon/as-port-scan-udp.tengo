@@ -92,7 +92,7 @@ scanCmd.set_run(func(cmd, args) {
       return
     }
 
-    log.msg(format("Port Scan / UDP / %s/ checking", host.name))
+    log.msg(format("Port Scan / UDP / %s / checking", host.name))
 
     reconPath := filepath.join(host.dir, "recon")
 
