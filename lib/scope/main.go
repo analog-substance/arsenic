@@ -43,9 +43,7 @@ func IsInScope(ipOrHostname string, forceRootDomainBlacklistPrecedence bool) boo
 }
 
 func GetScope(scopeType string) ([]string, error) {
-
 	glob := fmt.Sprintf("scope-%s-*", scopeType)
-	actualFile := fmt.Sprintf("scope-%s.txt", scopeType)
 
 	files, _ := filepath.Glob(glob)
 	scope := set.NewStringSet()
@@ -63,7 +61,20 @@ func GetScope(scopeType string) ([]string, error) {
 	}
 
 	// now lets open the actual scope file and add those. since they can't be blacklisted
-	err := util.ReadLineByLine(actualFile, func(line string) {
+	constScope, err := GetConstScope(scopeType)
+	if err != nil {
+		return nil, err
+	}
+	scope.AddRange(constScope)
+
+	return scope.SortedStringSlice(), nil
+}
+
+func GetConstScope(scopeType string) ([]string, error) {
+	file := fmt.Sprintf("scope-%s.txt", scopeType)
+	scope := set.NewStringSet()
+
+	err := util.ReadLineByLine(file, func(line string) {
 		scope.Add(normalizeScope(line, scopeType))
 	})
 

@@ -169,6 +169,7 @@ func ReadLines(path string) ([]string, error) {
 	return lines, scanner.Err()
 }
 
+// Maybe we can change this to return a channel that can be used
 func ReadLineByLine(path string, action func(line string)) error {
 	file, err := os.Open(path)
 	if err != nil {

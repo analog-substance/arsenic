@@ -82,13 +82,20 @@ func sliceToIntArray(slice []int) tengo.Object {
 }
 
 // sliceToStringSlice converts a slice of tengo Objects into a string slice
-func sliceToStringSlice(slice []tengo.Object) []string {
+func sliceToStringSlice(slice []tengo.Object) ([]string, error) {
 	var strSlice []string
 	for _, obj := range slice {
-		path, _ := tengo.ToString(obj)
-		strSlice = append(strSlice, path)
+		item, ok := tengo.ToString(obj)
+		if !ok {
+			return nil, tengo.ErrInvalidArgumentType{
+				Name:     "string type",
+				Expected: "string",
+				Found:    obj.TypeName(),
+			}
+		}
+		strSlice = append(strSlice, item)
 	}
-	return strSlice
+	return strSlice, nil
 }
 
 // toError converts an error into a tengo Error

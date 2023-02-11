@@ -1,0 +1,64 @@
+#!/usr/bin/env arsenic
+
+fmt := import("fmt")
+os2 := import("os2")
+scope := import("scope")
+filepath := import("filepath")
+log := import("log")
+check_err := import("check_err")
+text := import("text")
+set := import("set")
+
+domainsPath := filepath.from_slash("recon/domains")
+ipsPath := filepath.from_slash("recon/ips")
+
+err := os2.mkdir_all(domainsPath, ipsPath)
+check_err(err)
+
+log.msg("Getting subdomains for root domains")
+
+rootDomains := scope.root_domains(true)
+check_err(rootDomains)
+
+for rootDomain in rootDomains {
+	rootDomain = text.to_lower(rootDomain)
+	rootDomainPath := filepath.join(domainsPath, rootDomain)
+
+	err = os2.mkdir_all(rootDomainPath)
+	check_err(err)
+
+	// Get explicitly in scope subdomains
+	subDomains := scope.const_subdomains(rootDomain)
+	check_err(subDomains)
+
+	// Always write in scope subdomains to a txt file
+	err = os2.write_file_lines(filepath.join(rootDomainPath, "subdomains-scope.txt"), subDomains)
+	check_err(subDomains)
+
+	matches := filepath.glob(filepath.join(rootDomainPath, "subdomains-*.txt"))
+	check_err(matches)
+
+	log.msg("Combining discovered subdomains")
+
+	subdomainSet := set.new_string_set()
+	for match in matches {
+		lines := os2.read_file_lines(match)
+		check_err(lines)
+
+		subdomainSet.add_range(lines)
+	}
+
+	inScope := scope.prune(subdomainSet.sorted_string_slice())
+	err = os2.write_file_lines(filepath.join(rootDomainPath, "subdomains.txt"), inScope)
+	check_err(err)
+
+	for domain in inScope {
+		fmt.println(domain)
+	}
+}
+
+allDomains := scope.domains()
+check_err(allDomains)
+
+err = os2.write_file_lines("scope-domains-generated-combined.txt", allDomains)
+check_err(err)

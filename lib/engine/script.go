@@ -63,9 +63,12 @@ func (s *Script) tengoRunScript(args ...tengo.Object) (tengo.Object, error) {
 		}
 	}
 
-	scriptArgs := sliceToStringSlice(args[1:])
+	scriptArgs, err := sliceToStringSlice(args[1:])
+	if err != nil {
+		return nil, err
+	}
 
-	err := s.runScript(path, scriptArgs...)
+	err = s.runScript(path, scriptArgs...)
 	if err != nil {
 		return toError(err), nil
 	}
@@ -88,9 +91,12 @@ func (s *Script) tengoRunScriptWithSigHandler(args ...tengo.Object) (tengo.Objec
 		}
 	}
 
-	scriptArgs := sliceToStringSlice(args[1:])
+	scriptArgs, err := sliceToStringSlice(args[1:])
+	if err != nil {
+		return nil, err
+	}
 
-	err := s.runScriptWithSigHandler(path, scriptArgs...)
+	err = s.runScriptWithSigHandler(path, scriptArgs...)
 	if err != nil {
 		return toError(err), nil
 	}

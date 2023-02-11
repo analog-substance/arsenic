@@ -21,11 +21,11 @@ func (s *Script) newStringSet(args ...tengo.Object) (tengo.Object, error) {
 				Value: func(args ...tengo.Object) (tengo.Object, error) {
 					item, ok := tengo.ToString(args[0])
 					if !ok {
-						return toError(tengo.ErrInvalidArgumentType{
+						return nil, tengo.ErrInvalidArgumentType{
 							Name:     "item",
 							Expected: "string",
 							Found:    args[0].TypeName(),
-						}), nil
+						}
 					}
 
 					value := tengo.FalseValue
@@ -34,6 +34,34 @@ func (s *Script) newStringSet(args ...tengo.Object) (tengo.Object, error) {
 					}
 
 					return value, nil
+				},
+			},
+			"add_range": &tengo.UserFunction{
+				Name: "add",
+				Value: func(args ...tengo.Object) (tengo.Object, error) {
+					if len(args) != 1 {
+						return nil, tengo.ErrWrongNumArguments
+					}
+
+					itemsArray, ok := args[0].(*tengo.Array)
+					if !ok {
+						return nil, tengo.ErrInvalidArgumentType{
+							Name:     "items",
+							Expected: "array",
+							Found:    args[0].TypeName(),
+						}
+					}
+
+					items, err := arrayToStringSlice(itemsArray)
+					if err != nil {
+						return nil, err
+					}
+
+					for _, item := range items {
+						stringSet.Add(item)
+					}
+
+					return nil, nil
 				},
 			},
 			"sorted_string_slice": &tengo.UserFunction{
