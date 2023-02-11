@@ -115,7 +115,7 @@ scanCmd.set_run(func(cmd, args) {
 
     log.info(format("Port Scan / TCP / %s / running", host.name))
 
-    err = arsenic.tcp_scan(host.name)
+    err = script.run_script_with_sig_handler("as-recon-discover-services.tengo", "tcp", "-t", host.name)
     check_err(err)
 
     err = git.commit(".", format("TCP port scan complete: %s", host.name))

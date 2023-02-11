@@ -45,7 +45,7 @@ func (s *Script) hostUrls(args ...tengo.Object) (tengo.Object, error) {
 		}), nil
 	}
 
-	protocols, err := toStringSlice(protocolsArray)
+	protocols, err := arrayToStringSlice(protocolsArray)
 	if err != nil {
 		return toError(err), nil
 	}
@@ -61,7 +61,7 @@ func (s *Script) hostUrls(args ...tengo.Object) (tengo.Object, error) {
 			}), nil
 		}
 
-		flags, err = toStringSlice(flagsArray)
+		flags, err = arrayToStringSlice(flagsArray)
 		if err != nil {
 			return toError(err), nil
 		}
@@ -85,7 +85,7 @@ func (s *Script) hostUrls(args ...tengo.Object) (tengo.Object, error) {
 		}
 	}
 
-	return toStringArray(validHostURLs.SortedStringSlice()), nil
+	return sliceToStringArray(validHostURLs.SortedStringSlice()), nil
 }
 
 func (s *Script) host(args ...tengo.Object) (tengo.Object, error) {
@@ -123,7 +123,7 @@ func (s *Script) hosts(args ...tengo.Object) (tengo.Object, error) {
 		}
 
 		var err error
-		flags, err = toStringSlice(flagsArray)
+		flags, err = arrayToStringSlice(flagsArray)
 		if err != nil {
 			return toError(err), nil
 		}
@@ -210,7 +210,7 @@ func (s *Script) lockedFiles(args ...tengo.Object) (tengo.Object, error) {
 		}
 	}
 
-	return toStringArray(locked), nil
+	return sliceToStringArray(locked), nil
 }
 
 func (s *Script) ffuf(args ...tengo.Object) (tengo.Object, error) {
@@ -273,7 +273,7 @@ func (s *Script) contentDiscoveryURLs(args ...tengo.Object) (tengo.Object, error
 		}), nil
 	}
 
-	patterns, err := toStringSlice(patternsArray)
+	patterns, err := arrayToStringSlice(patternsArray)
 	if err != nil {
 		return toError(err), nil
 	}
@@ -287,7 +287,7 @@ func (s *Script) contentDiscoveryURLs(args ...tengo.Object) (tengo.Object, error
 		}), nil
 	}
 
-	codes, err := toIntSlice(codesArray)
+	codes, err := arrayToIntSlice(codesArray)
 	if err != nil {
 		return toError(err), nil
 	}
@@ -319,7 +319,7 @@ func (s *Script) contentDiscoveryURLs(args ...tengo.Object) (tengo.Object, error
 		}
 	}
 
-	return toStringArray(urls), nil
+	return sliceToStringArray(urls), nil
 }
 
 func (s *Script) tcpScan(args ...tengo.Object) (tengo.Object, error) {

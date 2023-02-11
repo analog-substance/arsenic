@@ -1,8 +1,6 @@
 package engine
 
 import (
-	"errors"
-
 	"github.com/analog-substance/tengo/v2"
 	"github.com/analog-substance/tengo/v2/stdlib"
 	"github.com/spf13/cobra"
@@ -31,6 +29,22 @@ func makeCobraCmd(cmd *cobra.Command, script *Script) *CobraCmd {
 				"bool": &tengo.UserFunction{
 					Name:  "bool",
 					Value: funcASBSRBp(cobraCmd.Value.Flags().Bool),
+				},
+				"get_bool": &tengo.UserFunction{
+					Name:  "get_bool",
+					Value: funcASRBE(cobraCmd.Value.Flags().GetBool),
+				},
+				"intp": &tengo.UserFunction{
+					Name:  "intp",
+					Value: funcASSISRIp(cobraCmd.Value.Flags().IntP),
+				},
+				"int": &tengo.UserFunction{
+					Name:  "int",
+					Value: funcASISRIp(cobraCmd.Value.Flags().Int),
+				},
+				"get_int": &tengo.UserFunction{
+					Name:  "get_int",
+					Value: stdlib.FuncASRIE(cobraCmd.Value.Flags().GetInt),
 				},
 				"stringp": &tengo.UserFunction{
 					Name:  "stringp",
@@ -68,6 +82,14 @@ func makeCobraCmd(cmd *cobra.Command, script *Script) *CobraCmd {
 					Name:  "bool",
 					Value: funcASBSRBp(cobraCmd.Value.PersistentFlags().Bool),
 				},
+				"intp": &tengo.UserFunction{
+					Name:  "intp",
+					Value: funcASSISRIp(cobraCmd.Value.PersistentFlags().IntP),
+				},
+				"int": &tengo.UserFunction{
+					Name:  "int",
+					Value: funcASISRIp(cobraCmd.Value.PersistentFlags().Int),
+				},
 				"stringp": &tengo.UserFunction{
 					Name:  "stringp",
 					Value: funcASSSSRSp(cobraCmd.Value.PersistentFlags().StringP),
@@ -97,6 +119,31 @@ func makeCobraCmd(cmd *cobra.Command, script *Script) *CobraCmd {
 		"set_run": &tengo.UserFunction{
 			Name:  "set_run",
 			Value: cobraCmd.setRun,
+		},
+		"name": &tengo.UserFunction{
+			Name:  "name",
+			Value: stdlib.FuncARS(cobraCmd.Value.Name),
+		},
+		"has_parent": &tengo.UserFunction{
+			Name:  "has_parent",
+			Value: stdlib.FuncARB(cobraCmd.Value.HasParent),
+		},
+		"parent": &tengo.UserFunction{
+			Name: "parent",
+			Value: func(args ...tengo.Object) (tengo.Object, error) {
+				return makeCobraCmd(cobraCmd.Value.Parent(), cobraCmd.script), nil
+			},
+		},
+		"called_as": &tengo.UserFunction{
+			Name:  "called_as",
+			Value: stdlib.FuncARS(cobraCmd.Value.CalledAs),
+		},
+		"enable_completion": &tengo.UserFunction{
+			Name: "enable_completion",
+			Value: func(args ...tengo.Object) (tengo.Object, error) {
+				cobraCmd.Value.CompletionOptions.DisableDefaultCmd = false
+				return nil, nil
+			},
 		},
 	}
 
@@ -136,7 +183,7 @@ func (c *CobraCmd) setRun(args ...tengo.Object) (tengo.Object, error) {
 	}
 
 	c.Value.RunE = func(cmd *cobra.Command, args []string) error {
-		return c.runCompiledFunction(fn, args)
+		return c.script.runCompiledFunction(fn, makeCobraCmd(cmd, c.script), sliceToStringArray(args))
 	}
 	return nil, nil
 }
@@ -156,46 +203,17 @@ func (c *CobraCmd) setPersistentPreRun(args ...tengo.Object) (tengo.Object, erro
 	}
 
 	c.Value.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+		// If completion command isn't disabled and the current command is one of the "completion" sub commands
+		// or __complete, don't run the set persistent pre run
+		if !cmd.CompletionOptions.DisableDefaultCmd &&
+			(cmd.Name() == "__complete" || (cmd.HasParent() && cmd.Parent().Name() == "completion")) {
+			return nil
+		}
+
 		c.cobraRootCmdPersistentPreRun(cmd, args)
-		return c.runCompiledFunction(fn, args)
+		return c.script.runCompiledFunction(fn, makeCobraCmd(cmd, c.script), sliceToStringArray(args))
 	}
 	return nil, nil
-}
-
-func (c *CobraCmd) runCompiledFunction(fn *tengo.CompiledFunction, args []string) error {
-	vm := tengo.NewVM(c.script.compiled.Bytecode(), c.script.compiled.Globals(), -1)
-	ch := make(chan error, 1)
-
-	errEmpty := errors.New("")
-
-	go func() {
-		obj, err := vm.RunCompiled(fn, c, toStringArray(args))
-		if err != nil {
-			ch <- err
-			return
-		}
-
-		errObj, ok := obj.(*tengo.Error)
-		if ok {
-			ch <- errors.New(errObj.String())
-		} else {
-			ch <- errEmpty
-		}
-	}()
-
-	var err error
-	select {
-	case <-c.script.ctx.Done():
-		vm.Abort()
-		err = c.script.ctx.Err()
-	case err = <-ch:
-	}
-
-	if err != nil && err != errEmpty {
-		return err
-	}
-
-	return nil
 }
 
 // TypeName should return the name of the type.

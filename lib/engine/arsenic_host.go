@@ -74,7 +74,7 @@ func makeArsenicHost(h *host.Host) *tengo.ImmutableMap {
 					if err != nil {
 						return toError(err), nil
 					}
-					return toStringArray(matches), nil
+					return sliceToStringArray(matches), nil
 				},
 			},
 			"urls": &tengo.UserFunction{
@@ -106,7 +106,7 @@ func makeArsenicHost(h *host.Host) *tengo.ImmutableMap {
 						}
 					}
 
-					return toStringArray(urls), nil
+					return sliceToStringArray(urls), nil
 				},
 			},
 			"file_exists": &tengo.UserFunction{
@@ -149,7 +149,7 @@ func makeArsenicHost(h *host.Host) *tengo.ImmutableMap {
 						}), nil
 					}
 
-					patterns, err := toStringSlice(patternsArray)
+					patterns, err := arrayToStringSlice(patternsArray)
 					if err != nil {
 						return toError(err), nil
 					}
@@ -163,7 +163,7 @@ func makeArsenicHost(h *host.Host) *tengo.ImmutableMap {
 						}), nil
 					}
 
-					codes, err := toIntSlice(codesArray)
+					codes, err := arrayToIntSlice(codesArray)
 					if err != nil {
 						return toError(err), nil
 					}
@@ -195,7 +195,7 @@ func makeArsenicHost(h *host.Host) *tengo.ImmutableMap {
 						}
 					}
 
-					return toStringArray(urls), nil
+					return sliceToStringArray(urls), nil
 				},
 			},
 		},

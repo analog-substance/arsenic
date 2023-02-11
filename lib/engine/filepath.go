@@ -154,7 +154,7 @@ func (m *Script) glob(args ...tengo.Object) (tengo.Object, error) {
 		return toError(err), nil
 	}
 
-	return toStringArray(matches), nil
+	return sliceToStringArray(matches), nil
 }
 
 func (m *Script) fromSlash(args ...tengo.Object) (tengo.Object, error) {

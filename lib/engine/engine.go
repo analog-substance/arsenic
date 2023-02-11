@@ -2,7 +2,9 @@ package engine
 
 import (
 	"context"
+	"errors"
 	"os"
+	"path/filepath"
 	"regexp"
 
 	"github.com/analog-substance/arsenic/lib/util"
@@ -27,9 +29,10 @@ type Script struct {
 	compiled *tengo.Compiled
 	args     []string
 	isGit    bool
+	signaled bool
 }
 
-func NewScript(path string) *Script {
+func NewScript(path string) (*Script, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	script := &Script{
 		ctx:    ctx,
@@ -38,7 +41,11 @@ func NewScript(path string) *Script {
 	}
 
 	shebangRe := regexp.MustCompile(`#!\s*/usr/bin/env arsenic\s*`)
-	bytes, _ := os.ReadFile(path)
+	bytes, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+
 	bytes = shebangRe.ReplaceAll(bytes, []byte{})
 
 	s := tengo.NewScript(bytes)
@@ -55,13 +62,18 @@ func NewScript(path string) *Script {
 	moduleMap.AddBuiltinModule("os2", script.OS2ModuleMap())
 	moduleMap.AddBuiltinModule("set", script.SetModuleMap())
 	moduleMap.AddBuiltinModule("cobra", script.CobraModuleMap())
+	moduleMap.AddBuiltinModule("nmap", script.NmapModuleMap())
 	moduleMap.AddBuiltinModule("log", logModule)
 	moduleMap.AddSourceModule("check_err", []byte(checkErrSrcModule))
 
 	s.SetImports(moduleMap)
+
+	s.Add("SCRIPT_PATH", path)
+	s.Add("SCRIPT_NAME", filepath.Base(path))
+
 	script.script = s
 
-	return script
+	return script, nil
 }
 
 func (s *Script) Run(args []string) error {
@@ -75,4 +87,45 @@ func (s *Script) Run(args []string) error {
 	s.compiled = compiled
 
 	return s.compiled.RunContext(s.ctx)
+}
+
+func (s *Script) Signal() {
+	s.signaled = true
+	s.stop(ErrSignaled.Error())
+}
+
+func (s *Script) runCompiledFunction(fn *tengo.CompiledFunction, args ...tengo.Object) error {
+	vm := tengo.NewVM(s.compiled.Bytecode(), s.compiled.Globals(), -1)
+	ch := make(chan error, 1)
+
+	errEmpty := errors.New("")
+
+	go func() {
+		obj, err := vm.RunCompiled(fn, args...)
+		if err != nil {
+			ch <- err
+			return
+		}
+
+		errObj, ok := obj.(*tengo.Error)
+		if ok {
+			ch <- errors.New(errObj.String())
+		} else {
+			ch <- errEmpty
+		}
+	}()
+
+	var err error
+	select {
+	case <-s.ctx.Done():
+		vm.Abort()
+		err = s.ctx.Err()
+	case err = <-ch:
+	}
+
+	if err != nil && err != errEmpty {
+		return err
+	}
+
+	return nil
 }

@@ -13,6 +13,7 @@ import (
 
 var ErrSignaled error = errors.New("process signaled to close")
 
+// ExecModuleMap represents the 'exec' import module
 func (s *Script) ExecModuleMap() map[string]tengo.Object {
 	return map[string]tengo.Object{
 		"err_signaled": &tengo.Error{
@@ -148,7 +149,7 @@ func (s *Script) runWithSigHandler(name string, args ...string) error {
 }
 
 func (s *Script) runCmdWithSigHandler(cmd *exec.Cmd) error {
-	sigs := make(chan os.Signal)
+	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, os.Interrupt, syscall.SIGTERM)
 
 	// relay trapped signals to the spawned process

@@ -118,7 +118,7 @@ scanCmd.set_run(func(cmd, args) {
 
     log.info(format("Port Scan / UDP / %s / running", host.name))
 
-    err = exec.run_with_sig_handler("sudo", "nmap", "--stylesheet", "/static/nmap.xsl", "-oA", "recon/nmap-punched-udp", "-sUV", "-p-", "-Pn", "--max-rtt-timeout", "100ms", "--min-rate", "1000", "--version-intensity", "0", host.name)
+    err = script.run_script_with_sig_handler("as-recon-discover-services.tengo", "udp", "-t", host.name)
     check_err(err)
 
     err = git.commit(".", format("UDP port scan complete: %s", host.name))
