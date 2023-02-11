@@ -11,7 +11,7 @@ import (
 	"github.com/analog-substance/tengo/v2"
 )
 
-func (s *Script) GitModuleMap() map[string]tengo.Object {
+func (s *Script) GitModule() map[string]tengo.Object {
 	return map[string]tengo.Object{
 		"pull":   &tengo.UserFunction{Name: "pull", Value: s.tengoPull},
 		"commit": &tengo.UserFunction{Name: "commit", Value: s.tengoCommit},

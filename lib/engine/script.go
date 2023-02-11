@@ -13,8 +13,8 @@ import (
 	"github.com/analog-substance/tengo/v2"
 )
 
-// ScriptModuleMap represents the 'script' import module
-func (s *Script) ScriptModuleMap() map[string]tengo.Object {
+// ScriptModule represents the 'script' import module
+func (s *Script) ScriptModule() map[string]tengo.Object {
 	return map[string]tengo.Object{
 		"stop": &tengo.UserFunction{
 			Name:  "stop",
@@ -31,6 +31,12 @@ func (s *Script) ScriptModuleMap() map[string]tengo.Object {
 		"find": &tengo.UserFunction{
 			Name:  "find",
 			Value: s.tengoFindScript,
+		},
+		"path": &tengo.String{
+			Value: s.path,
+		},
+		"name": &tengo.String{
+			Value: s.name,
 		},
 		"args": &tengo.UserFunction{
 			Name: "args",

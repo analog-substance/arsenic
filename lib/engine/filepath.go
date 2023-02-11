@@ -8,7 +8,7 @@ import (
 	"github.com/bmatcuk/doublestar/v4"
 )
 
-func (m *Script) FilePathModuleMap() map[string]tengo.Object {
+func (m *Script) FilePathModule() map[string]tengo.Object {
 	return map[string]tengo.Object{
 		"join":        &tengo.UserFunction{Name: "join", Value: m.join},
 		"file_exists": &tengo.UserFunction{Name: "file_exists", Value: m.fileExists},

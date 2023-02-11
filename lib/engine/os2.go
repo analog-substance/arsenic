@@ -10,8 +10,8 @@ import (
 	"github.com/andrew-d/go-termutil"
 )
 
-// OS2ModuleMap represents the 'os2' import module
-func (s *Script) OS2ModuleMap() map[string]tengo.Object {
+// OS2Module represents the 'os2' import module
+func (s *Script) OS2Module() map[string]tengo.Object {
 	return map[string]tengo.Object{
 		"write_file":         &tengo.UserFunction{Name: "write_file", Value: s.writeFile},
 		"read_file_lines":    &tengo.UserFunction{Name: "read_file_lines", Value: s.readFileLines},

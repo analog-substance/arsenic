@@ -9,7 +9,7 @@ import (
 	"github.com/analog-substance/tengo/v2"
 )
 
-func (s *Script) SliceModuleMap() map[string]tengo.Object {
+func (s *Script) SliceModule() map[string]tengo.Object {
 	return map[string]tengo.Object{
 		"sort_strings": &tengo.UserFunction{Name: "sort_strings", Value: s.sortStrings},
 		"rand_item":    &tengo.UserFunction{Name: "rand_item", Value: s.randItem},

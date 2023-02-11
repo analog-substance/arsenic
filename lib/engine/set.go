@@ -6,7 +6,7 @@ import (
 	"github.com/analog-substance/tengo/v2/stdlib"
 )
 
-func (s *Script) SetModuleMap() map[string]tengo.Object {
+func (s *Script) SetModule() map[string]tengo.Object {
 	return map[string]tengo.Object{
 		"new_string_set": &tengo.UserFunction{Name: "new_string_set", Value: s.newStringSet},
 	}

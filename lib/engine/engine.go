@@ -23,6 +23,8 @@ export func(err) {
 `
 
 type Script struct {
+	path     string
+	name     string
 	ctx      context.Context
 	cancel   context.CancelFunc
 	script   *tengo.Script
@@ -35,11 +37,14 @@ type Script struct {
 func NewScript(path string) (*Script, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	script := &Script{
+		path:   path,
+		name:   filepath.Base(path),
 		ctx:    ctx,
 		cancel: cancel,
 		isGit:  util.DirExists(".git"),
 	}
 
+	// Might want to change this so it just removes any shebang
 	shebangRe := regexp.MustCompile(`#!\s*/usr/bin/env arsenic\s*`)
 	bytes, err := os.ReadFile(path)
 	if err != nil {
@@ -49,31 +54,32 @@ func NewScript(path string) (*Script, error) {
 	bytes = shebangRe.ReplaceAll(bytes, []byte{})
 
 	s := tengo.NewScript(bytes)
-
-	moduleMap := stdlib.GetModuleMap(stdlib.AllModuleNames()...)
-
-	moduleMap.AddBuiltinModule("filepath", script.FilePathModuleMap())
-	moduleMap.AddBuiltinModule("git", script.GitModuleMap())
-	moduleMap.AddBuiltinModule("slice", script.SliceModuleMap())
-	moduleMap.AddBuiltinModule("url", script.URLModuleMap())
-	moduleMap.AddBuiltinModule("arsenic", script.ArsenicModuleMap())
-	moduleMap.AddBuiltinModule("script", script.ScriptModuleMap())
-	moduleMap.AddBuiltinModule("exec", script.ExecModuleMap())
-	moduleMap.AddBuiltinModule("os2", script.OS2ModuleMap())
-	moduleMap.AddBuiltinModule("set", script.SetModuleMap())
-	moduleMap.AddBuiltinModule("cobra", script.CobraModuleMap())
-	moduleMap.AddBuiltinModule("nmap", script.NmapModuleMap())
-	moduleMap.AddBuiltinModule("log", logModule)
-	moduleMap.AddSourceModule("check_err", []byte(checkErrSrcModule))
-
-	s.SetImports(moduleMap)
-
-	s.Add("SCRIPT_PATH", path)
-	s.Add("SCRIPT_NAME", filepath.Base(path))
+	s.SetImports(script.NewModuleMap())
 
 	script.script = s
 
 	return script, nil
+}
+
+func (s *Script) NewModuleMap() *tengo.ModuleMap {
+	moduleMap := stdlib.GetModuleMap(stdlib.AllModuleNames()...)
+
+	moduleMap.AddBuiltinModule("filepath", s.FilePathModule())
+	moduleMap.AddBuiltinModule("git", s.GitModule())
+	moduleMap.AddBuiltinModule("slice", s.SliceModule())
+	moduleMap.AddBuiltinModule("url", s.URLModule())
+	moduleMap.AddBuiltinModule("arsenic", s.ArsenicModule())
+	moduleMap.AddBuiltinModule("script", s.ScriptModule())
+	moduleMap.AddBuiltinModule("exec", s.ExecModule())
+	moduleMap.AddBuiltinModule("os2", s.OS2Module())
+	moduleMap.AddBuiltinModule("set", s.SetModule())
+	moduleMap.AddBuiltinModule("cobra", s.CobraModule())
+	moduleMap.AddBuiltinModule("nmap", s.NmapModule())
+	moduleMap.AddBuiltinModule("scope", s.ScopeModule())
+	moduleMap.AddBuiltinModule("log", logModule)
+	moduleMap.AddSourceModule("check_err", []byte(checkErrSrcModule))
+
+	return moduleMap
 }
 
 func (s *Script) Run(args []string) error {

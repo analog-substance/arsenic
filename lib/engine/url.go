@@ -6,7 +6,7 @@ import (
 	"github.com/analog-substance/tengo/v2"
 )
 
-func (s *Script) URLModuleMap() map[string]tengo.Object {
+func (s *Script) URLModule() map[string]tengo.Object {
 	return map[string]tengo.Object{
 		"hostname": &tengo.UserFunction{Name: "hostname", Value: s.hostname},
 	}

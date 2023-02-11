@@ -4,8 +4,8 @@ import (
 	"github.com/analog-substance/tengo/v2"
 )
 
-// NmapModuleMap represents the 'nmap' import module
-func (s *Script) NmapModuleMap() map[string]tengo.Object {
+// NmapModule represents the 'nmap' import module
+func (s *Script) NmapModule() map[string]tengo.Object {
 	return map[string]tengo.Object{
 		"scanner":           &tengo.UserFunction{Name: "scanner", Value: s.nmapScanner},
 		"timing_slowest":    &tengo.Int{Value: 0},

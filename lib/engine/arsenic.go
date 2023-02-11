@@ -18,7 +18,7 @@ import (
 	"github.com/analog-substance/tengo/v2"
 )
 
-func (s *Script) ArsenicModuleMap() map[string]tengo.Object {
+func (s *Script) ArsenicModule() map[string]tengo.Object {
 	return map[string]tengo.Object{
 		"host_urls":              &tengo.UserFunction{Name: "host_urls", Value: s.hostUrls},
 		"host":                   &tengo.UserFunction{Name: "host", Value: s.host},

@@ -5,8 +5,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// CobraModuleMap represents the 'cobra' import module
-func (s *Script) CobraModuleMap() map[string]tengo.Object {
+// CobraModule represents the 'cobra' import module
+func (s *Script) CobraModule() map[string]tengo.Object {
 	return map[string]tengo.Object{
 		"root_cmd": &tengo.UserFunction{Name: "root_cmd", Value: s.cobraRootCmd},
 		"cmd":      &tengo.UserFunction{Name: "cmd", Value: s.cobraCmd},
