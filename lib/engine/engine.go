@@ -75,7 +75,6 @@ func (s *Script) NewModuleMap() *tengo.ModuleMap {
 	moduleMap.AddBuiltinModule("set", s.SetModule())
 	moduleMap.AddBuiltinModule("cobra", s.CobraModule())
 	moduleMap.AddBuiltinModule("nmap", s.NmapModule())
-	moduleMap.AddBuiltinModule("scope", s.ScopeModule())
 	moduleMap.AddBuiltinModule("log", logModule)
 	moduleMap.AddSourceModule("check_err", []byte(checkErrSrcModule))
 
