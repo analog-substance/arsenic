@@ -4,11 +4,12 @@ import (
 	"regexp"
 	"strings"
 
+	"net"
+
 	"github.com/analog-substance/arsenic/lib/set"
 	"github.com/analog-substance/arsenic/lib/util"
 	"github.com/spf13/viper"
 	"golang.org/x/net/publicsuffix"
-	"net"
 )
 
 type scope struct {
@@ -73,6 +74,7 @@ func (s *scope) loadExplicitScopeIPs() {
 }
 
 func (s *scope) IsBlacklistedRootDomain(rootDomain string) bool {
+	s.loadDomainInfo()
 	for _, badRootDomain := range s.blacklistedRootDomains {
 		if strings.EqualFold(badRootDomain, rootDomain) {
 			return true
@@ -133,6 +135,8 @@ func (s *scope) IsIPInScope(checkHostIP string) bool {
 }
 
 func (s *scope) IsDomainInScope(domain string, forceRootDomainBlacklistPrecedence bool) bool {
+	s.loadDomainInfo()
+
 	rootDomain, _ := publicsuffix.EffectiveTLDPlusOne(domain)
 	if rootDomain == domain {
 		rootDomain, _ = publicsuffix.PublicSuffix(domain)
