@@ -1,6 +1,5 @@
 #! /usr/bin/env arsenic
 
-// arsenic := import("arsenic")
 cobra := import("cobra")
 os := import("os")
 os2 := import("os2")
@@ -81,7 +80,7 @@ tcpCmd.set_run(func(cmd, args){
     scanner := defaultScanner(target).
       privileged().
       oA(filepath.from_slash(format("recon/nmap-top-%d-tcp", topPorts))).
-      host_timeout("30m").
+      host_timeout("30m"). // Make an argument/configurable
       A().
       top_ports(topPorts)
     
@@ -92,7 +91,7 @@ tcpCmd.set_run(func(cmd, args){
   quickScan := func(target) {
     scanner := defaultScanner(target).
       T3().
-      host_timeout("30m").
+      host_timeout("30m"). // Make an argument/configurable
       ports("-").
       oA(filepath.from_slash("recon/nmap-punched-quick-tcp"))
 
@@ -119,7 +118,7 @@ tcpCmd.set_run(func(cmd, args){
     scanner := defaultScanner(target).
       privileged().
       oA(filepath.from_slash("recon/nmap-punched-tcp")).
-      host_timeout("30m").
+      host_timeout("30m"). // Make an argument/configurable
       A().
       ports(ports...)
     

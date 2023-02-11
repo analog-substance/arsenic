@@ -12,6 +12,7 @@ import (
 	"github.com/analog-substance/tengo/v2/stdlib"
 )
 
+// NmapScanner is the tengo wrapper object for nmap.Scanner
 type NmapScanner struct {
 	tengo.ObjectImpl
 	Value         *nmap.Scanner
@@ -20,6 +21,8 @@ type NmapScanner struct {
 	xmlOutputName string
 }
 
+// addOptionA transform a function of 'func() nmap.Option' signature
+// into tengo CallableFunc type.
 func (s *NmapScanner) addOptionA(fn func() nmap.Option) tengo.CallableFunc {
 	return func(args ...tengo.Object) (tengo.Object, error) {
 		option := fn()
@@ -29,6 +32,8 @@ func (s *NmapScanner) addOptionA(fn func() nmap.Option) tengo.CallableFunc {
 	}
 }
 
+// addOptionAS transform a function of 'func(string) nmap.Option' signature
+// into tengo CallableFunc type.
 func (s *NmapScanner) addOptionAS(fn func(string) nmap.Option) tengo.CallableFunc {
 	return func(args ...tengo.Object) (tengo.Object, error) {
 		if len(args) != 1 {
@@ -50,6 +55,8 @@ func (s *NmapScanner) addOptionAS(fn func(string) nmap.Option) tengo.CallableFun
 	}
 }
 
+// addOptionAI transform a function of 'func(int) nmap.Option' signature
+// into tengo CallableFunc type.
 func (s *NmapScanner) addOptionAI(fn func(int) nmap.Option) tengo.CallableFunc {
 	return func(args ...tengo.Object) (tengo.Object, error) {
 		if len(args) != 1 {
@@ -71,6 +78,8 @@ func (s *NmapScanner) addOptionAI(fn func(int) nmap.Option) tengo.CallableFunc {
 	}
 }
 
+// addOptionAI16 transform a function of 'func(int16) nmap.Option' signature
+// into tengo CallableFunc type.
 func (s *NmapScanner) addOptionAI16(fn func(int16) nmap.Option) tengo.CallableFunc {
 	return func(args ...tengo.Object) (tengo.Object, error) {
 		if len(args) != 1 {
@@ -92,6 +101,8 @@ func (s *NmapScanner) addOptionAI16(fn func(int16) nmap.Option) tengo.CallableFu
 	}
 }
 
+// addOptionAD transform a function of 'func(time.Duration) nmap.Option' signature
+// into tengo CallableFunc type.
 func (s *NmapScanner) addOptionAD(fn func(time.Duration) nmap.Option) tengo.CallableFunc {
 	return func(args ...tengo.Object) (tengo.Object, error) {
 		if len(args) != 1 {
@@ -119,6 +130,8 @@ func (s *NmapScanner) addOptionAD(fn func(time.Duration) nmap.Option) tengo.Call
 	}
 }
 
+// addOptionASv transform a function of 'func(...string) nmap.Option' signature
+// into tengo CallableFunc type.
 func (s *NmapScanner) addOptionASv(fn func(...string) nmap.Option) tengo.CallableFunc {
 	return func(args ...tengo.Object) (tengo.Object, error) {
 		if len(args) == 0 {
@@ -145,6 +158,7 @@ func (s *NmapScanner) addOptionASv(fn func(...string) nmap.Option) tengo.Callabl
 	}
 }
 
+// aliasFunc is used to call the same tengo function using a different name
 func (s *NmapScanner) aliasFunc(name string, src string) *tengo.UserFunction {
 	return &tengo.UserFunction{
 		Name: name,
@@ -466,6 +480,7 @@ func makeNmapScanner(s *Script) (*NmapScanner, error) {
 	return nmapScanner, nil
 }
 
+// NmapRun represents a simple tengo object wrapper for *nmap.Run
 type NmapRun struct {
 	tengo.ObjectImpl
 	Value     *nmap.Run

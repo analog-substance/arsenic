@@ -9,6 +9,7 @@ import (
 	"github.com/analog-substance/tengo/v2"
 )
 
+// arrayToStringSlice converts a tengo Array into a string slice
 func arrayToStringSlice(array *tengo.Array) ([]string, error) {
 	var slice []string
 	for _, v := range array.Value {
@@ -27,6 +28,7 @@ func arrayToStringSlice(array *tengo.Array) ([]string, error) {
 	return slice, nil
 }
 
+// arrayToSlice converts a tengo Array into an interface slice
 func arrayToSlice(array *tengo.Array) []interface{} {
 	var slice []interface{}
 	for _, v := range array.Value {
@@ -36,6 +38,7 @@ func arrayToSlice(array *tengo.Array) []interface{} {
 	return slice
 }
 
+// arrayToIntSlice converts a tengo Array into an int slice
 func arrayToIntSlice(array *tengo.Array) ([]int, error) {
 	var slice []int
 	for _, v := range array.Value {
@@ -54,6 +57,7 @@ func arrayToIntSlice(array *tengo.Array) ([]int, error) {
 	return slice, nil
 }
 
+// sliceToStringArray converts a string slice into a tengo String Array
 func sliceToStringArray(slice []string) tengo.Object {
 	var values []tengo.Object
 	for _, s := range slice {
@@ -65,6 +69,7 @@ func sliceToStringArray(slice []string) tengo.Object {
 	}
 }
 
+// sliceToIntArray converts an int slice into a tengo Int Array
 func sliceToIntArray(slice []int) tengo.Object {
 	var values []tengo.Object
 	for _, i := range slice {
@@ -76,6 +81,7 @@ func sliceToIntArray(slice []int) tengo.Object {
 	}
 }
 
+// sliceToStringSlice converts a slice of tengo Objects into a string slice
 func sliceToStringSlice(slice []tengo.Object) []string {
 	var strSlice []string
 	for _, obj := range slice {
@@ -85,6 +91,7 @@ func sliceToStringSlice(slice []tengo.Object) []string {
 	return strSlice
 }
 
+// toError converts an error into a tengo Error
 func toError(err error) tengo.Object {
 	return &tengo.Error{
 		Value: &tengo.String{
@@ -93,6 +100,7 @@ func toError(err error) tengo.Object {
 	}
 }
 
+// toWarning creates a Warning object from a string
 func toWarning(value string) tengo.Object {
 	return &Warning{
 		Value: &tengo.String{
@@ -116,6 +124,8 @@ func runWithError(cmd *exec.Cmd) error {
 	return nil
 }
 
+// funcASSSSRSp transform a function of 'func(string, string, string, string) *string' signature
+// into tengo CallableFunc type.
 func funcASSSSRSp(fn func(string, string, string, string) *string) tengo.CallableFunc {
 	return func(args ...tengo.Object) (tengo.Object, error) {
 		if len(args) != 4 {
@@ -161,6 +171,8 @@ func funcASSSSRSp(fn func(string, string, string, string) *string) tengo.Callabl
 	}
 }
 
+// funcASSSRSp transform a function of 'func(string, string, string) *string' signature
+// into tengo CallableFunc type.
 func funcASSSRSp(fn func(string, string, string) *string) tengo.CallableFunc {
 	return func(args ...tengo.Object) (tengo.Object, error) {
 		if len(args) != 3 {
@@ -198,6 +210,8 @@ func funcASSSRSp(fn func(string, string, string) *string) tengo.CallableFunc {
 	}
 }
 
+// funcASSSsSRSsp transform a function of 'func(string, string, []string, string) *[]string' signature
+// into tengo CallableFunc type.
 func funcASSSsSRSsp(fn func(string, string, []string, string) *[]string) tengo.CallableFunc {
 	return func(args ...tengo.Object) (tengo.Object, error) {
 		if len(args) != 4 {
@@ -274,6 +288,8 @@ func funcASSSsSRSsp(fn func(string, string, []string, string) *[]string) tengo.C
 	}
 }
 
+// funcASSsSRSsp transform a function of 'func(string, []string, string) *[]string' signature
+// into tengo CallableFunc type.
 func funcASSsSRSsp(fn func(string, []string, string) *[]string) tengo.CallableFunc {
 	return func(args ...tengo.Object) (tengo.Object, error) {
 		if len(args) != 3 {
@@ -342,6 +358,8 @@ func funcASSsSRSsp(fn func(string, []string, string) *[]string) tengo.CallableFu
 	}
 }
 
+// funcASSBSRBp transform a function of 'func(string, string, bool, string) *bool' signature
+// into tengo CallableFunc type.
 func funcASSBSRBp(fn func(string, string, bool, string) *bool) tengo.CallableFunc {
 	return func(args ...tengo.Object) (tengo.Object, error) {
 		if len(args) != 4 {
@@ -389,6 +407,8 @@ func funcASSBSRBp(fn func(string, string, bool, string) *bool) tengo.CallableFun
 	}
 }
 
+// funcASBSRBp transform a function of 'func(string, bool, string) *bool' signature
+// into tengo CallableFunc type.
 func funcASBSRBp(fn func(string, bool, string) *bool) tengo.CallableFunc {
 	return func(args ...tengo.Object) (tengo.Object, error) {
 		if len(args) != 3 {
@@ -428,6 +448,8 @@ func funcASBSRBp(fn func(string, bool, string) *bool) tengo.CallableFunc {
 	}
 }
 
+// funcASSISRIp transform a function of 'func(string, string, int, string) *int' signature
+// into tengo CallableFunc type.
 func funcASSISRIp(fn func(string, string, int, string) *int) tengo.CallableFunc {
 	return func(args ...tengo.Object) (tengo.Object, error) {
 		if len(args) != 4 {
@@ -473,6 +495,8 @@ func funcASSISRIp(fn func(string, string, int, string) *int) tengo.CallableFunc 
 	}
 }
 
+// funcASISRIp transform a function of 'func(string, int, string) *int' signature
+// into tengo CallableFunc type.
 func funcASISRIp(fn func(string, int, string) *int) tengo.CallableFunc {
 	return func(args ...tengo.Object) (tengo.Object, error) {
 		if len(args) != 3 {
@@ -510,6 +534,8 @@ func funcASISRIp(fn func(string, int, string) *int) tengo.CallableFunc {
 	}
 }
 
+// funcASRSsE transform a function of 'func(string) ([]string, error)' signature
+// into tengo CallableFunc type.
 func funcASRSsE(fn func(string) ([]string, error)) tengo.CallableFunc {
 	return func(args ...tengo.Object) (tengo.Object, error) {
 		if len(args) != 1 {
@@ -540,6 +566,8 @@ func funcASRSsE(fn func(string) ([]string, error)) tengo.CallableFunc {
 	}
 }
 
+// funcASRBE transform a function of 'func(string) (bool, error)' signature
+// into tengo CallableFunc type.
 func funcASRBE(fn func(string) (bool, error)) tengo.CallableFunc {
 	return func(args ...tengo.Object) (tengo.Object, error) {
 		if len(args) != 1 {

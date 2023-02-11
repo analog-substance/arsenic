@@ -10,6 +10,7 @@ import (
 	"github.com/andrew-d/go-termutil"
 )
 
+// OS2ModuleMap represents the 'os2' import module
 func (s *Script) OS2ModuleMap() map[string]tengo.Object {
 	return map[string]tengo.Object{
 		"write_file":         &tengo.UserFunction{Name: "write_file", Value: s.writeFile},
@@ -21,6 +22,8 @@ func (s *Script) OS2ModuleMap() map[string]tengo.Object {
 	}
 }
 
+// writeFile is like the tengo 'os.write_file' function except the file is written with 0644 permissions
+// Represents 'os2.write_file(path string, data string) error'
 func (s *Script) writeFile(args ...tengo.Object) (tengo.Object, error) {
 	if len(args) != 2 {
 		return toError(tengo.ErrWrongNumArguments), nil
@@ -52,6 +55,8 @@ func (s *Script) writeFile(args ...tengo.Object) (tengo.Object, error) {
 	return nil, nil
 }
 
+// regexReplaceFile reads the file, replaces the contents that match the regex and writes it back to the file.
+// Represents 'os2.regex_replace_file(path string, regex string, replace string) error'
 func (s *Script) regexReplaceFile(args ...tengo.Object) (tengo.Object, error) {
 	if len(args) != 3 {
 		return toError(tengo.ErrWrongNumArguments), nil
@@ -104,6 +109,8 @@ func (s *Script) regexReplaceFile(args ...tengo.Object) (tengo.Object, error) {
 	return nil, nil
 }
 
+// mkdirTemp is a tengo function wrapper to the os.MkdirTemp function
+// Represents 'os2.mkdir_temp(dir string, pattern string) string|error'
 func (s *Script) mkdirTemp(args ...tengo.Object) (tengo.Object, error) {
 	if len(args) != 2 {
 		return toError(tengo.ErrWrongNumArguments), nil
@@ -137,6 +144,8 @@ func (s *Script) mkdirTemp(args ...tengo.Object) (tengo.Object, error) {
 	}, nil
 }
 
+// readFileLines reads the file and splits the contents by each new line
+// Represents 'os2.read_file_lines(path string) []string|error'
 func (s *Script) readFileLines(args ...tengo.Object) (tengo.Object, error) {
 	if len(args) != 1 {
 		return nil, tengo.ErrWrongNumArguments
@@ -159,6 +168,8 @@ func (s *Script) readFileLines(args ...tengo.Object) (tengo.Object, error) {
 	return sliceToStringArray(lines), nil
 }
 
+// readStdin reads the current process's Stdin if anything was piped to it.
+// Represents 'os2.read_stdin() []string'
 func (s *Script) readStdin(args ...tengo.Object) (tengo.Object, error) {
 	if termutil.Isatty(os.Stdin.Fd()) {
 		return nil, nil
@@ -173,6 +184,8 @@ func (s *Script) readStdin(args ...tengo.Object) (tengo.Object, error) {
 	return sliceToStringArray(lines), nil
 }
 
+// tempChdir changes the current directory, executes the function, then changes the current directory back.
+// Represents 'os2.temp_chdir(dir string, fn func())'
 func (s *Script) tempChdir(args ...tengo.Object) (tengo.Object, error) {
 	if len(args) != 2 {
 		return nil, tengo.ErrWrongNumArguments

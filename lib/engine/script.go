@@ -13,6 +13,7 @@ import (
 	"github.com/analog-substance/tengo/v2"
 )
 
+// ScriptModuleMap represents the 'script' import module
 func (s *Script) ScriptModuleMap() map[string]tengo.Object {
 	return map[string]tengo.Object{
 		"stop": &tengo.UserFunction{
@@ -40,6 +41,8 @@ func (s *Script) ScriptModuleMap() map[string]tengo.Object {
 	}
 }
 
+// tengoRunScript is the tengo function version of runScript.
+// Represents 'script.run_script(path string, args ...string) error'
 func (s *Script) tengoRunScript(args ...tengo.Object) (tengo.Object, error) {
 	if len(args) == 0 {
 		return nil, tengo.ErrWrongNumArguments
@@ -63,6 +66,8 @@ func (s *Script) tengoRunScript(args ...tengo.Object) (tengo.Object, error) {
 	return nil, nil
 }
 
+// tengoRunScriptWithSigHandler is the tengo function version of runScriptWithSigHandler.
+// Represents 'script.run_script_with_sig_handler(path string, args ...string) error'
 func (s *Script) tengoRunScriptWithSigHandler(args ...tengo.Object) (tengo.Object, error) {
 	if len(args) == 0 {
 		return nil, tengo.ErrWrongNumArguments
@@ -86,6 +91,7 @@ func (s *Script) tengoRunScriptWithSigHandler(args ...tengo.Object) (tengo.Objec
 	return nil, nil
 }
 
+// runScript runs the scripts with the args
 func (s *Script) runScript(path string, args ...string) error {
 	scriptPath, err := s.findScript(path)
 	if err != nil {
@@ -99,6 +105,8 @@ func (s *Script) runScript(path string, args ...string) error {
 	return script.Run(args)
 }
 
+// runScriptWithSigHandler is like runScript but traps signals like os.Interrupt and syscall.SIGTERM
+// and stops the script instead of killing the entire process
 func (s *Script) runScriptWithSigHandler(path string, args ...string) error {
 	scriptPath, err := s.findScript(path)
 	if err != nil {
@@ -139,6 +147,8 @@ func (s *Script) runScriptWithSigHandler(path string, args ...string) error {
 	return nil
 }
 
+// tengoFindScript is the tengo function version of findScript.
+// Represents 'script.find(script string) string|error'
 func (s *Script) tengoFindScript(args ...tengo.Object) (tengo.Object, error) {
 	if len(args) != 1 {
 		return nil, tengo.ErrWrongNumArguments
@@ -161,6 +171,7 @@ func (s *Script) tengoFindScript(args ...tengo.Object) (tengo.Object, error) {
 	return &tengo.String{Value: fullPath}, nil
 }
 
+// findScript attempts to get the full path of the specified script
 func (s *Script) findScript(path string) (string, error) {
 	if _, err := os.Stat(path); !os.IsNotExist(err) {
 		return path, nil
@@ -175,6 +186,8 @@ func (s *Script) findScript(path string) (string, error) {
 	return "", os.ErrNotExist
 }
 
+// tengoStop is the tengo function version of stop.
+// Represents 'script.stop(msg string|error)'
 func (s *Script) tengoStop(args ...tengo.Object) (tengo.Object, error) {
 	message := ""
 	if len(args) == 1 {
@@ -185,6 +198,7 @@ func (s *Script) tengoStop(args ...tengo.Object) (tengo.Object, error) {
 	return nil, nil
 }
 
+// stop prints the message and stops the current script.
 func (s *Script) stop(args ...string) {
 	if len(args) == 1 {
 		message := args[0]

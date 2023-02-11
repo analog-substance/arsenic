@@ -13,6 +13,7 @@ import (
 
 var ErrSignaled error = errors.New("process signaled to close")
 
+// ExecModuleMap represents the 'exec' import module
 func (s *Script) ExecModuleMap() map[string]tengo.Object {
 	return map[string]tengo.Object{
 		"err_signaled": &tengo.Error{

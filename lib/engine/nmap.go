@@ -4,6 +4,7 @@ import (
 	"github.com/analog-substance/tengo/v2"
 )
 
+// NmapModuleMap represents the 'nmap' import module
 func (s *Script) NmapModuleMap() map[string]tengo.Object {
 	return map[string]tengo.Object{
 		"scanner":           &tengo.UserFunction{Name: "scanner", Value: s.nmapScanner},
@@ -16,6 +17,8 @@ func (s *Script) NmapModuleMap() map[string]tengo.Object {
 	}
 }
 
+// nmapScanner creates a new NmapScanner
+// Represents 'nmap.scanner() NmapScanner'
 func (s *Script) nmapScanner(args ...tengo.Object) (tengo.Object, error) {
 	scanner, err := makeNmapScanner(s)
 	if err != nil {
