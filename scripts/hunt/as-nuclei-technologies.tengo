@@ -85,7 +85,7 @@ runCmd.set_run(func(cmd, args) {
       return
     }
 
-    log.msg(format("Nuclei / Technologies / %s/ checking", host.name))
+    log.msg(format("Nuclei / Technologies / %s / checking", host.name))
 
     reconPath := filepath.join(host.dir, "recon")
 

@@ -107,7 +107,7 @@ runCmd.set_run(func(cmd, args) {
 
     log.info(format("Nuclei / CVEs / %s / running", host.name))
     
-    tempDir := os2.mkdir_temp(os.temp_dir(), "nuclei-technologies-*")
+    tempDir := os2.mkdir_temp(os.temp_dir(), "nuclei-cves-*")
     check_err(tempDir)
 
     nucleiArgs := ["nuclei", "-project", "-project-path", tempDir, "-t", "cves", "-o", outputName, "-ni"]
