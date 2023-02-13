@@ -109,7 +109,7 @@ tcpCmd.set_run(func(cmd, args){
 
     ports := quickScan(target)
     if len(ports) == 0 {
-      log.msg(format("%s: No open ports"))
+      log.msg(format("%s: No open ports", target))
       return
     }
 
