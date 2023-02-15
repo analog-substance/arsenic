@@ -162,6 +162,10 @@ func makeCobraCmd(cmd *cobra.Command, script *Script) *CobraCmd {
 				return nil, nil
 			},
 		},
+		"register_flag_completion_func": &tengo.UserFunction{
+			Name:  "register_flag_completion_func",
+			Value: cobraCmd.registerFlagCompletionFunc,
+		},
 	}
 
 	cobraCmd.objectMap = objectMap
@@ -232,6 +236,50 @@ func (c *CobraCmd) setPersistentPreRun(args ...tengo.Object) (tengo.Object, erro
 		_, err := c.script.runCompiledFunction(fn, makeCobraCmd(cmd, c.script), sliceToStringArray(args))
 		return err
 	}
+	return nil, nil
+}
+
+func (c *CobraCmd) registerFlagCompletionFunc(args ...tengo.Object) (tengo.Object, error) {
+	if len(args) != 2 {
+		return nil, tengo.ErrWrongNumArguments
+	}
+
+	flag, ok := tengo.ToString(args[0])
+	if !ok {
+		return nil, tengo.ErrInvalidArgumentType{
+			Name:     "flag",
+			Expected: "string",
+			Found:    args[0].TypeName(),
+		}
+	}
+
+	fn, ok := args[1].(*tengo.CompiledFunction)
+	if !ok {
+		return nil, tengo.ErrInvalidArgumentType{
+			Name:     "persistent_pre_run",
+			Expected: "string",
+			Found:    args[1].TypeName(),
+		}
+	}
+
+	c.Value.RegisterFlagCompletionFunc(flag, func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		res, err := c.script.runCompiledFunction(fn, makeCobraCmd(cmd, c.script), sliceToStringArray(args), &tengo.String{Value: toComplete})
+		if err != nil {
+			return nil, cobra.ShellCompDirectiveError
+		}
+
+		_, ok := res.(*tengo.Error)
+		if ok {
+			return nil, cobra.ShellCompDirectiveError
+		}
+
+		slice, err := arrayToStringSlice(res.(*tengo.Array))
+		if err != nil {
+			return nil, cobra.ShellCompDirectiveError
+		}
+		return slice, cobra.ShellCompDirectiveDefault
+	})
+
 	return nil, nil
 }
 
