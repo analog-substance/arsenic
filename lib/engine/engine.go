@@ -100,38 +100,37 @@ func (s *Script) Signal() {
 	s.stop(ErrSignaled.Error())
 }
 
-func (s *Script) runCompiledFunction(fn *tengo.CompiledFunction, args ...tengo.Object) error {
+func (s *Script) runCompiledFunction(fn *tengo.CompiledFunction, args ...tengo.Object) (tengo.Object, error) {
 	vm := tengo.NewVM(s.compiled.Bytecode(), s.compiled.Globals(), -1)
-	ch := make(chan error, 1)
-
-	errEmpty := errors.New("")
+	ch := make(chan tengo.Object, 1)
 
 	go func() {
 		obj, err := vm.RunCompiled(fn, args...)
 		if err != nil {
-			ch <- err
+			ch <- toError(err)
 			return
 		}
 
-		errObj, ok := obj.(*tengo.Error)
-		if ok {
-			ch <- errors.New(errObj.String())
-		} else {
-			ch <- errEmpty
-		}
+		ch <- obj
 	}()
 
+	var obj tengo.Object
 	var err error
 	select {
 	case <-s.ctx.Done():
 		vm.Abort()
 		err = s.ctx.Err()
-	case err = <-ch:
+	case obj = <-ch:
 	}
 
-	if err != nil && err != errEmpty {
-		return err
+	if err != nil {
+		return nil, err
 	}
 
-	return nil
+	errObj, ok := obj.(*tengo.Error)
+	if ok {
+		return nil, errors.New(errObj.String())
+	}
+
+	return obj, nil
 }

@@ -284,7 +284,7 @@ func (s *Script) tempChdir(args ...tengo.Object) (tengo.Object, error) {
 		}
 	}
 
-	err = s.runCompiledFunction(fn)
+	_, err = s.runCompiledFunction(fn)
 	if err != nil {
 		return toError(err), nil
 	}
