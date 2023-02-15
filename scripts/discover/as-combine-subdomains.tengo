@@ -8,57 +8,65 @@ log := import("log")
 check_err := import("check_err")
 text := import("text")
 set := import("set")
+cobra := import("cobra")
+script := import("script")
 
-domainsPath := filepath.from_slash("recon/domains")
-ipsPath := filepath.from_slash("recon/ips")
+rootCmd := cobra.root_cmd(script.name, "Combines all discovered subdomains")
+rootCmd.set_run(func(cmd, args) {
+	domainsPath := filepath.from_slash("recon/domains")
+	ipsPath := filepath.from_slash("recon/ips")
 
-err := os2.mkdir_all(domainsPath, ipsPath)
-check_err(err)
-
-log.msg("Getting subdomains for root domains")
-
-rootDomains := scope.root_domains(true)
-check_err(rootDomains)
-
-for rootDomain in rootDomains {
-	rootDomain = text.to_lower(rootDomain)
-	rootDomainPath := filepath.join(domainsPath, rootDomain)
-
-	err = os2.mkdir_all(rootDomainPath)
+	err := os2.mkdir_all(domainsPath, ipsPath)
 	check_err(err)
 
-	// Get explicitly in scope subdomains
-	subDomains := scope.const_subdomains(rootDomain)
-	check_err(subDomains)
+	log.msg("Getting subdomains for root domains")
 
-	// Always write in scope subdomains to a txt file
-	err = os2.write_file_lines(filepath.join(rootDomainPath, "subdomains-scope.txt"), subDomains)
-	check_err(subDomains)
+	rootDomains := scope.root_domains(true)
+	check_err(rootDomains)
 
-	matches := filepath.glob(filepath.join(rootDomainPath, "subdomains-*.txt"))
-	check_err(matches)
+	for rootDomain in rootDomains {
+		rootDomain = text.to_lower(rootDomain)
+		rootDomainPath := filepath.join(domainsPath, rootDomain)
 
-	log.msg("Combining discovered subdomains")
+		err = os2.mkdir_all(rootDomainPath)
+		check_err(err)
 
-	subdomainSet := set.new_string_set()
-	for match in matches {
-		lines := os2.read_file_lines(match)
-		check_err(lines)
+		// Get explicitly in scope subdomains
+		subDomains := scope.const_subdomains(rootDomain)
+		check_err(subDomains)
 
-		subdomainSet.add_range(lines)
+		// Always write in scope subdomains to a txt file
+		err = os2.write_file_lines(filepath.join(rootDomainPath, "subdomains-scope.txt"), subDomains)
+		check_err(subDomains)
+
+		matches := filepath.glob(filepath.join(rootDomainPath, "subdomains-*.txt"))
+		check_err(matches)
+
+		log.msg("Combining discovered subdomains")
+
+		subdomainSet := set.new_string_set()
+		for match in matches {
+			lines := os2.read_file_lines(match)
+			check_err(lines)
+
+			subdomainSet.add_range(lines)
+		}
+
+		inScope := scope.prune(subdomainSet.sorted_string_slice())
+		err = os2.write_file_lines(filepath.join(rootDomainPath, "subdomains.txt"), inScope)
+		check_err(err)
+
+		for domain in inScope {
+			fmt.println(domain)
+		}
 	}
 
-	inScope := scope.prune(subdomainSet.sorted_string_slice())
-	err = os2.write_file_lines(filepath.join(rootDomainPath, "subdomains.txt"), inScope)
+	allDomains := scope.domains()
+	check_err(allDomains)
+
+	err = os2.write_file_lines("scope-domains-generated-combined.txt", allDomains)
 	check_err(err)
+})
 
-	for domain in inScope {
-		fmt.println(domain)
-	}
-}
-
-allDomains := scope.domains()
-check_err(allDomains)
-
-err = os2.write_file_lines("scope-domains-generated-combined.txt", allDomains)
+err := rootCmd()
 check_err(err)

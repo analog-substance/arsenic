@@ -73,8 +73,9 @@ getHosts := func(flags) {
 
 flags := []
 
-rootCmd := cobra.root_cmd("as-http-screenshot-hosts.tengo", "Take screenshots of URLs found during content enumeration scans.")
+rootCmd := cobra.root_cmd(script.name, "Take screenshots of URLs found during content enumeration scans.")
 rootCmd.persistent_flags.string_slicep("flags", "f", [], "Filter hosts by flags")
+rootCmd.add_disable_git_flag()
 
 rootCmd.set_persistent_pre_run(func(cmd, args) {
   flags = cmd.flags.get_string_slice("flags")

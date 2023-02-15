@@ -37,7 +37,7 @@ defaultScanner := func(target) {
     targets(target)
 }
 
-rootCmd := cobra.root_cmd("as-recon-discover-services.tengo", "Run nmap scans on targets")
+rootCmd := cobra.root_cmd(script.name, "Run nmap scans on targets")
 rootCmd.enable_completion()
 
 rootCmd.persistent_flags.string_slicep("targets", "t", [], "The target to scan. Can be used multiple times to specify multiple targets")

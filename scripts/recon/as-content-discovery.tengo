@@ -57,8 +57,9 @@ flags := []
 wordlistFile := ""
 wordlistName := ""
 
-rootCmd := cobra.root_cmd("as-content-discovery.tengo", "Run content enumeration on current scope")
+rootCmd := cobra.root_cmd(script.name, "Run content enumeration on current scope")
 rootCmd.persistent_flags.string_slicep("flags", "f", [], "Filter hosts by flags")
+rootCmd.add_disable_git_flag()
 
 rootCmd.set_persistent_pre_run(func(cmd, args) {
   flags = cmd.flags.get_string_slice("flags")

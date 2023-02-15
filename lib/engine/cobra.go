@@ -25,12 +25,12 @@ func (s *Script) cobraRootCmd(args ...tengo.Object) (tengo.Object, error) {
 	c.Value.SilenceErrors = true
 	c.Value.SilenceUsage = true
 
+	c.Value.Annotations["type"] = "root"
+
 	c.Value.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
 		c.cobraRootCmdPersistentPreRun(cmd, args)
 		return nil
 	}
-
-	c.Value.PersistentFlags().Bool("disable-git", false, "Disable git commands through the git module.")
 
 	return cmd, nil
 }
@@ -50,7 +50,8 @@ func (s *Script) cobraCmd(args ...tengo.Object) (tengo.Object, error) {
 	}
 
 	cmd := &cobra.Command{
-		Use: use,
+		Use:         use,
+		Annotations: map[string]string{"type": "sub"},
 	}
 
 	if len(args) == 2 {

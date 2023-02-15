@@ -8,9 +8,10 @@ import (
 
 type CobraCmd struct {
 	tengo.ObjectImpl
-	Value     *cobra.Command
-	objectMap map[string]tengo.Object
-	script    *Script
+	Value                 *cobra.Command
+	objectMap             map[string]tengo.Object
+	script                *Script
+	disableGitFlagEnabled bool
 }
 
 func makeCobraCmd(cmd *cobra.Command, script *Script) *CobraCmd {
@@ -141,7 +142,23 @@ func makeCobraCmd(cmd *cobra.Command, script *Script) *CobraCmd {
 		"enable_completion": &tengo.UserFunction{
 			Name: "enable_completion",
 			Value: func(args ...tengo.Object) (tengo.Object, error) {
+				if !cobraCmd.isRootCmd() {
+					return nil, nil
+				}
+
 				cobraCmd.Value.CompletionOptions.DisableDefaultCmd = false
+				return nil, nil
+			},
+		},
+		"add_disable_git_flag": &tengo.UserFunction{
+			Name: "add_disable_git_flag",
+			Value: func(args ...tengo.Object) (tengo.Object, error) {
+				if !cobraCmd.isRootCmd() {
+					return nil, nil
+				}
+
+				cobraCmd.disableGitFlagEnabled = true
+				cobraCmd.Value.PersistentFlags().Bool("disable-git", false, "Disable git commands through the git module.")
 				return nil, nil
 			},
 		},
@@ -216,6 +233,10 @@ func (c *CobraCmd) setPersistentPreRun(args ...tengo.Object) (tengo.Object, erro
 	return nil, nil
 }
 
+func (c *CobraCmd) isRootCmd() bool {
+	return c.Value.Annotations["type"] == "root"
+}
+
 // TypeName should return the name of the type.
 func (c *CobraCmd) TypeName() string {
 	return "cobra-cmd"
@@ -266,8 +287,14 @@ func (c *CobraCmd) IndexGet(index tengo.Object) (tengo.Object, error) {
 }
 
 func (c *CobraCmd) cobraRootCmdPersistentPreRun(cmd *cobra.Command, args []string) {
-	disableGit, _ := cmd.Flags().GetBool("disable-git")
-	if disableGit {
-		c.script.isGit = false
+	if !c.isRootCmd() {
+		return
+	}
+
+	if c.disableGitFlagEnabled {
+		disableGit, _ := cmd.Flags().GetBool("disable-git")
+		if disableGit {
+			c.script.isGit = false
+		}
 	}
 }
