@@ -12,16 +12,6 @@ import (
 	"github.com/analog-substance/tengo/v2/stdlib"
 )
 
-const checkErrSrcModule = `
-script := import("script")
-
-export func(err) {
-	if is_error(err) {
-		script.stop(err)
-	}
-}
-`
-
 type Script struct {
 	path     string
 	name     string
@@ -56,6 +46,11 @@ func NewScript(path string) (*Script, error) {
 	s := tengo.NewScript(bytes)
 	s.SetImports(script.NewModuleMap())
 
+	s.Add("check_err", &tengo.UserFunction{
+		Name:  "check_err",
+		Value: script.checkErr,
+	})
+
 	script.script = s
 
 	return script, nil
@@ -77,7 +72,6 @@ func (s *Script) NewModuleMap() *tengo.ModuleMap {
 	moduleMap.AddBuiltinModule("nmap", s.NmapModule())
 	moduleMap.AddBuiltinModule("scope", s.ScopeModule())
 	moduleMap.AddBuiltinModule("log", logModule)
-	moduleMap.AddSourceModule("check_err", []byte(checkErrSrcModule))
 
 	return moduleMap
 }
@@ -133,4 +127,16 @@ func (s *Script) runCompiledFunction(fn *tengo.CompiledFunction, args ...tengo.O
 	}
 
 	return obj, nil
+}
+
+func (s *Script) checkErr(args ...tengo.Object) (tengo.Object, error) {
+	for _, arg := range args {
+		errObj, ok := arg.(*tengo.Error)
+		if ok {
+			s.tengoStop(errObj)
+			break
+		}
+	}
+
+	return nil, nil
 }

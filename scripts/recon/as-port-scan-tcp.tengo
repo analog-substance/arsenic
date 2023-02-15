@@ -13,7 +13,6 @@ log := import("log")
 rand := import("rand")
 git := import("git")
 cobra := import("cobra")
-check_err := import("check_err")
 
 getHosts := func(flags) {
   err := git.pull()

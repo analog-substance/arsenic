@@ -13,7 +13,6 @@ log := import("log")
 git := import("git")
 set := import("set")
 cobra := import("cobra")
-check_err := import("check_err")
 
 genOutputFileName := func(rawURL, wordlistName) {
   rawURL = text.replace(rawURL, "://", ".", -1)

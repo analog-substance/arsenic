@@ -13,7 +13,6 @@ git := import("git")
 os2 := import("os2")
 exec := import("exec")
 cobra := import("cobra")
-check_err := import("check_err")
 
 getURLs := func(host) {
   re := text.re_compile(`\.(png|jpe?g|ico|css|gif|js)$`)

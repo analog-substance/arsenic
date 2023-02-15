@@ -15,8 +15,6 @@ git := import("git")
 exec := import("exec")
 os2 := import("os2")
 cobra := import("cobra")
-check_err := import("check_err")
-
 
 getHosts := func(flags) {
   err := git.pull()
