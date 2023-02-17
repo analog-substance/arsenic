@@ -201,24 +201,27 @@ func (s *Script) findScript(path string) (string, error) {
 // tengoStop is the tengo function version of stop.
 // Represents 'script.stop(msg string|error)'
 func (s *Script) tengoStop(args ...tengo.Object) (tengo.Object, error) {
-	message := ""
-	if len(args) == 1 {
-		message, _ = tengo.ToString(args[0])
+	var messages []string
+	for _, arg := range args {
+		msg, _ := tengo.ToString(arg)
+		messages = append(messages, msg)
 	}
 
-	s.stop(message)
+	s.stop(messages...)
 	return nil, nil
 }
 
 // stop prints the message and stops the current script.
 func (s *Script) stop(args ...string) {
-	if len(args) == 1 {
-		message := args[0]
-		if message != "" {
-			message = strings.ReplaceAll(message, `\n`, "\n")
-			message = strings.ReplaceAll(message, `\t`, "\t")
-			fmt.Println(message)
+	for _, arg := range args {
+		if arg == "" {
+			continue
 		}
+
+		message := strings.ReplaceAll(arg, `\n`, "\n")
+		message = strings.ReplaceAll(message, `\t`, "\t")
+
+		fmt.Println(message)
 	}
 
 	go func() {

@@ -26,44 +26,43 @@ func (s *Script) ArsenicModule() map[string]tengo.Object {
 		"gen_wordlist":           &tengo.UserFunction{Name: "gen_wordlist", Value: s.generateWordlist},
 		"locked_files":           &tengo.UserFunction{Name: "locked_files", Value: s.lockedFiles},
 		"ffuf":                   &tengo.UserFunction{Name: "ffuf", Value: s.ffuf},
-		"tcp_scan":               &tengo.UserFunction{Name: "tcp_scan", Value: s.tcpScan},
 		"content_discovery_urls": &tengo.UserFunction{Name: "content_discovery_urls", Value: s.contentDiscoveryURLs},
 	}
 }
 
 func (s *Script) hostUrls(args ...tengo.Object) (tengo.Object, error) {
 	if len(args) < 1 || len(args) > 2 {
-		return toError(tengo.ErrWrongNumArguments), nil
+		return nil, tengo.ErrWrongNumArguments
 	}
 
 	protocolsArray, ok := args[0].(*tengo.Array)
 	if !ok {
-		return toError(tengo.ErrInvalidArgumentType{
+		return nil, tengo.ErrInvalidArgumentType{
 			Name:     "protocols",
 			Expected: "string",
 			Found:    args[0].TypeName(),
-		}), nil
+		}
 	}
 
 	protocols, err := arrayToStringSlice(protocolsArray)
 	if err != nil {
-		return toError(err), nil
+		return nil, err
 	}
 
 	var flags []string
 	if len(args) == 2 {
 		flagsArray, ok := args[1].(*tengo.Array)
 		if !ok {
-			return toError(tengo.ErrInvalidArgumentType{
+			return nil, tengo.ErrInvalidArgumentType{
 				Name:     "flags",
 				Expected: "string",
 				Found:    args[1].TypeName(),
-			}), nil
+			}
 		}
 
 		flags, err = arrayToStringSlice(flagsArray)
 		if err != nil {
-			return toError(err), nil
+			return nil, err
 		}
 	}
 
@@ -90,16 +89,16 @@ func (s *Script) hostUrls(args ...tengo.Object) (tengo.Object, error) {
 
 func (s *Script) host(args ...tengo.Object) (tengo.Object, error) {
 	if len(args) != 1 {
-		return toError(tengo.ErrWrongNumArguments), nil
+		return nil, tengo.ErrWrongNumArguments
 	}
 
 	hostname, ok := tengo.ToString(args[0])
 	if !ok {
-		return toError(tengo.ErrInvalidArgumentType{
+		return nil, tengo.ErrInvalidArgumentType{
 			Name:     "hostname",
 			Expected: "string",
 			Found:    args[0].TypeName(),
-		}), nil
+		}
 	}
 
 	foundHost := host.GetFirst(hostname)
@@ -115,17 +114,17 @@ func (s *Script) hosts(args ...tengo.Object) (tengo.Object, error) {
 	if len(args) == 1 {
 		flagsArray, ok := args[0].(*tengo.Array)
 		if !ok {
-			return toError(tengo.ErrInvalidArgumentType{
+			return nil, tengo.ErrInvalidArgumentType{
 				Name:     "flags",
 				Expected: "string",
 				Found:    args[0].TypeName(),
-			}), nil
+			}
 		}
 
 		var err error
 		flags, err = arrayToStringSlice(flagsArray)
 		if err != nil {
-			return toError(err), nil
+			return nil, err
 		}
 	}
 
@@ -142,25 +141,25 @@ func (s *Script) hosts(args ...tengo.Object) (tengo.Object, error) {
 
 func (s *Script) generateWordlist(args ...tengo.Object) (tengo.Object, error) {
 	if len(args) != 2 {
-		return toError(tengo.ErrWrongNumArguments), nil
+		return nil, tengo.ErrWrongNumArguments
 	}
 
 	wordlist, ok := tengo.ToString(args[0])
 	if !ok {
-		return toError(tengo.ErrInvalidArgumentType{
+		return nil, tengo.ErrInvalidArgumentType{
 			Name:     "wordlist",
 			Expected: "string",
 			Found:    args[0].TypeName(),
-		}), nil
+		}
 	}
 
 	path, ok := tengo.ToString(args[1])
 	if !ok {
-		return toError(tengo.ErrInvalidArgumentType{
+		return nil, tengo.ErrInvalidArgumentType{
 			Name:     "path",
 			Expected: "string",
 			Found:    args[1].TypeName(),
-		}), nil
+		}
 	}
 
 	wordlistSet := set.NewStringSet()
@@ -178,16 +177,16 @@ func (s *Script) generateWordlist(args ...tengo.Object) (tengo.Object, error) {
 
 func (s *Script) lockedFiles(args ...tengo.Object) (tengo.Object, error) {
 	if len(args) != 1 {
-		return toError(tengo.ErrWrongNumArguments), nil
+		return nil, tengo.ErrWrongNumArguments
 	}
 
 	glob, ok := tengo.ToString(args[0])
 	if !ok {
-		return toError(tengo.ErrInvalidArgumentType{
+		return nil, tengo.ErrInvalidArgumentType{
 			Name:     "glob",
 			Expected: "string",
 			Found:    args[0].TypeName(),
-		}), nil
+		}
 	}
 
 	matches, err := filepath.Glob(glob)
@@ -215,21 +214,12 @@ func (s *Script) lockedFiles(args ...tengo.Object) (tengo.Object, error) {
 
 func (s *Script) ffuf(args ...tengo.Object) (tengo.Object, error) {
 	if len(args) == 0 {
-		return toError(tengo.ErrWrongNumArguments), nil
+		return nil, tengo.ErrWrongNumArguments
 	}
 
-	var cmdArgs []string
-	for _, arg := range args {
-		cmdArg, ok := tengo.ToString(arg)
-		if !ok {
-			return toError(tengo.ErrInvalidArgumentType{
-				Name:     "ffuf arg",
-				Expected: "string",
-				Found:    arg.TypeName(),
-			}), nil
-		}
-
-		cmdArgs = append(cmdArgs, cmdArg)
+	cmdArgs, err := sliceToStringSlice(args)
+	if err != nil {
+		return nil, err
 	}
 
 	cmd := exec.CommandContext(context.Background(), "as-ffuf", cmdArgs...)
@@ -240,7 +230,7 @@ func (s *Script) ffuf(args ...tengo.Object) (tengo.Object, error) {
 	errBuf := new(bytes.Buffer)
 	cmd.Stderr = io.MultiWriter(errBuf, os.Stderr)
 
-	err := s.runCmdWithSigHandler(cmd)
+	err = s.runCmdWithSigHandler(cmd)
 	if err != nil {
 		return toError(err), nil
 	}
@@ -261,35 +251,35 @@ func (s *Script) ffuf(args ...tengo.Object) (tengo.Object, error) {
 
 func (s *Script) contentDiscoveryURLs(args ...tengo.Object) (tengo.Object, error) {
 	if len(args) != 2 {
-		return toError(tengo.ErrWrongNumArguments), nil
+		return nil, tengo.ErrWrongNumArguments
 	}
 
 	patternsArray, ok := args[0].(*tengo.Array)
 	if !ok {
-		return toError(tengo.ErrInvalidArgumentType{
+		return nil, tengo.ErrInvalidArgumentType{
 			Name:     "patterns",
 			Expected: "string",
 			Found:    args[0].TypeName(),
-		}), nil
+		}
 	}
 
 	patterns, err := arrayToStringSlice(patternsArray)
 	if err != nil {
-		return toError(err), nil
+		return nil, err
 	}
 
 	codesArray, ok := args[1].(*tengo.Array)
 	if !ok {
-		return toError(tengo.ErrInvalidArgumentType{
+		return nil, tengo.ErrInvalidArgumentType{
 			Name:     "codes",
 			Expected: "string",
 			Found:    args[1].TypeName(),
-		}), nil
+		}
 	}
 
 	codes, err := arrayToIntSlice(codesArray)
 	if err != nil {
-		return toError(err), nil
+		return nil, err
 	}
 
 	var files []string
@@ -320,31 +310,4 @@ func (s *Script) contentDiscoveryURLs(args ...tengo.Object) (tengo.Object, error
 	}
 
 	return sliceToStringArray(urls), nil
-}
-
-func (s *Script) tcpScan(args ...tengo.Object) (tengo.Object, error) {
-	if len(args) == 0 {
-		return toError(tengo.ErrWrongNumArguments), nil
-	}
-
-	var cmdArgs []string
-	for _, arg := range args {
-		cmdArg, ok := tengo.ToString(arg)
-		if !ok {
-			return toError(tengo.ErrInvalidArgumentType{
-				Name:     "as-recon-discover-service arg",
-				Expected: "string",
-				Found:    arg.TypeName(),
-			}), nil
-		}
-
-		cmdArgs = append(cmdArgs, cmdArg)
-	}
-
-	err := s.runWithSigHandler("as-recon-discover-services", cmdArgs...)
-	if err != nil {
-		return toError(err), nil
-	}
-
-	return nil, nil
 }

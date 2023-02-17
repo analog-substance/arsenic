@@ -76,16 +76,16 @@ func (s *Script) writeFileLines(args ...tengo.Object) (tengo.Object, error) {
 
 	lineArray, ok := args[1].(*tengo.Array)
 	if !ok {
-		return toError(tengo.ErrInvalidArgumentType{
+		return nil, tengo.ErrInvalidArgumentType{
 			Name:     "lines",
 			Expected: "[]string",
 			Found:    args[1].TypeName(),
-		}), nil
+		}
 	}
 
 	lines, err := arrayToStringSlice(lineArray)
 	if err != nil {
-		return toError(err), nil
+		return nil, err
 	}
 
 	data := strings.Join(lines, "\n")
@@ -101,39 +101,39 @@ func (s *Script) writeFileLines(args ...tengo.Object) (tengo.Object, error) {
 // Represents 'os2.regex_replace_file(path string, regex string, replace string) error'
 func (s *Script) regexReplaceFile(args ...tengo.Object) (tengo.Object, error) {
 	if len(args) != 3 {
-		return toError(tengo.ErrWrongNumArguments), nil
+		return nil, tengo.ErrWrongNumArguments
 	}
 
 	path, ok := tengo.ToString(args[0])
 	if !ok {
-		return toError(tengo.ErrInvalidArgumentType{
+		return nil, tengo.ErrInvalidArgumentType{
 			Name:     "path",
 			Expected: "string",
 			Found:    args[0].TypeName(),
-		}), nil
+		}
 	}
 
 	regex, ok := tengo.ToString(args[1])
 	if !ok {
-		return toError(tengo.ErrInvalidArgumentType{
+		return nil, tengo.ErrInvalidArgumentType{
 			Name:     "regex",
 			Expected: "string",
 			Found:    args[1].TypeName(),
-		}), nil
+		}
 	}
 
 	re, err := regexp.Compile(regex)
 	if err != nil {
-		return toError(err), nil
+		return nil, err
 	}
 
 	replace, ok := tengo.ToString(args[2])
 	if !ok {
-		return toError(tengo.ErrInvalidArgumentType{
+		return nil, tengo.ErrInvalidArgumentType{
 			Name:     "replace",
 			Expected: "string",
 			Found:    args[2].TypeName(),
-		}), nil
+		}
 	}
 
 	data, err := os.ReadFile(path)

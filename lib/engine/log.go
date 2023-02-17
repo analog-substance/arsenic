@@ -5,14 +5,16 @@ import (
 	"github.com/analog-substance/tengo/v2"
 )
 
-var logModule = map[string]tengo.Object{
-	"msg":  &tengo.UserFunction{Name: "msg", Value: logMsg},
-	"warn": &tengo.UserFunction{Name: "warn", Value: logWarn},
-	"info": &tengo.UserFunction{Name: "info", Value: logInfo},
+func (s *Script) LogModule() map[string]tengo.Object {
+	return map[string]tengo.Object{
+		"msg":  &tengo.UserFunction{Name: "msg", Value: s.logMsg},
+		"warn": &tengo.UserFunction{Name: "warn", Value: s.logWarn},
+		"info": &tengo.UserFunction{Name: "info", Value: s.logInfo},
+	}
 }
 
-func logMsg(args ...tengo.Object) (tengo.Object, error) {
-	err := log("[+]", args...)
+func (s *Script) logMsg(args ...tengo.Object) (tengo.Object, error) {
+	err := s.log("[+]", args...)
 	if err != nil {
 		return toError(err), nil
 	}
@@ -20,8 +22,8 @@ func logMsg(args ...tengo.Object) (tengo.Object, error) {
 	return nil, nil
 }
 
-func logWarn(args ...tengo.Object) (tengo.Object, error) {
-	err := log("[!]", args...)
+func (s *Script) logWarn(args ...tengo.Object) (tengo.Object, error) {
+	err := s.log("[!]", args...)
 	if err != nil {
 		return toError(err), nil
 	}
@@ -29,8 +31,8 @@ func logWarn(args ...tengo.Object) (tengo.Object, error) {
 	return nil, nil
 }
 
-func logInfo(args ...tengo.Object) (tengo.Object, error) {
-	err := log("[-]", args...)
+func (s *Script) logInfo(args ...tengo.Object) (tengo.Object, error) {
+	err := s.log("[-]", args...)
 	if err != nil {
 		return toError(err), nil
 	}
@@ -38,8 +40,8 @@ func logInfo(args ...tengo.Object) (tengo.Object, error) {
 	return nil, nil
 }
 
-func log(prefix string, args ...tengo.Object) error {
-	logArgs, err := getLogArgs(args...)
+func (s *Script) log(prefix string, args ...tengo.Object) error {
+	logArgs, err := s.getLogArgs(args...)
 	if err != nil {
 		return err
 	}
@@ -49,7 +51,7 @@ func log(prefix string, args ...tengo.Object) error {
 	return nil
 }
 
-func getLogArgs(args ...tengo.Object) ([]interface{}, error) {
+func (s *Script) getLogArgs(args ...tengo.Object) ([]interface{}, error) {
 	var logArgs []interface{}
 	l := 0
 	for _, arg := range args {

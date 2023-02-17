@@ -16,11 +16,7 @@ var ErrSignaled error = errors.New("process signaled to close")
 // ExecModule represents the 'exec' import module
 func (s *Script) ExecModule() map[string]tengo.Object {
 	return map[string]tengo.Object{
-		"err_signaled": &tengo.Error{
-			Value: &tengo.String{
-				Value: ErrSignaled.Error(),
-			},
-		},
+		"err_signaled":         toError(ErrSignaled),
 		"run_with_sig_handler": &tengo.UserFunction{Name: "run_with_sig_handler", Value: s.tengoRunWithSigHandler},
 		"cmd":                  &tengo.UserFunction{Name: "cmd", Value: s.tengoCmd},
 	}
@@ -28,33 +24,24 @@ func (s *Script) ExecModule() map[string]tengo.Object {
 
 func (s *Script) tengoRunWithSigHandler(args ...tengo.Object) (tengo.Object, error) {
 	if len(args) == 0 {
-		return toError(tengo.ErrWrongNumArguments), nil
+		return nil, tengo.ErrWrongNumArguments
 	}
 
 	cmdName, ok := tengo.ToString(args[0])
 	if !ok {
-		return toError(tengo.ErrInvalidArgumentType{
+		return nil, tengo.ErrInvalidArgumentType{
 			Name:     "cmd name",
 			Expected: "string",
 			Found:    args[0].TypeName(),
-		}), nil
-	}
-
-	var cmdArgs []string
-	for _, arg := range args[1:] {
-		cmdArg, ok := tengo.ToString(arg)
-		if !ok {
-			return toError(tengo.ErrInvalidArgumentType{
-				Name:     "cmd arg",
-				Expected: "string",
-				Found:    arg.TypeName(),
-			}), nil
 		}
-
-		cmdArgs = append(cmdArgs, cmdArg)
 	}
 
-	err := s.runWithSigHandler(cmdName, cmdArgs...)
+	cmdArgs, err := sliceToStringSlice(args[1:])
+	if err != nil {
+		return nil, err
+	}
+
+	err = s.runWithSigHandler(cmdName, cmdArgs...)
 	if err != nil {
 		return toError(err), nil
 	}
@@ -64,30 +51,21 @@ func (s *Script) tengoRunWithSigHandler(args ...tengo.Object) (tengo.Object, err
 
 func (s *Script) tengoCmd(args ...tengo.Object) (tengo.Object, error) {
 	if len(args) == 0 {
-		return toError(tengo.ErrWrongNumArguments), nil
+		return nil, tengo.ErrWrongNumArguments
 	}
 
 	cmdName, ok := tengo.ToString(args[0])
 	if !ok {
-		return toError(tengo.ErrInvalidArgumentType{
+		return nil, tengo.ErrInvalidArgumentType{
 			Name:     "cmd name",
 			Expected: "string",
 			Found:    args[0].TypeName(),
-		}), nil
+		}
 	}
 
-	var cmdArgs []string
-	for _, arg := range args[1:] {
-		cmdArg, ok := tengo.ToString(arg)
-		if !ok {
-			return toError(tengo.ErrInvalidArgumentType{
-				Name:     "cmd arg",
-				Expected: "string",
-				Found:    arg.TypeName(),
-			}), nil
-		}
-
-		cmdArgs = append(cmdArgs, cmdArg)
+	cmdArgs, err := sliceToStringSlice(args[1:])
+	if err != nil {
+		return nil, err
 	}
 
 	cmd := exec.CommandContext(context.Background(), cmdName, cmdArgs...)
@@ -102,16 +80,16 @@ func (s *Script) tengoCmd(args ...tengo.Object) (tengo.Object, error) {
 				Name: "set_file_stdin",
 				Value: func(args ...tengo.Object) (tengo.Object, error) {
 					if len(args) == 0 {
-						return toError(tengo.ErrWrongNumArguments), nil
+						return nil, tengo.ErrWrongNumArguments
 					}
 
 					file, ok := tengo.ToString(args[0])
 					if !ok {
-						return toError(tengo.ErrInvalidArgumentType{
+						return nil, tengo.ErrInvalidArgumentType{
 							Name:     "file",
 							Expected: "string",
 							Found:    args[0].TypeName(),
-						}), nil
+						}
 					}
 
 					f, err := os.Open(file)

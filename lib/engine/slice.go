@@ -19,21 +19,21 @@ func (s *Script) SliceModule() map[string]tengo.Object {
 
 func (s *Script) sortStrings(args ...tengo.Object) (tengo.Object, error) {
 	if len(args) != 1 {
-		return toError(tengo.ErrWrongNumArguments), nil
+		return nil, tengo.ErrWrongNumArguments
 	}
 
 	array, ok := args[0].(*tengo.Array)
 	if !ok {
-		return toError(tengo.ErrInvalidArgumentType{
+		return nil, tengo.ErrInvalidArgumentType{
 			Name:     "slice",
 			Expected: "array",
 			Found:    args[0].TypeName(),
-		}), nil
+		}
 	}
 
 	slice, err := arrayToStringSlice(array)
 	if err != nil {
-		return toError(err), nil
+		return nil, err
 	}
 
 	sort.Strings(slice)
@@ -43,16 +43,16 @@ func (s *Script) sortStrings(args ...tengo.Object) (tengo.Object, error) {
 
 func (s *Script) randItem(args ...tengo.Object) (tengo.Object, error) {
 	if len(args) != 1 {
-		return toError(tengo.ErrWrongNumArguments), nil
+		return nil, tengo.ErrWrongNumArguments
 	}
 
 	array, ok := args[0].(*tengo.Array)
 	if !ok {
-		return toError(tengo.ErrInvalidArgumentType{
+		return nil, tengo.ErrInvalidArgumentType{
 			Name:     "slice",
 			Expected: "array",
 			Found:    args[0].TypeName(),
-		}), nil
+		}
 	}
 
 	slice := arrayToSlice(array)
@@ -69,21 +69,21 @@ func (s *Script) randItem(args ...tengo.Object) (tengo.Object, error) {
 
 func (s *Script) unique(args ...tengo.Object) (tengo.Object, error) {
 	if len(args) != 1 {
-		return toError(tengo.ErrWrongNumArguments), nil
+		return nil, tengo.ErrWrongNumArguments
 	}
 
 	array, ok := args[0].(*tengo.Array)
 	if !ok {
-		return toError(tengo.ErrInvalidArgumentType{
+		return nil, tengo.ErrInvalidArgumentType{
 			Name:     "slice",
 			Expected: "array",
 			Found:    args[0].TypeName(),
-		}), nil
+		}
 	}
 
 	slice, err := arrayToStringSlice(array)
 	if err != nil {
-		return toError(err), nil
+		return nil, err
 	}
 
 	itemSet := set.NewStringSet(slice)

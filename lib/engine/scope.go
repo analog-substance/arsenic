@@ -48,11 +48,6 @@ func (s *Script) domains(args ...tengo.Object) (tengo.Object, error) {
 // rootDomains returns the in scope root domains
 // Represents 'scope.root_domains(all_root_domains bool = false)'
 func (s *Script) rootDomains(args ...tengo.Object) (tengo.Object, error) {
-	domains, err := scope.GetScope("domains")
-	if err != nil {
-		return toError(err), nil
-	}
-
 	pruneBlacklisted := true
 	if len(args) > 0 {
 		value, ok := tengo.ToBool(args[0])
@@ -65,6 +60,11 @@ func (s *Script) rootDomains(args ...tengo.Object) (tengo.Object, error) {
 		}
 
 		pruneBlacklisted = !value
+	}
+
+	domains, err := scope.GetScope("domains")
+	if err != nil {
+		return toError(err), nil
 	}
 
 	rootDomains := scope.GetRootDomains(domains, pruneBlacklisted)

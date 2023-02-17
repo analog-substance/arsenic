@@ -8,34 +8,33 @@ import (
 	"github.com/bmatcuk/doublestar/v4"
 )
 
-func (m *Script) FilePathModule() map[string]tengo.Object {
+func (s *Script) FilePathModule() map[string]tengo.Object {
 	return map[string]tengo.Object{
-		"join":        &tengo.UserFunction{Name: "join", Value: m.join},
-		"file_exists": &tengo.UserFunction{Name: "file_exists", Value: m.fileExists},
-		"dir_exists":  &tengo.UserFunction{Name: "dir_exists", Value: m.dirExists},
-		"base":        &tengo.UserFunction{Name: "base", Value: m.base},
-		"abs":         &tengo.UserFunction{Name: "abs", Value: m.abs},
-		"ext":         &tengo.UserFunction{Name: "ext", Value: m.ext},
-		"glob":        &tengo.UserFunction{Name: "glob", Value: m.glob},
-		"from_slash":  &tengo.UserFunction{Name: "from_slash", Value: m.fromSlash},
+		"join":        &tengo.UserFunction{Name: "join", Value: s.join},
+		"file_exists": &tengo.UserFunction{Name: "file_exists", Value: s.fileExists},
+		"dir_exists":  &tengo.UserFunction{Name: "dir_exists", Value: s.dirExists},
+		"base":        &tengo.UserFunction{Name: "base", Value: s.base},
+		"abs":         &tengo.UserFunction{Name: "abs", Value: s.abs},
+		"ext":         &tengo.UserFunction{Name: "ext", Value: s.ext},
+		"glob":        &tengo.UserFunction{Name: "glob", Value: s.glob},
+		"from_slash":  &tengo.UserFunction{Name: "from_slash", Value: s.fromSlash},
 	}
 }
 
-func (m *Script) join(args ...tengo.Object) (tengo.Object, error) {
+func (s *Script) join(args ...tengo.Object) (tengo.Object, error) {
 	if len(args) < 1 {
 		return nil, tengo.ErrWrongNumArguments
 	}
 
-	var paths []string
-	for _, obj := range args {
-		path, _ := tengo.ToString(obj)
-		paths = append(paths, path)
+	paths, err := sliceToStringSlice(args)
+	if err != nil {
+		return nil, err
 	}
 
 	return &tengo.String{Value: filepath.Join(paths...)}, nil
 }
 
-func (m *Script) fileExists(args ...tengo.Object) (tengo.Object, error) {
+func (s *Script) fileExists(args ...tengo.Object) (tengo.Object, error) {
 	if len(args) != 1 {
 		return nil, tengo.ErrWrongNumArguments
 	}
@@ -57,7 +56,7 @@ func (m *Script) fileExists(args ...tengo.Object) (tengo.Object, error) {
 	return obj, nil
 }
 
-func (m *Script) dirExists(args ...tengo.Object) (tengo.Object, error) {
+func (s *Script) dirExists(args ...tengo.Object) (tengo.Object, error) {
 	if len(args) != 1 {
 		return nil, tengo.ErrWrongNumArguments
 	}
@@ -79,7 +78,7 @@ func (m *Script) dirExists(args ...tengo.Object) (tengo.Object, error) {
 	return obj, nil
 }
 
-func (m *Script) base(args ...tengo.Object) (tengo.Object, error) {
+func (s *Script) base(args ...tengo.Object) (tengo.Object, error) {
 	if len(args) != 1 {
 		return nil, tengo.ErrWrongNumArguments
 	}
@@ -96,7 +95,7 @@ func (m *Script) base(args ...tengo.Object) (tengo.Object, error) {
 	return &tengo.String{Value: filepath.Base(path)}, nil
 }
 
-func (m *Script) abs(args ...tengo.Object) (tengo.Object, error) {
+func (s *Script) abs(args ...tengo.Object) (tengo.Object, error) {
 	if len(args) != 1 {
 		return nil, tengo.ErrWrongNumArguments
 	}
@@ -118,7 +117,7 @@ func (m *Script) abs(args ...tengo.Object) (tengo.Object, error) {
 	return &tengo.String{Value: absPath}, nil
 }
 
-func (m *Script) ext(args ...tengo.Object) (tengo.Object, error) {
+func (s *Script) ext(args ...tengo.Object) (tengo.Object, error) {
 	if len(args) != 1 {
 		return nil, tengo.ErrWrongNumArguments
 	}
@@ -135,7 +134,7 @@ func (m *Script) ext(args ...tengo.Object) (tengo.Object, error) {
 	return &tengo.String{Value: filepath.Ext(path)}, nil
 }
 
-func (m *Script) glob(args ...tengo.Object) (tengo.Object, error) {
+func (s *Script) glob(args ...tengo.Object) (tengo.Object, error) {
 	if len(args) != 1 {
 		return nil, tengo.ErrWrongNumArguments
 	}
@@ -157,7 +156,7 @@ func (m *Script) glob(args ...tengo.Object) (tengo.Object, error) {
 	return sliceToStringArray(matches), nil
 }
 
-func (m *Script) fromSlash(args ...tengo.Object) (tengo.Object, error) {
+func (s *Script) fromSlash(args ...tengo.Object) (tengo.Object, error) {
 	if len(args) != 1 {
 		return nil, tengo.ErrWrongNumArguments
 	}

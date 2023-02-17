@@ -14,16 +14,16 @@ func (s *Script) URLModule() map[string]tengo.Object {
 
 func (s *Script) hostname(args ...tengo.Object) (tengo.Object, error) {
 	if len(args) != 1 {
-		return toError(tengo.ErrWrongNumArguments), nil
+		return nil, tengo.ErrWrongNumArguments
 	}
 
 	rawURL, ok := tengo.ToString(args[0])
 	if !ok {
-		return toError(tengo.ErrInvalidArgumentType{
+		return nil, tengo.ErrInvalidArgumentType{
 			Name:     "url",
 			Expected: "string",
 			Found:    args[0].TypeName(),
-		}), nil
+		}
 	}
 
 	parsedURL, err := url.Parse(rawURL)
