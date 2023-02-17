@@ -11,169 +11,191 @@ import (
 	"github.com/analog-substance/tengo/v2/stdlib"
 )
 
-func makeArsenicHost(h *host.Host) *tengo.ImmutableMap {
-	return &tengo.ImmutableMap{
-		Value: map[string]tengo.Object{
-			"dir": &tengo.String{
-				Value: h.Dir,
-			},
-			"name": &tengo.String{
-				Value: h.Metadata.Name,
-			},
-			"has_flags": &tengo.UserFunction{
-				Name: "has_flags",
-				Value: func(args ...tengo.Object) (tengo.Object, error) {
-					var flags []string
-					for _, arg := range args {
-						flag, ok := tengo.ToString(arg)
-						if !ok {
-							return toError(tengo.ErrInvalidArgumentType{
-								Name:     "flag",
-								Expected: "string",
-								Found:    arg.TypeName(),
-							}), nil
-						}
+type ArsenicHost struct {
+	tengo.ObjectImpl
+	Value     *host.Host
+	objectMap map[string]tengo.Object
+}
 
-						flags = append(flags, flag)
-					}
+func (h *ArsenicHost) TypeName() string {
+	return "arsenic-host"
+}
 
-					value := tengo.FalseValue
-					if h.Metadata.HasFlags(flags...) {
-						value = tengo.TrueValue
-					}
+// String should return a string representation of the type's value.
+func (h *ArsenicHost) String() string {
+	return h.Value.Metadata.Name
+}
 
-					return value, nil
-				},
-			},
-			"has_any_port": &tengo.UserFunction{
-				Name:  "has_any_port",
-				Value: stdlib.FuncARB(h.Metadata.HasAnyPort),
-			},
-			"files": &tengo.UserFunction{
-				Name:  "files",
-				Value: funcASvRSsE(h.Files),
-			},
-			"urls": &tengo.UserFunction{
-				Name: "urls",
-				Value: func(args ...tengo.Object) (tengo.Object, error) {
-					var protocols []string
-					for _, arg := range args {
-						protocol, ok := tengo.ToString(arg)
-						if !ok {
-							return toError(tengo.ErrInvalidArgumentType{
-								Name:     "protocol",
-								Expected: "string",
-								Found:    arg.TypeName(),
-							}), nil
-						}
+// IsFalsy should return true if the value of the type should be considered
+// as falsy.
+func (h *ArsenicHost) IsFalsy() bool {
+	return h.Value == nil
+}
 
-						protocols = append(protocols, protocol)
-					}
-					if len(protocols) == 0 {
-						protocols = append(protocols, "all")
-					}
+// CanIterate should return whether the Object can be Iterated.
+func (h *ArsenicHost) CanIterate() bool {
+	return false
+}
 
-					var urls []string
-					for _, hostURL := range h.URLs() {
-						for _, proto := range protocols {
-							if strings.HasPrefix(hostURL, proto) || proto == "all" {
-								urls = append(urls, hostURL)
-							}
-						}
-					}
+func (h *ArsenicHost) IndexGet(index tengo.Object) (tengo.Object, error) {
+	strIdx, ok := tengo.ToString(index)
+	if !ok {
+		return nil, tengo.ErrInvalidIndexType
+	}
 
-					return sliceToStringArray(urls), nil
-				},
-			},
-			"file_exists": &tengo.UserFunction{
-				Name: "file_exists",
-				Value: func(args ...tengo.Object) (tengo.Object, error) {
-					if len(args) != 1 {
-						return toError(tengo.ErrWrongNumArguments), nil
-					}
+	res, ok := h.objectMap[strIdx]
+	if !ok {
+		res = tengo.UndefinedValue
+	}
+	return res, nil
+}
 
-					file, ok := tengo.ToString(args[0])
-					if !ok {
-						return toError(tengo.ErrInvalidArgumentType{
-							Name:     "path",
-							Expected: "string",
-							Found:    args[0].TypeName(),
-						}), nil
-					}
+func (h *ArsenicHost) urls(args ...tengo.Object) (tengo.Object, error) {
+	protocols, err := sliceToStringSlice(args)
+	if err != nil {
+		return nil, err
+	}
 
-					value := tengo.FalseValue
-					if util.FileExists(filepath.Join(h.Dir, file)) {
-						value = tengo.TrueValue
-					}
+	if len(protocols) == 0 {
+		protocols = append(protocols, "all")
+	}
 
-					return value, nil
-				},
-			},
-			"content_discovery_urls": &tengo.UserFunction{
-				Name: "content_discovery_urls",
-				Value: func(args ...tengo.Object) (tengo.Object, error) {
-					if len(args) != 2 {
-						return toError(tengo.ErrWrongNumArguments), nil
-					}
+	var urls []string
+	for _, hostURL := range h.Value.URLs() {
+		for _, proto := range protocols {
+			if strings.HasPrefix(hostURL, proto) || proto == "all" {
+				urls = append(urls, hostURL)
+			}
+		}
+	}
 
-					patternsArray, ok := args[0].(*tengo.Array)
-					if !ok {
-						return toError(tengo.ErrInvalidArgumentType{
-							Name:     "patterns",
-							Expected: "string",
-							Found:    args[0].TypeName(),
-						}), nil
-					}
+	return sliceToStringArray(urls), nil
+}
 
-					patterns, err := arrayToStringSlice(patternsArray)
-					if err != nil {
-						return toError(err), nil
-					}
+func (h *ArsenicHost) fileExists(args ...tengo.Object) (tengo.Object, error) {
+	if len(args) != 1 {
+		return nil, tengo.ErrWrongNumArguments
+	}
 
-					codesArray, ok := args[1].(*tengo.Array)
-					if !ok {
-						return toError(tengo.ErrInvalidArgumentType{
-							Name:     "codes",
-							Expected: "string",
-							Found:    args[1].TypeName(),
-						}), nil
-					}
+	file, ok := tengo.ToString(args[0])
+	if !ok {
+		return nil, tengo.ErrInvalidArgumentType{
+			Name:     "path",
+			Expected: "string",
+			Found:    args[0].TypeName(),
+		}
+	}
 
-					codes, err := arrayToIntSlice(codesArray)
-					if err != nil {
-						return toError(err), nil
-					}
+	value := tengo.FalseValue
+	if util.FileExists(filepath.Join(h.Value.Dir, file)) {
+		value = tengo.TrueValue
+	}
 
-					var files []string
-					for _, pattern := range patterns {
-						matches, err := filepath.Glob(pattern)
-						if err != nil {
-							return toError(err), nil
-						}
-						files = append(files, matches...)
-					}
+	return value, nil
+}
 
-					allResults, err := gocdp.SmartParseFiles(files)
-					if err != nil {
-						return toError(err), nil
-					}
-					grouped := allResults.GroupByStatus()
+func (h *ArsenicHost) contentDiscoveryURLs(args ...tengo.Object) (tengo.Object, error) {
+	if len(args) != 2 {
+		return nil, tengo.ErrWrongNumArguments
+	}
 
-					var urls []string
-					for _, code := range codes {
-						results, ok := grouped[code]
-						if !ok {
-							continue
-						}
+	patternsArray, ok := args[0].(*tengo.Array)
+	if !ok {
+		return nil, tengo.ErrInvalidArgumentType{
+			Name:     "patterns",
+			Expected: "string",
+			Found:    args[0].TypeName(),
+		}
+	}
 
-						for _, result := range results {
-							urls = append(urls, result.Url)
-						}
-					}
+	patterns, err := arrayToStringSlice(patternsArray)
+	if err != nil {
+		return nil, err
+	}
 
-					return sliceToStringArray(urls), nil
-				},
-			},
+	codesArray, ok := args[1].(*tengo.Array)
+	if !ok {
+		return nil, tengo.ErrInvalidArgumentType{
+			Name:     "codes",
+			Expected: "string",
+			Found:    args[1].TypeName(),
+		}
+	}
+
+	codes, err := arrayToIntSlice(codesArray)
+	if err != nil {
+		return nil, err
+	}
+
+	var files []string
+	for _, pattern := range patterns {
+		matches, err := filepath.Glob(pattern)
+		if err != nil {
+			return toError(err), nil
+		}
+		files = append(files, matches...)
+	}
+
+	allResults, err := gocdp.SmartParseFiles(files)
+	if err != nil {
+		return toError(err), nil
+	}
+	grouped := allResults.GroupByStatus()
+
+	var urls []string
+	for _, code := range codes {
+		results, ok := grouped[code]
+		if !ok {
+			continue
+		}
+
+		for _, result := range results {
+			urls = append(urls, result.Url)
+		}
+	}
+
+	return sliceToStringArray(urls), nil
+}
+
+func makeArsenicHost(h *host.Host) *ArsenicHost {
+	arsenicHost := &ArsenicHost{
+		Value: h,
+	}
+
+	objectMap := map[string]tengo.Object{
+		"dir": &tengo.String{
+			Value: h.Dir,
+		},
+		"name": &tengo.String{
+			Value: h.Metadata.Name,
+		},
+		"has_flags": &tengo.UserFunction{
+			Name:  "has_flags",
+			Value: funcASvRB(h.Metadata.HasFlags),
+		},
+		"has_any_port": &tengo.UserFunction{
+			Name:  "has_any_port",
+			Value: stdlib.FuncARB(h.Metadata.HasAnyPort),
+		},
+		"files": &tengo.UserFunction{
+			Name:  "files",
+			Value: funcASvRSsE(h.Files),
+		},
+		"urls": &tengo.UserFunction{
+			Name:  "urls",
+			Value: arsenicHost.urls,
+		},
+		"file_exists": &tengo.UserFunction{
+			Name:  "file_exists",
+			Value: arsenicHost.fileExists,
+		},
+		"content_discovery_urls": &tengo.UserFunction{
+			Name:  "content_discovery_urls",
+			Value: arsenicHost.contentDiscoveryURLs,
 		},
 	}
+
+	arsenicHost.objectMap = objectMap
+
+	return arsenicHost
 }
