@@ -114,7 +114,7 @@ func toStringMapString(obj tengo.Object) (map[string]string, error) {
 		}
 	}
 
-	var m map[string]string
+	m := make(map[string]string)
 	for key, value := range objMap {
 		str, ok := tengo.ToString(value)
 		if !ok {
