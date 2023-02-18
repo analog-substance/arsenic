@@ -61,6 +61,8 @@ github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc/go.mod h1:LOuy
 github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751/go.mod h1:LOuyumcjzFXgccqObfd/Ljyb9UuFJ6TxHnclSeseNhc=
 github.com/alecthomas/units v0.0.0-20151022065526-2efee857e7cf/go.mod h1:ybxpYRFXyAe+OPACYpWeL0wqObRcbAqCMya13uyzqw0=
 github.com/alecthomas/units v0.0.0-20190717042225-c3de453c63f4/go.mod h1:ybxpYRFXyAe+OPACYpWeL0wqObRcbAqCMya13uyzqw0=
+github.com/analog-substance/ffufwrap v0.0.0-20230214233527-0bbe7350af6d h1:50cQJgLXuWbsYynYynhoIs5P4wztsiFhVfa7w6XKEyU=
+github.com/analog-substance/ffufwrap v0.0.0-20230214233527-0bbe7350af6d/go.mod h1:XIjeP7AWQB/vGOzjcH3Avvh545lWW0k9948CD29+yfg=
 github.com/analog-substance/nmap/v2 v2.2.2 h1:ufYArpkLkPkAzOWzgY1ECmE0iCqcmiuyXZTGuRkDNXE=
 github.com/analog-substance/nmap/v2 v2.2.2/go.mod h1:/6YyiW1Rgn7J6DAWCgL4CZZf6zJCFhB07PQzvjFfzLI=
 github.com/analog-substance/tengo/v2 v2.12.2 h1:53HUgMDvolzt9LlamKuptQxZegbvCZe1rZB5hzZBubE=

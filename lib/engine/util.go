@@ -98,6 +98,39 @@ func sliceToStringSlice(slice []tengo.Object) ([]string, error) {
 	return strSlice, nil
 }
 
+// toStringMapString converts a tengo object into a map[string] string
+func toStringMapString(obj tengo.Object) (map[string]string, error) {
+	var objMap map[string]tengo.Object
+	switch o := obj.(type) {
+	case *tengo.Map:
+		objMap = o.Value
+	case *tengo.ImmutableMap:
+		objMap = o.Value
+	default:
+		return nil, tengo.ErrInvalidArgumentType{
+			Name:     "first",
+			Expected: "map(compatible)",
+			Found:    obj.TypeName(),
+		}
+	}
+
+	var m map[string]string
+	for key, value := range objMap {
+		str, ok := tengo.ToString(value)
+		if !ok {
+			return nil, tengo.ErrInvalidArgumentType{
+				Name:     fmt.Sprintf("map key %s", key),
+				Expected: "string(compatible)",
+				Found:    value.TypeName(),
+			}
+		}
+
+		m[key] = str
+	}
+
+	return m, nil
+}
+
 // toError converts an error into a tengo Error
 func toError(err error) tengo.Object {
 	return &tengo.Error{
@@ -658,5 +691,40 @@ func funcASvRB(fn func(...string) bool) tengo.CallableFunc {
 		}
 
 		return tengo.FalseValue, nil
+	}
+}
+
+// funcASRBE transform a function of 'func(string)' signature
+// into tengo CallableFunc type.
+func funcASR(fn func(string)) tengo.CallableFunc {
+	return func(args ...tengo.Object) (tengo.Object, error) {
+		if len(args) != 1 {
+			return nil, tengo.ErrWrongNumArguments
+		}
+		s1, ok := tengo.ToString(args[0])
+		if !ok {
+			return nil, tengo.ErrInvalidArgumentType{
+				Name:     "first",
+				Expected: "string(compatible)",
+				Found:    args[0].TypeName(),
+			}
+		}
+
+		fn(s1)
+		return nil, nil
+	}
+}
+
+// aliasFunc is used to call the same tengo function using a different name
+func aliasFunc(obj tengo.Object, name string, src string) *tengo.UserFunction {
+	return &tengo.UserFunction{
+		Name: name,
+		Value: func(args ...tengo.Object) (tengo.Object, error) {
+			fn, err := obj.IndexGet(&tengo.String{Value: src})
+			if err != nil {
+				return nil, err
+			}
+			return fn.(*tengo.UserFunction).Value(args...)
+		},
 	}
 }

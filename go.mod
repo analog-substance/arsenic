@@ -6,6 +6,7 @@ require (
 	github.com/NoF0rte/gocdp v0.0.6
 	github.com/Ullaakut/nmap/v2 v2.2.1
 	github.com/ahmetb/go-linq/v3 v3.2.0
+	github.com/analog-substance/ffufwrap v0.0.0-20230214233527-0bbe7350af6d
 	github.com/analog-substance/tengo/v2 v2.12.2
 	github.com/andrew-d/go-termutil v0.0.0-20150726205930-009166a695a2
 	github.com/bmatcuk/doublestar/v4 v4.2.0

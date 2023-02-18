@@ -160,12 +160,7 @@ func (s *NmapScanner) addOptionASv(fn func(...string) nmap.Option) tengo.Callabl
 
 // aliasFunc is used to call the same tengo function using a different name
 func (s *NmapScanner) aliasFunc(name string, src string) *tengo.UserFunction {
-	return &tengo.UserFunction{
-		Name: name,
-		Value: func(args ...tengo.Object) (tengo.Object, error) {
-			return (s.objectMap[src].(*tengo.UserFunction)).Value(args...)
-		},
-	}
+	return aliasFunc(s, name, src)
 }
 
 // TypeName should return the name of the type.
