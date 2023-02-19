@@ -1,13 +1,12 @@
 package lead
 
 import (
-	"encoding/json"
 	"errors"
+
 	"github.com/analog-substance/arsenic/api/controller"
 	"github.com/analog-substance/arsenic/api/models"
 	"github.com/analog-substance/arsenic/lib/lead"
 	"github.com/gin-gonic/gin"
-	"io/ioutil"
 )
 
 func AddRoutes(router *gin.RouterGroup) {
@@ -18,13 +17,9 @@ func AddRoutes(router *gin.RouterGroup) {
 }
 
 func getLeadId(c *gin.Context) (string, error) {
-	reqBody, err := ioutil.ReadAll(c.Request.Body)
-	if err != nil {
-		return "", err
-	}
-
 	var l models.Lead
-	err = json.Unmarshal(reqBody, &l)
+
+	err := c.BindJSON(&l)
 	if err != nil {
 		return "", err
 	}
@@ -42,12 +37,14 @@ func doUpdate(c *gin.Context, fn func(string) error) {
 		controller.Error(c, err)
 		return
 	}
+
 	err = fn(id)
 	if err != nil {
 		controller.Error(c, err)
-	} else {
-		controller.Success(c)
+		return
 	}
+
+	controller.Success(c)
 }
 
 func ignoreLead(c *gin.Context) {

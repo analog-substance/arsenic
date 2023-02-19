@@ -1,9 +1,7 @@
 package host
 
 import (
-	"encoding/json"
 	"errors"
-	"io/ioutil"
 	"log"
 	"strings"
 
@@ -22,16 +20,8 @@ func AddRoutes(router *gin.RouterGroup) {
 }
 
 func ReviewHost(c *gin.Context) {
-
-	reqBody, err := ioutil.ReadAll(c.Request.Body)
-	if err != nil {
-		log.Printf("reviewHost: %v\n", err)
-		controller.Error(c, err)
-		return
-	}
-
 	var reviewHost models.ReviewHost
-	err = json.Unmarshal(reqBody, &reviewHost)
+	err := c.BindJSON(&reviewHost)
 	if err != nil {
 		log.Printf("reviewHost: %v\n", err)
 		controller.Error(c, err)
@@ -61,27 +51,19 @@ func ReviewHost(c *gin.Context) {
 }
 
 func GetContentDiscovery(c *gin.Context) {
-	reqBody, err := ioutil.ReadAll(c.Request.Body)
-	if err != nil {
-		log.Printf("getContentDiscovery: %v\n", err)
-		controller.Error(c, err)
-		return
-	}
-
 	var request models.HostContentDiscovery
-	err = json.Unmarshal(reqBody, &request)
+	err := c.BindJSON(&request)
 	if err != nil {
 		log.Printf("getContentDiscovery: %v\n", err)
 		controller.Error(c, err)
 		return
 	}
 
-	hosts := host.Get(request.Host)
-	if len(hosts) == 0 {
+	host := host.GetFirst(request.Host)
+	if host == nil {
 		controller.Error(c, errors.New("host not found"))
 		return
 	}
-	host := hosts[0]
 
 	files, err := host.Files("recon/ffuf*", "recon/gobuster*", "recon/dirb*")
 	if err != nil {
@@ -100,7 +82,7 @@ func GetContentDiscovery(c *gin.Context) {
 	var dedupped gocdp.CDResults
 	resultSet := set.NewStringSet()
 	for _, result := range results {
-		if resultSet.Add(result.Url) {
+		if resultSet.Add(result.Url) { // Maybe want to change this so it deduplicates based off of URL and method?
 			dedupped = append(dedupped, result)
 		}
 	}
