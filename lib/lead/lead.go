@@ -4,63 +4,39 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/analog-substance/arsenic/lib/util"
-	"github.com/reapertechlabs/go_nessus"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
-	"path"
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/analog-substance/arsenic/lib/util"
+	nessus "github.com/reapertechlabs/go_nessus"
 )
 
-const data_lead_file string = ".hugo/data/leads.json"
-const recon_leads_dir string = "recon/leads/"
-const report_findings_dir string = "report/findings/"
-const metadata_file string = "00-metadata.md"
+const (
+	metadataFile string = "00-metadata.md"
+)
 
-type HugoLeadMetadata struct {
+var (
+	reconLeadsDir     string = filepath.FromSlash("recon/leads")
+	dataLeadFile      string = filepath.FromSlash(".hugo/data/leads.json")
+	reportFindingsDir string = filepath.FromSlash("report/findings")
+)
+
+type HugoLeadData struct {
 	Ignored []string `json:"ignored"`
 	Copied  []string `json:"copied"`
 }
 
-type Cvss struct {
-	Severity string  `json:"severity"`
-	Score    float32 `json:"score"`
-	Vector   string  `json:"vector"`
-}
-
-type LeadMetadata struct {
-	Title string `json:"title"`
-	Cvss  Cvss   `json:"cvss"`
-}
-
-func ReadHugoLeadMetadata() (HugoLeadMetadata, error) {
-	var metadata HugoLeadMetadata
-	jsonFile, err := os.Open(filepath.FromSlash(data_lead_file))
-	if err != nil {
-		return metadata, err
-	}
-	defer jsonFile.Close()
-
-	byteValue, _ := ioutil.ReadAll(jsonFile)
-	err = json.Unmarshal(byteValue, &metadata)
-	if err != nil {
-		return metadata, err
-	}
-	return metadata, nil
-}
-
-func (md HugoLeadMetadata) save() error {
-	out, err := json.MarshalIndent(md, "", "  ")
+func (d HugoLeadData) save() error {
+	out, err := json.MarshalIndent(d, "", "  ")
 	if err != nil {
 		return err
 	}
 
-	fp := filepath.FromSlash(data_lead_file)
-	err = ioutil.WriteFile(fp, out, 0644)
+	err = os.WriteFile(dataLeadFile, out, 0644)
 	if err != nil {
 		return err
 	}
@@ -68,45 +44,23 @@ func (md HugoLeadMetadata) save() error {
 	return nil
 }
 
-func ReadLeadMetadata(id string) (LeadMetadata, error) {
-	var metadata LeadMetadata
-	lead_metadata_file := recon_leads_dir + "/" + util.Sanitize(id) + "/" + metadata_file
-	jsonFile, err := os.Open(filepath.FromSlash(lead_metadata_file))
+func readHugoLeadData() (HugoLeadData, error) {
+	var data HugoLeadData
+
+	byteValue, err := os.ReadFile(dataLeadFile)
 	if err != nil {
-		return metadata, err
+		return data, err
 	}
-	defer jsonFile.Close()
 
-	byteValue, _ := ioutil.ReadAll(jsonFile)
-	err = json.Unmarshal(byteValue, &metadata)
+	err = json.Unmarshal(byteValue, &data)
 	if err != nil {
-		return metadata, err
+		return data, err
 	}
-	return metadata, nil
-}
-
-func GetLeadDir(id string) string {
-	return recon_leads_dir + "/" + id
-}
-
-func GetLeadFiles(id string) ([]string, error) {
-	filePaths := []string{}
-	lead_dir := GetLeadDir(id)
-	files, err := ioutil.ReadDir(filepath.FromSlash(lead_dir))
-	if err != nil {
-		return filePaths, err
-	}
-
-	for _, file := range files {
-		filePaths = append(filePaths, file.Name())
-	}
-
-	return filePaths, nil
+	return data, nil
 }
 
 func IgnoreLead(id string) error {
-	fmt.Println("IgnoreLead")
-	md, err := ReadHugoLeadMetadata()
+	md, err := readHugoLeadData()
 	if err != nil {
 		return err
 	}
@@ -120,24 +74,22 @@ func IgnoreLead(id string) error {
 }
 
 func UnignoreLead(id string) error {
-	fmt.Println("UnignoreLead")
-	md, err := ReadHugoLeadMetadata()
+	data, err := readHugoLeadData()
 	if err != nil {
 		return err
 	}
 
-	idx := util.IndexOf(md.Ignored, id)
+	idx := util.IndexOf(data.Ignored, id)
 	if idx >= 0 {
-		md.Ignored = util.RemoveIndex(md.Ignored, idx)
-		err = md.save()
+		data.Ignored = util.RemoveIndex(data.Ignored, idx)
+		err = data.save()
 	}
 
 	return err
 }
 
 func CopyLead(id string) error {
-	fmt.Println("CopyLead")
-	md, err := ReadHugoLeadMetadata()
+	md, err := readHugoLeadData()
 	if err != nil {
 		return err
 	}
@@ -146,44 +98,21 @@ func CopyLead(id string) error {
 		return errors.New("lead already copied")
 	}
 
+	lead, err := LeadFromID(id)
+	if err != nil {
+		return err
+	}
+
 	//Create the finding folder
-	lead_md, err := ReadLeadMetadata(id)
+	findingDir := fmt.Sprintf("%v/%.1f %v %v", reportFindingsDir, lead.Cvss.Score, util.Sanitize(lead.Title), util.Sanitize(id))
+	err = os.Mkdir(filepath.FromSlash(findingDir), 0755)
 	if err != nil {
 		return err
 	}
 
-	lead_dir := GetLeadDir(id)
-	finding_dir := fmt.Sprintf("%v/%.1f %v %v", report_findings_dir, lead_md.Cvss.Score, util.Sanitize(lead_md.Title), util.Sanitize(id))
-	err = os.Mkdir(filepath.FromSlash(finding_dir), 0750)
+	err = lead.copyFiles(findingDir)
 	if err != nil {
 		return err
-	}
-
-	//Copy the files
-	files, err := GetLeadFiles(id)
-	if err != nil {
-		return err
-	}
-
-	for _, file := range files {
-		// Open src
-		src, err := os.Open(filepath.FromSlash(lead_dir + "/" + file))
-		if err != nil {
-			return err
-		}
-		defer src.Close()
-
-		// Create dest
-		dest, err := os.Create(filepath.FromSlash(finding_dir + "/" + file))
-		if err != nil {
-			return err
-		}
-		defer dest.Close()
-
-		_, err = io.Copy(dest, src)
-		if err != nil {
-			return err
-		}
 	}
 
 	md.Copied = append(md.Copied, id)
@@ -193,8 +122,7 @@ func CopyLead(id string) error {
 
 func UncopyLead(id string) error {
 	// Note: This only clears the ID from the Copied array
-	fmt.Println("UncopyLead")
-	md, err := ReadHugoLeadMetadata()
+	md, err := readHugoLeadData()
 	if err != nil {
 		return err
 	}
@@ -262,6 +190,7 @@ type ExploitationRatings struct {
 	RiskRating string `json:"riskRating"`
 }
 type Lead struct {
+	Dir          string              `json:"-"`
 	Title        string              `json:"title"`
 	Description  string              `json:"description"`
 	CweRefs      []string            `json:"cweRefs"`
@@ -311,8 +240,7 @@ func (l *Lead) Save() error {
 		}
 	}
 
-	leadDir := path.Join("recon", "leads", ID)
-	os.MkdirAll(leadDir, 0755)
+	os.MkdirAll(l.Dir, 0755)
 
 	out, err := json.MarshalIndent(l, "", "  ")
 	if err != nil {
@@ -320,35 +248,101 @@ func (l *Lead) Save() error {
 	}
 
 	//00-metadata.md  01-summary.md  02-affected_assets.md  03-recommendations.md  04-references.md  05-steps_to_reproduce.md
-	err = os.WriteFile(path.Join(leadDir, "00-metadata.md"), out, 0644)
+	err = os.WriteFile(filepath.Join(l.Dir, "00-metadata.md"), out, 0644)
 	if err != nil {
 		return err
 	}
 
-	err = os.WriteFile(path.Join(leadDir, "01-summary.md"), []byte(summary), 0644)
+	err = os.WriteFile(filepath.Join(l.Dir, "01-summary.md"), []byte(summary), 0644)
 	if err != nil {
 		return err
 	}
 
-	err = os.WriteFile(path.Join(leadDir, "02-affected_assets.md"), []byte(strings.Join(affectedAssets, "\n* ")), 0644)
+	err = os.WriteFile(filepath.Join(l.Dir, "02-affected_assets.md"), []byte(strings.Join(affectedAssets, "\n* ")), 0644)
 	if err != nil {
 		return err
 	}
 
-	err = os.WriteFile(path.Join(leadDir, "03-recommendations.md"), []byte(recommendations), 0644)
+	err = os.WriteFile(filepath.Join(l.Dir, "03-recommendations.md"), []byte(recommendations), 0644)
 	if err != nil {
 		return err
 	}
 
-	err = os.WriteFile(path.Join(leadDir, "04-references.md"), []byte(strings.Join(references, "\n* ")), 0644)
+	err = os.WriteFile(filepath.Join(l.Dir, "04-references.md"), []byte(strings.Join(references, "\n* ")), 0644)
 	if err != nil {
 		return err
 	}
 
-	err = os.WriteFile(path.Join(leadDir, "05-steps_to_reproduce.md"), []byte(strings.Join(stepsToReproduce, "\n")), 0644)
+	err = os.WriteFile(filepath.Join(l.Dir, "05-steps_to_reproduce.md"), []byte(strings.Join(stepsToReproduce, "\n")), 0644)
 	if err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func (l *Lead) files() ([]string, error) {
+	var filePaths []string
+
+	files, err := os.ReadDir(l.Dir)
+	if err != nil {
+		return filePaths, err
+	}
+
+	for _, file := range files {
+		filePaths = append(filePaths, file.Name())
+	}
+
+	return filePaths, nil
+}
+
+func (l *Lead) copyFiles(dest string) error {
+	// Copy the files
+	files, err := l.files()
+	if err != nil {
+		return err
+	}
+
+	for _, file := range files {
+		// Open src
+		src, err := os.Open(filepath.Join(l.Dir, file))
+		if err != nil {
+			return err
+		}
+		defer src.Close()
+
+		// Create dest
+		dest, err := os.Create(filepath.Join(dest, file))
+		if err != nil {
+			return err
+		}
+		defer dest.Close()
+
+		_, err = io.Copy(dest, src)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func LeadFromID(id string) (*Lead, error) {
+	dir := filepath.Join(reconLeadsDir, util.Sanitize(id))
+	metadataFile := filepath.Join(dir, metadataFile)
+	bytes, err := os.ReadFile(metadataFile)
+	if err != nil {
+		return nil, err
+	}
+
+	var lead Lead
+	err = json.Unmarshal(bytes, &lead)
+	if err != nil {
+		return nil, err
+	}
+
+	lead.ExternalUUID = id
+	lead.Dir = dir
+
+	return &lead, nil
 }
