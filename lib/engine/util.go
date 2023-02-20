@@ -696,24 +696,24 @@ func funcASvRB(fn func(...string) bool) tengo.CallableFunc {
 
 // funcASRBE transform a function of 'func(string)' signature
 // into tengo CallableFunc type.
-func funcASR(fn func(string)) tengo.CallableFunc {
-	return func(args ...tengo.Object) (tengo.Object, error) {
-		if len(args) != 1 {
-			return nil, tengo.ErrWrongNumArguments
-		}
-		s1, ok := tengo.ToString(args[0])
-		if !ok {
-			return nil, tengo.ErrInvalidArgumentType{
-				Name:     "first",
-				Expected: "string(compatible)",
-				Found:    args[0].TypeName(),
-			}
-		}
+// func funcASR(fn func(string)) tengo.CallableFunc {
+// 	return func(args ...tengo.Object) (tengo.Object, error) {
+// 		if len(args) != 1 {
+// 			return nil, tengo.ErrWrongNumArguments
+// 		}
+// 		s1, ok := tengo.ToString(args[0])
+// 		if !ok {
+// 			return nil, tengo.ErrInvalidArgumentType{
+// 				Name:     "first",
+// 				Expected: "string(compatible)",
+// 				Found:    args[0].TypeName(),
+// 			}
+// 		}
 
-		fn(s1)
-		return nil, nil
-	}
-}
+// 		fn(s1)
+// 		return nil, nil
+// 	}
+// }
 
 // aliasFunc is used to call the same tengo function using a different name
 func aliasFunc(obj tengo.Object, name string, src string) *tengo.UserFunction {
