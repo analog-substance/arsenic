@@ -27,7 +27,7 @@ const (
 	unreviewedFlag string = "Unreviewed"
 )
 
-// SyncOptions represents the different parts of host metadata to syn
+// SyncOptions represents the different parts of host metadata to sync
 type SyncOptions struct {
 	IPAddresses bool
 	Hostnames   bool
@@ -197,15 +197,13 @@ func NewHost(dir string) *Host {
 
 func (h *Host) SyncMetadata(options SyncOptions) error {
 	var metadata Metadata
-	if _, err := os.Stat(h.metadataFile()); !os.IsNotExist(err) {
-		jsonFile, err := os.Open(h.metadataFile())
+	if !util.FileExists(h.metadataFile()) {
+		bytes, err := os.ReadFile(h.metadataFile())
 		if err != nil {
 			return err
 		}
-		defer jsonFile.Close()
 
-		byteValue, _ := ioutil.ReadAll(jsonFile)
-		json.Unmarshal(byteValue, &metadata)
+		json.Unmarshal(bytes, &metadata)
 	} else if h.Metadata != nil {
 		metadata = *h.Metadata
 	} else {
@@ -361,7 +359,7 @@ func (host Host) SaveMetadata() {
 	}
 
 	if host.Metadata.changed {
-		err = ioutil.WriteFile(host.metadataFile(), out, 0644)
+		err = os.WriteFile(host.metadataFile(), out, 0644)
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -391,7 +389,7 @@ func (host Host) Hostnames() []string {
 }
 
 func (host Host) URLs() []string {
-	URLMap := map[string]bool{}
+	urlSet := set.NewStringSet()
 	httpProtocolRe := regexp.MustCompile(`^https?`)
 	for _, port := range host.Metadata.Ports {
 		proto := port.Service
@@ -404,37 +402,33 @@ func (host Host) URLs() []string {
 			proto = httpProtocolRe.FindString(port.Service)
 		}
 
-		URLPort := fmt.Sprintf(":%d", port.ID)
+		urlPort := fmt.Sprintf(":%d", port.ID)
 		if proto == "http" && port.ID == 80 || proto == "https" && port.ID == 443 {
-			URLPort = ""
+			urlPort = ""
 		}
 
-		URLMap[fmt.Sprintf("%s://%s%s", proto, host.Metadata.Name, URLPort)] = true
+		urlSet.Add(fmt.Sprintf("%s://%s%s", proto, host.Metadata.Name, urlPort))
 
 		if strings.HasPrefix(proto, "http") {
-			// we have an http or https port, we should llo through hostnames
+			// we have an http or https port, we should loop through hostnames
 			for _, hostname := range host.Metadata.Hostnames {
-				URLMap[fmt.Sprintf("%s://%s%s", proto, hostname, URLPort)] = true
+				urlSet.Add(fmt.Sprintf("%s://%s%s", proto, hostname, urlPort))
 			}
 		}
 	}
 
-	URLs := []string{}
-	for URL := range URLMap {
-		URLs = append(URLs, URL)
-	}
-	return URLs
+	return urlSet.StringSlice()
 }
 
 func (host Host) IPAddresses() []string {
-	IPAddressesFile := filepath.Join(host.Dir, "recon/ip-addresses.txt")
-	IPAddresses, err := util.ReadLines(IPAddressesFile)
+	ipAddressesFile := filepath.Join(host.Dir, "recon/ip-addresses.txt")
+	ipAddresses, err := util.ReadLines(ipAddressesFile)
 
-	if err != nil || len(IPAddresses) == 0 {
+	if err != nil || len(ipAddresses) == 0 {
 		return []string{}
 	}
 
-	ipSet := set.NewStringSet(IPAddresses)
+	ipSet := set.NewStringSet(ipAddresses)
 	return ipSet.SortedStringSlice()
 }
 
@@ -558,8 +552,8 @@ func GetByIp(ips ...string) []*Host {
 
 func getHostDirs() []string {
 	filePaths := []string{}
-	if _, err := os.Stat("hosts"); !os.IsNotExist(err) {
-		files, err := ioutil.ReadDir("hosts")
+	if !util.DirExists("hosts") {
+		files, err := os.ReadDir("hosts")
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -584,6 +578,7 @@ func (host Host) ipAddressesFile() string {
 }
 
 func (host Host) flags() []string {
+	// Make the auto flags configurable
 	flags := []string{}
 
 	checkGlob := func(glob string) bool {
@@ -653,7 +648,7 @@ func (host Host) ports() []Port {
 			continue
 		}
 
-		data, err := ioutil.ReadFile(file)
+		data, err := os.ReadFile(file)
 		if err != nil {
 			continue
 		}
