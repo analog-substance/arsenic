@@ -1,6 +1,7 @@
 package scope
 
 import (
+	"regexp"
 	"testing"
 )
 
@@ -9,7 +10,7 @@ func Test_scope_IsBlacklistedDomain(t *testing.T) {
 		domainsExplicitlyInScope       []string
 		rootDomainsExplicitlyInScope   []string
 		blacklistedRootDomains         []string
-		blacklistedDomains             []string
+		blacklistedDomainRegexps       []*regexp.Regexp
 		explicitDomainsLoaded          bool
 		hostIPsExplicitlyInScope       []string
 		hostIPsExplicitlyInScopeLoaded bool
@@ -18,7 +19,7 @@ func Test_scope_IsBlacklistedDomain(t *testing.T) {
 		domainsExplicitlyInScope:     []string{"www.example.com"},
 		rootDomainsExplicitlyInScope: []string{"example.com"},
 		blacklistedRootDomains:       []string{"example.net"},
-		blacklistedDomains:           []string{"blog.example.com"},
+		blacklistedDomainRegexps:     []*regexp.Regexp{regexp.MustCompile(regexp.QuoteMeta("blog.example.com"))},
 		explicitDomainsLoaded:        true,
 
 		hostIPsExplicitlyInScope:       []string{},
@@ -58,7 +59,7 @@ func Test_scope_IsBlacklistedDomain(t *testing.T) {
 				domainsExplicitlyInScope:       tt.fields.domainsExplicitlyInScope,
 				rootDomainsExplicitlyInScope:   tt.fields.rootDomainsExplicitlyInScope,
 				blacklistedRootDomains:         tt.fields.blacklistedRootDomains,
-				blacklistedDomains:             tt.fields.blacklistedDomains,
+				blacklistedDomainRegexps:       tt.fields.blacklistedDomainRegexps,
 				domainInfoLoaded:               tt.fields.explicitDomainsLoaded,
 				hostIPsExplicitlyInScope:       tt.fields.hostIPsExplicitlyInScope,
 				hostIPsExplicitlyInScopeLoaded: tt.fields.hostIPsExplicitlyInScopeLoaded,
@@ -75,7 +76,7 @@ func Test_scope_IsBlacklistedRootDomain(t *testing.T) {
 		domainsExplicitlyInScope       []string
 		rootDomainsExplicitlyInScope   []string
 		blacklistedRootDomains         []string
-		blacklistedDomains             []string
+		blacklistedDomainRegexps       []*regexp.Regexp
 		explicitDomainsLoaded          bool
 		hostIPsExplicitlyInScope       []string
 		hostIPsExplicitlyInScopeLoaded bool
@@ -85,7 +86,7 @@ func Test_scope_IsBlacklistedRootDomain(t *testing.T) {
 		domainsExplicitlyInScope:     []string{"www.example.com"},
 		rootDomainsExplicitlyInScope: []string{"example.com"},
 		blacklistedRootDomains:       []string{"example.net"},
-		blacklistedDomains:           []string{"blog.example.com"},
+		blacklistedDomainRegexps:     []*regexp.Regexp{regexp.MustCompile(regexp.QuoteMeta("blog.example.com"))},
 		explicitDomainsLoaded:        true,
 
 		hostIPsExplicitlyInScope:       []string{},
@@ -126,7 +127,7 @@ func Test_scope_IsBlacklistedRootDomain(t *testing.T) {
 				domainsExplicitlyInScope:       tt.fields.domainsExplicitlyInScope,
 				rootDomainsExplicitlyInScope:   tt.fields.rootDomainsExplicitlyInScope,
 				blacklistedRootDomains:         tt.fields.blacklistedRootDomains,
-				blacklistedDomains:             tt.fields.blacklistedDomains,
+				blacklistedDomainRegexps:       tt.fields.blacklistedDomainRegexps,
 				domainInfoLoaded:               tt.fields.explicitDomainsLoaded,
 				hostIPsExplicitlyInScope:       tt.fields.hostIPsExplicitlyInScope,
 				hostIPsExplicitlyInScopeLoaded: tt.fields.hostIPsExplicitlyInScopeLoaded,
@@ -143,7 +144,7 @@ func Test_scope_IsDomainExplicitlyInScope(t *testing.T) {
 		domainsExplicitlyInScope       []string
 		rootDomainsExplicitlyInScope   []string
 		blacklistedRootDomains         []string
-		blacklistedDomains             []string
+		blacklistedDomainRegexps       []*regexp.Regexp
 		explicitDomainsLoaded          bool
 		hostIPsExplicitlyInScope       []string
 		hostIPsExplicitlyInScopeLoaded bool
@@ -152,7 +153,7 @@ func Test_scope_IsDomainExplicitlyInScope(t *testing.T) {
 		domainsExplicitlyInScope:     []string{"www.example.com"},
 		rootDomainsExplicitlyInScope: []string{"example.com"},
 		blacklistedRootDomains:       []string{"example.net"},
-		blacklistedDomains:           []string{"blog.example.com"},
+		blacklistedDomainRegexps:     []*regexp.Regexp{regexp.MustCompile(regexp.QuoteMeta("blog.example.com"))},
 		explicitDomainsLoaded:        true,
 
 		hostIPsExplicitlyInScope:       []string{},
@@ -186,7 +187,7 @@ func Test_scope_IsDomainExplicitlyInScope(t *testing.T) {
 				domainsExplicitlyInScope:       tt.fields.domainsExplicitlyInScope,
 				rootDomainsExplicitlyInScope:   tt.fields.rootDomainsExplicitlyInScope,
 				blacklistedRootDomains:         tt.fields.blacklistedRootDomains,
-				blacklistedDomains:             tt.fields.blacklistedDomains,
+				blacklistedDomainRegexps:       tt.fields.blacklistedDomainRegexps,
 				domainInfoLoaded:               tt.fields.explicitDomainsLoaded,
 				hostIPsExplicitlyInScope:       tt.fields.hostIPsExplicitlyInScope,
 				hostIPsExplicitlyInScopeLoaded: tt.fields.hostIPsExplicitlyInScopeLoaded,
@@ -203,7 +204,7 @@ func Test_scope_IsIPInScope(t *testing.T) {
 		domainsExplicitlyInScope       []string
 		rootDomainsExplicitlyInScope   []string
 		blacklistedRootDomains         []string
-		blacklistedDomains             []string
+		blacklistedDomainRegexps       []*regexp.Regexp
 		explicitDomainsLoaded          bool
 		hostIPsExplicitlyInScope       []string
 		hostIPsExplicitlyInScopeLoaded bool
@@ -212,7 +213,7 @@ func Test_scope_IsIPInScope(t *testing.T) {
 		domainsExplicitlyInScope:     []string{"www.example.com"},
 		rootDomainsExplicitlyInScope: []string{"example.com"},
 		blacklistedRootDomains:       []string{"example.net"},
-		blacklistedDomains:           []string{"blog.example.com"},
+		blacklistedDomainRegexps:     []*regexp.Regexp{regexp.MustCompile(regexp.QuoteMeta("blog.example.com"))},
 		explicitDomainsLoaded:        true,
 
 		hostIPsExplicitlyInScope:       []string{"10.10.10.10"},
@@ -246,7 +247,7 @@ func Test_scope_IsIPInScope(t *testing.T) {
 				domainsExplicitlyInScope:       tt.fields.domainsExplicitlyInScope,
 				rootDomainsExplicitlyInScope:   tt.fields.rootDomainsExplicitlyInScope,
 				blacklistedRootDomains:         tt.fields.blacklistedRootDomains,
-				blacklistedDomains:             tt.fields.blacklistedDomains,
+				blacklistedDomainRegexps:       tt.fields.blacklistedDomainRegexps,
 				domainInfoLoaded:               tt.fields.explicitDomainsLoaded,
 				hostIPsExplicitlyInScope:       tt.fields.hostIPsExplicitlyInScope,
 				hostIPsExplicitlyInScopeLoaded: tt.fields.hostIPsExplicitlyInScopeLoaded,
@@ -263,7 +264,7 @@ func Test_scope_IsRootDomainInScope(t *testing.T) {
 		domainsExplicitlyInScope       []string
 		rootDomainsExplicitlyInScope   []string
 		blacklistedRootDomains         []string
-		blacklistedDomains             []string
+		blacklistedDomainRegexps       []*regexp.Regexp
 		explicitDomainsLoaded          bool
 		hostIPsExplicitlyInScope       []string
 		hostIPsExplicitlyInScopeLoaded bool
@@ -272,7 +273,7 @@ func Test_scope_IsRootDomainInScope(t *testing.T) {
 		domainsExplicitlyInScope:     []string{"www.example.com"},
 		rootDomainsExplicitlyInScope: []string{"example.com"},
 		blacklistedRootDomains:       []string{"example.net"},
-		blacklistedDomains:           []string{"blog.example.com"},
+		blacklistedDomainRegexps:     []*regexp.Regexp{regexp.MustCompile(regexp.QuoteMeta("blog.example.com"))},
 		explicitDomainsLoaded:        true,
 
 		hostIPsExplicitlyInScope:       []string{},
@@ -306,7 +307,7 @@ func Test_scope_IsRootDomainInScope(t *testing.T) {
 				domainsExplicitlyInScope:       tt.fields.domainsExplicitlyInScope,
 				rootDomainsExplicitlyInScope:   tt.fields.rootDomainsExplicitlyInScope,
 				blacklistedRootDomains:         tt.fields.blacklistedRootDomains,
-				blacklistedDomains:             tt.fields.blacklistedDomains,
+				blacklistedDomainRegexps:       tt.fields.blacklistedDomainRegexps,
 				domainInfoLoaded:               tt.fields.explicitDomainsLoaded,
 				hostIPsExplicitlyInScope:       tt.fields.hostIPsExplicitlyInScope,
 				hostIPsExplicitlyInScopeLoaded: tt.fields.hostIPsExplicitlyInScopeLoaded,
@@ -323,7 +324,7 @@ func Test_scope_IsDomainInScope(t *testing.T) {
 		domainsExplicitlyInScope       []string
 		rootDomainsExplicitlyInScope   []string
 		blacklistedRootDomains         []string
-		blacklistedDomains             []string
+		blacklistedDomainRegexps       []*regexp.Regexp
 		explicitDomainsLoaded          bool
 		hostIPsExplicitlyInScope       []string
 		hostIPsExplicitlyInScopeLoaded bool
@@ -332,7 +333,7 @@ func Test_scope_IsDomainInScope(t *testing.T) {
 		domainsExplicitlyInScope:     []string{"www.example.com", "target.subdomain.example.net"},
 		rootDomainsExplicitlyInScope: []string{"example.com"},
 		blacklistedRootDomains:       []string{"example.net"},
-		blacklistedDomains:           []string{"blog.example.com"},
+		blacklistedDomainRegexps:     []*regexp.Regexp{regexp.MustCompile(regexp.QuoteMeta("blog.example.com"))},
 		explicitDomainsLoaded:        true,
 
 		hostIPsExplicitlyInScope:       []string{},
@@ -403,7 +404,7 @@ func Test_scope_IsDomainInScope(t *testing.T) {
 				domainsExplicitlyInScope:       tt.fields.domainsExplicitlyInScope,
 				rootDomainsExplicitlyInScope:   tt.fields.rootDomainsExplicitlyInScope,
 				blacklistedRootDomains:         tt.fields.blacklistedRootDomains,
-				blacklistedDomains:             tt.fields.blacklistedDomains,
+				blacklistedDomainRegexps:       tt.fields.blacklistedDomainRegexps,
 				domainInfoLoaded:               tt.fields.explicitDomainsLoaded,
 				hostIPsExplicitlyInScope:       tt.fields.hostIPsExplicitlyInScope,
 				hostIPsExplicitlyInScopeLoaded: tt.fields.hostIPsExplicitlyInScopeLoaded,

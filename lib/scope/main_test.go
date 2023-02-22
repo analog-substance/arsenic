@@ -1,7 +1,9 @@
 package scope
 
 import (
+	"os"
 	"reflect"
+	"regexp"
 	"testing"
 )
 
@@ -10,7 +12,7 @@ func getTestScope() *scope {
 		domainsExplicitlyInScope:     []string{"www.example.com", "target.subdomain.example.net"},
 		rootDomainsExplicitlyInScope: []string{"example.com"},
 		blacklistedRootDomains:       []string{"example.net"},
-		blacklistedDomains:           []string{"blog.example.com"},
+		blacklistedDomainRegexps:     []*regexp.Regexp{regexp.MustCompile(regexp.QuoteMeta("blog.example.com"))},
 		domainInfoLoaded:             true,
 
 		hostIPsExplicitlyInScope:       []string{"10.10.10.10"},
@@ -19,7 +21,6 @@ func getTestScope() *scope {
 }
 
 func TestGetRootDomains(t *testing.T) {
-
 	type args struct {
 		domains          []string
 		pruneBlacklisted bool
@@ -51,32 +52,110 @@ func TestGetRootDomains(t *testing.T) {
 	}
 }
 
-//func TestGetScope(t *testing.T) {
-//	asScope = getTestScope()
-//	type args struct {
-//		scopeType string
-//	}
-//	tests := []struct {
-//		name    string
-//		args    args
-//		want    []string
-//		wantErr bool
-//	}{
-//		// TODO: Add test cases.
-//	}
-//	for _, tt := range tests {
-//		t.Run(tt.name, func(t *testing.T) {
-//			got, err := GetScope(tt.args.scopeType)
-//			if (err != nil) != tt.wantErr {
-//				t.Errorf("GetScope() error = %v, wantErr %v", err, tt.wantErr)
-//				return
-//			}
-//			if !reflect.DeepEqual(got, tt.want) {
-//				t.Errorf("GetScope() got = %v, want %v", got, tt.want)
-//			}
-//		})
-//	}
-//}
+// func TestGetScope(t *testing.T) {
+// 	asScope = getTestScope()
+// 	type args struct {
+// 		scopeType string
+// 	}
+// 	tests := []struct {
+// 		name    string
+// 		setup   func()
+// 		args    args
+// 		want    []string
+// 		wantErr bool
+// 	}{
+// 		{
+// 			name: "",
+// 			setup: func() {
+// 				os.WriteFile("scope-domains.txt", []byte("www.example.com\ntest.example.com\nex.com"), 0644)
+// 				os.WriteFile("scope-domains-1.txt", []byte("1.1.example.com\n1.2.example.com"), 0644)
+// 				os.WriteFile("scope-domains-2.txt", []byte("2.1.example.com\nblacklist.ex.com"), 0644)
+// 			},
+// 			args: args{
+// 				scopeType: "domains",
+// 			},
+// 			want: []string{},
+// 		},
+// 	}
+
+// 	t.Cleanup(func() {
+// 		os.RemoveAll("scope-domains.txt")
+// 		os.RemoveAll("scope-domains-1.txt")
+// 		os.RemoveAll("scope-domains-2.txt")
+// 	})
+// 	for _, tt := range tests {
+// 		t.Run(tt.name, func(t *testing.T) {
+// 			if tt.setup != nil {
+// 				tt.setup()
+// 			}
+
+// 			got, err := GetScope(tt.args.scopeType)
+// 			if (err != nil) != tt.wantErr {
+// 				t.Errorf("GetScope() error = %v, wantErr %v", err, tt.wantErr)
+// 				return
+// 			}
+// 			if !reflect.DeepEqual(got, tt.want) {
+// 				t.Errorf("GetScope() got = %v, want %v", got, tt.want)
+// 			}
+// 		})
+// 	}
+// }
+
+func TestGetConstScope(t *testing.T) {
+	type args struct {
+		scopeType string
+	}
+	tests := []struct {
+		name    string
+		setup   func()
+		args    args
+		want    []string
+		wantErr bool
+	}{
+		{
+			name: "No scope file",
+			args: args{
+				scopeType: "test",
+			},
+			wantErr: true,
+		},
+		{
+			name: "Scope file with dups",
+			setup: func() {
+				os.WriteFile("scope-domains.txt", []byte("*.www.example.com\ntest.example.com\ntest.example.com\nblah.example.com"), 0644)
+			},
+			args: args{
+				scopeType: "domains",
+			},
+			want: []string{
+				"blah.example.com",
+				"test.example.com",
+				"www.example.com",
+			},
+		},
+	}
+
+	t.Cleanup(func() {
+		os.RemoveAll("scope-domains.txt")
+	})
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.setup != nil {
+				tt.setup()
+			}
+
+			got, err := GetConstScope(tt.args.scopeType)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetConstScope() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("GetConstScope() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
 
 func TestIsInScope(t *testing.T) {
 	asScope = getTestScope()
