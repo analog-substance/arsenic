@@ -61,7 +61,9 @@ func GetContentDiscovery(c *gin.Context) {
 
 	host := host.GetFirst(request.Host)
 	if host == nil {
-		controller.Error(c, errors.New("host not found"))
+		err = errors.New("host not found")
+		log.Printf("getContentDiscovery: %v\n", err)
+		controller.Error(c, err)
 		return
 	}
 

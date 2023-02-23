@@ -552,7 +552,7 @@ func GetByIp(ips ...string) []*Host {
 
 func getHostDirs() []string {
 	filePaths := []string{}
-	if !util.DirExists("hosts") {
+	if _, err := os.Stat("hosts"); !os.IsNotExist(err) {
 		files, err := os.ReadDir("hosts")
 		if err != nil {
 			fmt.Println(err)
