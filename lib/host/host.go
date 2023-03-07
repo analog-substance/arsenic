@@ -197,7 +197,7 @@ func NewHost(dir string) *Host {
 
 func (h *Host) SyncMetadata(options SyncOptions) error {
 	var metadata Metadata
-	if !util.FileExists(h.metadataFile()) {
+	if util.FileExists(h.metadataFile()) {
 		bytes, err := os.ReadFile(h.metadataFile())
 		if err != nil {
 			return err
