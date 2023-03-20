@@ -62,12 +62,16 @@ listCmd.set_run(func(cmd, args) {
 runCmd := cobra.cmd("run", "Lists the hosts that need to run the Nuclei CVE templates.")
 runCmd.flags.stringp("host", "H", "", "Host to run templates on.")
 runCmd.flags.stringp("proxy", "p", "", "The http/socks5 proxy to use")
+runCmd.flags.string("iserver", "", "Interactsh server URL")
+runCmd.flags.string("itoken", "", "Interactsh server authentication token")
 rootCmd.add_command(runCmd)
 
 runCmd.set_run(func(cmd, args) {
   targetHost := undefined
   targetHostName := cmd.flags.get_string("host")
   proxy := cmd.flags.get_string("proxy")
+  interactServer := cmd.flags.get_string("iserver")
+  interactToken := cmd.flags.get_string("itoken")
 
   manual := targetHostName != ""
 
@@ -110,9 +114,17 @@ runCmd.set_run(func(cmd, args) {
     tempDir := os2.mkdir_temp(os.temp_dir(), "nuclei-cves-*")
     check_err(tempDir)
 
-    nucleiArgs := ["nuclei", "-project", "-project-path", tempDir, "-t", "cves", "-o", outputName, "-ni"]
+    nucleiArgs := ["nuclei", "-project", "-project-path", tempDir, "-t", "cves", "-o", outputName]
     if proxy != "" {
       nucleiArgs = append(nucleiArgs, "-p", proxy)
+    }
+
+    if interactServer != "" {
+      nucleiArgs = append(nucleiArgs, "-iserver", interactServer)
+    }
+
+    if interactToken != "" {
+      nucleiArgs = append(nucleiArgs, "-itoken", interactToken)
     }
 
     hostURLs := host.urls()
