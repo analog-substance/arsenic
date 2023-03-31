@@ -422,6 +422,10 @@ func makeNmapScanner(s *Script) (*NmapScanner, error) {
 			Name:  "args",
 			Value: stdlib.FuncARSs(nmapScanner.Value.Args),
 		},
+		"custom_args": &tengo.UserFunction{
+			Name:  "custom_args",
+			Value: nmapScanner.addOptionASv(nmap.WithCustomArguments),
+		},
 		"privileged": &tengo.UserFunction{
 			Name:  "privileged",
 			Value: nmapScanner.addOptionA(nmap.WithPrivileged),
