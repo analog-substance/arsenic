@@ -11,6 +11,9 @@ fi
 
 mkdir -p "$SCREENSHOT_DIR"
 
+SCREENSHOT_LOG="$SCREENSHOT_DIR/markdown-$USER-log.md"
+touch $SCREENSHOT_LOG
+
 name="$@"
 if [ -z "$name" ]; then
   if which rofi > /dev/null 2>&1 ; then
@@ -38,11 +41,12 @@ else
 fi
 
 echo "![$name]($(echo -n "$SCREENSHOT_PATH" | sed 's|'"$SCREENSHOT_DIR"'|/static|'))" | xclip -selection clipboard -target text/plain -i
+echo "![$name]($(echo -n "$SCREENSHOT_PATH" | sed 's|'"$SCREENSHOT_DIR"'|/static|'))" >> $SCREENSHOT_LOG
 
 if [ -t 1 ] ; then
   echo "[+] Saved to $SCREENSHOT_PATH"
-  echo "[+] $SCREENSHOT_PATH copied to clipboard"
+  echo "[+] $SCREENSHOT_PATH copied to clipboard and logged"
 else
   # notify-send "Saved to $SCREENSHOT_PATH"
-  notify-send "Markdown copied to clipboard"
+  notify-send "Markdown copied to clipboard and logged"
 fi
