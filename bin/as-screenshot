@@ -40,8 +40,7 @@ else
   maim -s -u --format=png "$SCREENSHOT_PATH"
 fi
 
-echo "![$name]($(echo -n "$SCREENSHOT_PATH" | sed 's|'"$SCREENSHOT_DIR"'|/static|'))" | xclip -selection clipboard -target text/plain -i
-echo "![$name]($(echo -n "$SCREENSHOT_PATH" | sed 's|'"$SCREENSHOT_DIR"'|/static|'))" >> $SCREENSHOT_LOG
+echo "![$name]($(echo -n "$SCREENSHOT_PATH" | sed 's|'"$SCREENSHOT_DIR"'|/static|'))" | tee -a $SCREENSHOT_LOG | xclip -selection clipboard -target text/plain -i
 
 if [ -t 1 ] ; then
   echo "[+] Saved to $SCREENSHOT_PATH"
