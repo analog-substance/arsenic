@@ -1,11 +1,8 @@
 package util
 
 import (
-	"bufio"
 	"context"
 	"fmt"
-	"io"
-	"io/fs"
 	"log"
 	"math/rand"
 	"net"
@@ -20,11 +17,6 @@ import (
 	"time"
 
 	"github.com/spf13/viper"
-)
-
-const (
-	DefaultDirPerms  fs.FileMode = 0755
-	DefaultFilePerms fs.FileMode = 0644
 )
 
 type ScriptConfig struct {
@@ -175,97 +167,6 @@ func ExecutePhaseScripts(phase string, args []string, dryRun bool) {
 		timeToSleep := rand.Intn(maxWait-minWait) + minWait
 		time.Sleep(time.Duration(timeToSleep) * time.Second)
 	}
-}
-
-func ReadLines(path string) ([]string, error) {
-	file, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-
-	var lines []string
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		lines = append(lines, scanner.Text())
-	}
-	return lines, scanner.Err()
-}
-
-func ReadFileLineByLine(path string) (chan string, error) {
-	file, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-
-	// Not sure if this is the best way to re-use ReadLineByLine
-	c := make(chan string)
-	go func() {
-		defer file.Close()
-
-		for s := range ReadLineByLine(file) {
-			c <- s
-		}
-		close(c)
-	}()
-
-	return c, nil
-}
-
-func ReadLineByLine(r io.Reader) chan string {
-	c := make(chan string)
-	go func() {
-		scanner := bufio.NewScanner(r)
-		for scanner.Scan() {
-			c <- scanner.Text()
-		}
-		close(c)
-	}()
-
-	return c
-}
-
-func FileExists(filename string) bool {
-	info, err := os.Stat(filename)
-	if os.IsNotExist(err) {
-		return false
-	}
-	return !info.IsDir()
-}
-
-func DirExists(dir string) bool {
-	info, err := os.Stat(dir)
-	if os.IsNotExist(err) {
-		return false
-	}
-	return info.IsDir()
-}
-
-func Mkdir(dirs ...string) []error {
-	var errors []error
-	for _, dir := range dirs {
-		err := os.MkdirAll(dir, DefaultDirPerms)
-		if err != nil {
-			errors = append(errors, err)
-		}
-	}
-	return errors
-}
-
-func WriteLines(path string, lines []string) error {
-	file, err := os.OpenFile(path, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, DefaultFilePerms)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	writer := bufio.NewWriter(file)
-	for _, data := range lines {
-		_, _ = writer.WriteString(data + "\n")
-	}
-
-	writer.Flush()
-	return nil
 }
 
 func StringSliceEquals(a []string, b []string) bool {

@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"regexp"
 
-	"github.com/analog-substance/arsenic/lib/util"
+	"github.com/analog-substance/fileutil"
 	"github.com/analog-substance/tengo/v2"
 	"github.com/analog-substance/tengo/v2/stdlib"
 )
@@ -31,7 +31,7 @@ func NewScript(path string) (*Script, error) {
 		name:   filepath.Base(path),
 		ctx:    ctx,
 		cancel: cancel,
-		isGit:  util.DirExists(".git"),
+		isGit:  fileutil.DirExists(".git"),
 	}
 
 	// Might want to change this so it just removes any shebang

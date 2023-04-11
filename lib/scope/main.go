@@ -9,6 +9,7 @@ import (
 
 	"github.com/analog-substance/arsenic/lib/set"
 	"github.com/analog-substance/arsenic/lib/util"
+	"github.com/analog-substance/fileutil"
 	"golang.org/x/net/publicsuffix"
 )
 
@@ -49,14 +50,14 @@ func GetScope(scopeType string) ([]string, error) {
 	scope := set.NewStringSet()
 
 	for _, filename := range files {
-		c, err := util.ReadFileLineByLine(filename)
+		lines, err := fileutil.ReadLineByLine(filename)
 		if err != nil {
 			return nil, err
 		}
 
-		for line := range c {
+		for line := range lines {
 			line = normalizeScope(line, scopeType)
-			if getScope().IsDomainInScope(line, false) {
+			if IsInScope(line, false) {
 				scope.Add(line)
 			}
 		}
@@ -76,12 +77,12 @@ func GetConstScope(scopeType string) ([]string, error) {
 	file := fmt.Sprintf("scope-%s.txt", scopeType)
 	scope := set.NewStringSet()
 
-	c, err := util.ReadFileLineByLine(file)
+	lines, err := fileutil.ReadLineByLine(file)
 	if err != nil {
 		return nil, err
 	}
 
-	for line := range c {
+	for line := range lines {
 		scope.Add(normalizeScope(line, scopeType))
 	}
 

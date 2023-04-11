@@ -12,7 +12,7 @@ import (
 	"strings"
 
 	"github.com/analog-substance/arsenic/lib/set"
-	"github.com/analog-substance/arsenic/lib/util"
+	"github.com/analog-substance/fileutil"
 	"github.com/spf13/viper"
 )
 
@@ -40,7 +40,7 @@ func GetWordlists(wordlistType string) []string {
 	for _, wordlist := range wordlists {
 		for _, dir := range dirs {
 			wordlistPath := path.Join(dir, wordlist)
-			if util.FileExists(wordlistPath) {
+			if fileutil.FileExists(wordlistPath) {
 				wordlistPaths = append(wordlistPaths, wordlistPath)
 				break
 			}

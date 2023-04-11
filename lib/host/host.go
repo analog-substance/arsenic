@@ -14,6 +14,7 @@ import (
 
 	"github.com/analog-substance/arsenic/lib/scope"
 	"github.com/analog-substance/arsenic/lib/set"
+	"github.com/analog-substance/fileutil"
 	"github.com/spf13/viper"
 
 	"github.com/Ullaakut/nmap/v2"
@@ -197,7 +198,7 @@ func NewHost(dir string) *Host {
 
 func (h *Host) SyncMetadata(options SyncOptions) error {
 	var metadata Metadata
-	if util.FileExists(h.metadataFile()) {
+	if fileutil.FileExists(h.metadataFile()) {
 		bytes, err := os.ReadFile(h.metadataFile())
 		if err != nil {
 			return err
@@ -346,7 +347,7 @@ func AddHost(hostnames []string, ips []string) (*Host, error) {
 
 func (host Host) SaveMetadata() {
 	reconDir := filepath.Join(host.Dir, "recon")
-	util.Mkdir(reconDir)
+	fileutil.MkdirAll(reconDir)
 
 	out, err := json.MarshalIndent(host.Metadata, "", "  ")
 	if err != nil {
@@ -364,12 +365,12 @@ func (host Host) SaveMetadata() {
 			fmt.Println(err)
 		}
 
-		err = util.WriteLines(host.hostnamesFile(), host.Metadata.Hostnames)
+		err = fileutil.WriteLines(host.hostnamesFile(), host.Metadata.Hostnames)
 		if err != nil {
 			fmt.Println(err)
 		}
 
-		err = util.WriteLines(host.ipAddressesFile(), host.Metadata.IPAddresses)
+		err = fileutil.WriteLines(host.ipAddressesFile(), host.Metadata.IPAddresses)
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -378,7 +379,7 @@ func (host Host) SaveMetadata() {
 
 func (host Host) Hostnames() []string {
 	hostnamesFile := filepath.Join(host.Dir, "recon/hostnames.txt")
-	hostnames, err := util.ReadLines(hostnamesFile)
+	hostnames, err := fileutil.ReadLines(hostnamesFile)
 
 	if err != nil || len(hostnames) == 0 {
 		return []string{}
@@ -422,7 +423,7 @@ func (host Host) URLs() []string {
 
 func (host Host) IPAddresses() []string {
 	ipAddressesFile := filepath.Join(host.Dir, "recon/ip-addresses.txt")
-	ipAddresses, err := util.ReadLines(ipAddressesFile)
+	ipAddresses, err := fileutil.ReadLines(ipAddressesFile)
 
 	if err != nil || len(ipAddresses) == 0 {
 		return []string{}

@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/analog-substance/arsenic/lib/util"
+	"github.com/analog-substance/fileutil"
 	"github.com/analog-substance/tengo/v2"
 	"github.com/andrew-d/go-termutil"
 )
@@ -50,7 +50,7 @@ func (s *Script) writeFile(args ...tengo.Object) (tengo.Object, error) {
 		}
 	}
 
-	err := os.WriteFile(path, []byte(data), util.DefaultFilePerms)
+	err := os.WriteFile(path, []byte(data), fileutil.DefaultFilePerms)
 	if err != nil {
 		return toError(err), nil
 	}
@@ -89,7 +89,7 @@ func (s *Script) writeFileLines(args ...tengo.Object) (tengo.Object, error) {
 	}
 
 	data := strings.Join(lines, "\n")
-	err = os.WriteFile(path, []byte(data), util.DefaultFilePerms)
+	err = os.WriteFile(path, []byte(data), fileutil.DefaultFilePerms)
 	if err != nil {
 		return toError(err), nil
 	}
@@ -143,7 +143,7 @@ func (s *Script) regexReplaceFile(args ...tengo.Object) (tengo.Object, error) {
 
 	replaced := re.ReplaceAll(data, []byte(replace))
 
-	err = os.WriteFile(path, replaced, util.DefaultFilePerms)
+	err = os.WriteFile(path, replaced, fileutil.DefaultFilePerms)
 	if err != nil {
 		return toError(err), nil
 	}
@@ -160,7 +160,7 @@ func (s *Script) mkdirAll(args ...tengo.Object) (tengo.Object, error) {
 
 	for _, obj := range args {
 		path, _ := tengo.ToString(obj)
-		err := os.MkdirAll(path, util.DefaultDirPerms)
+		err := os.MkdirAll(path, fileutil.DefaultDirPerms)
 		if err != nil {
 			return toError(err), nil
 		}
@@ -220,7 +220,7 @@ func (s *Script) readFileLines(args ...tengo.Object) (tengo.Object, error) {
 		}
 	}
 
-	lines, err := util.ReadLines(path)
+	lines, err := fileutil.ReadLines(path)
 	if err != nil {
 		return toError(err), nil
 	}

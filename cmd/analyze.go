@@ -13,9 +13,10 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/analog-substance/arsenic/lib/scope"
+	"github.com/analog-substance/fileutil"
+	"github.com/analog-substance/fileutil/grep"
 
 	"github.com/ahmetb/go-linq/v3"
-	"github.com/analog-substance/arsenic/lib/grep"
 	"github.com/analog-substance/arsenic/lib/host"
 	"github.com/analog-substance/arsenic/lib/set"
 	"github.com/analog-substance/arsenic/lib/util"
@@ -81,20 +82,20 @@ func newService() *service {
 
 func (svc *service) save(baseDir string) {
 	reconDir := filepath.Join(baseDir, "recon")
-	util.Mkdir(reconDir)
+	fileutil.MkdirAll(reconDir)
 
 	if svc.diffs.Length() > 0 {
-		err := util.WriteLines(filepath.Join(baseDir, "domains-with-resolv-differences"), svc.diffs.SortedStringSlice())
+		err := fileutil.WriteLines(filepath.Join(baseDir, "domains-with-resolv-differences"), svc.diffs.SortedStringSlice())
 		if err != nil {
 			log.Fatalln(err)
 		}
 	}
 
-	err := util.WriteLines(filepath.Join(reconDir, "other-hostnames.txt"), svc.hostnames.SortedStringSlice())
+	err := fileutil.WriteLines(filepath.Join(reconDir, "other-hostnames.txt"), svc.hostnames.SortedStringSlice())
 	if err != nil {
 		log.Fatalln(err)
 	}
-	err = util.WriteLines(filepath.Join(reconDir, "ip-addresses.txt"), svc.ipAddresses.SortedStringSlice())
+	err = fileutil.WriteLines(filepath.Join(reconDir, "ip-addresses.txt"), svc.ipAddresses.SortedStringSlice())
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -205,7 +206,7 @@ This will create a single host for hostnames that resolve to the same IPs`,
 		// util.ExecScript("as-analyze-hosts", scriptArgs)
 
 		os.RemoveAll(analyzeDir)
-		util.Mkdir(filepath.Join(analyzeDir, "services"), "hosts")
+		fileutil.MkdirAll(filepath.Join(analyzeDir, "services"), "hosts")
 
 		resolvResults, err := getResolvResults()
 		if err != nil {
@@ -303,7 +304,7 @@ This will create a single host for hostnames that resolve to the same IPs`,
 		if !nmapFlag {
 			fmt.Println("\n[+] IP processing started")
 
-			scopeIps, err := util.ReadLines("scope-ips.txt")
+			scopeIps, err := fileutil.ReadLines("scope-ips.txt")
 			if err != nil {
 				fmt.Println(err)
 				return
@@ -348,12 +349,12 @@ func getResolvResults() ([]string, error) {
 	addressRegex := regexp.MustCompile("address|is an alias for")
 	files, _ := filepath.Glob("recon/domains/*/resolv-domains.txt")
 	for _, file := range files {
-		c, err := grep.LineByLine(file, addressRegex)
+		lines, err := grep.LineByLine(file, addressRegex)
 		if err != nil {
 			return nil, err
 		}
 
-		for line := range c {
+		for line := range lines {
 			stringSet.Add(line)
 		}
 	}
@@ -470,7 +471,7 @@ func reviewDomains(resolvResults []string) {
 				domainCDNAliasMap[domain] = akIpResolvIP
 			}
 
-		} else if util.FileExists(resolvIpsFile) {
+		} else if fileutil.FileExists(resolvIpsFile) {
 			// I doubt we ever get to here, need to do more testing
 			re := regexp.MustCompile(fmt.Sprintf("^%s", regexp.QuoteMeta(ip)))
 			matches := grep.Matches(resolvIpsFile, re, 1)
@@ -525,19 +526,19 @@ func reviewDomains(resolvResults []string) {
 	for domain, ips := range ipsByDomain {
 		domainFile := fmt.Sprintf("%s/resolv-domain-%s.txt", analyzeDir, domain)
 
-		util.WriteLines(domainFile, ips.SortedStringSlice())
+		fileutil.WriteLines(domainFile, ips.SortedStringSlice())
 	}
 
 	for ip, domains := range domainsByIp {
 		ipFile := fmt.Sprintf("%s/resolv-ip-%s.txt", analyzeDir, ip)
 
-		util.WriteLines(ipFile, domains.SortedStringSlice())
+		fileutil.WriteLines(ipFile, domains.SortedStringSlice())
 	}
 
 	for ipResolvDomain, ips := range ipsByIpResolvDomain {
 		ipResolvDomainFile := fmt.Sprintf("%s/resolv-domain-%s.txt", analyzeDir, ipResolvDomain)
 
-		util.WriteLines(ipResolvDomainFile, ips.SortedStringSlice())
+		fileutil.WriteLines(ipResolvDomainFile, ips.SortedStringSlice())
 	}
 }
 
@@ -551,7 +552,7 @@ func createCDNRefs(CDNDomain string) {
 		}
 		CDNDomains := CDNDomainSet.SortedStringSlice()
 
-		util.WriteLines(filepath.Join(analyzeDir, fmt.Sprintf("%s-domains.txt", CDNDomain)), CDNDomains)
+		fileutil.WriteLines(filepath.Join(analyzeDir, fmt.Sprintf("%s-domains.txt", CDNDomain)), CDNDomains)
 
 		//firstCfDomain := ""
 		for _, CDNDomain := range CDNDomains {

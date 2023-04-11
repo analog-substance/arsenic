@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/analog-substance/arsenic/lib/engine"
-	"github.com/analog-substance/arsenic/lib/util"
+	"github.com/analog-substance/fileutil"
 	"github.com/google/shlex"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -52,7 +52,7 @@ func init() {
 	scriptCmd.Flags().StringP("name", "n", "", "Name of the script to run")
 	scriptCmd.RegisterFlagCompletionFunc("name", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		scriptsDir := viper.GetString("scripts-directory")
-		if !util.DirExists(scriptsDir) {
+		if !fileutil.DirExists(scriptsDir) {
 			return nil, cobra.ShellCompDirectiveError
 		}
 

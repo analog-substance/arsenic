@@ -8,6 +8,7 @@ import (
 	"os/exec"
 
 	"github.com/analog-substance/arsenic/lib/util"
+	"github.com/analog-substance/fileutil"
 	"github.com/analog-substance/tengo/v2"
 )
 
@@ -169,7 +170,7 @@ func (s *Script) add(path string) error {
 }
 
 func (s *Script) lock(lockFile string, msg string) error {
-	if util.FileExists(lockFile) {
+	if fileutil.FileExists(lockFile) {
 		util.LogWarn("can't lock a file that exists")
 		s.stop()
 		return nil
@@ -186,7 +187,7 @@ func (s *Script) lock(lockFile string, msg string) error {
 	_, _ = r.Read(b)
 
 	content := fmt.Sprintf("lock::%s", base64.RawURLEncoding.EncodeToString(b))
-	err = os.WriteFile(lockFile, []byte(content), util.DefaultFilePerms)
+	err = fileutil.WriteString(lockFile, content)
 	if err != nil {
 		return err
 	}

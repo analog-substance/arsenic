@@ -3,7 +3,7 @@ package engine
 import (
 	"path/filepath"
 
-	"github.com/analog-substance/arsenic/lib/util"
+	"github.com/analog-substance/fileutil"
 	"github.com/analog-substance/tengo/v2"
 	"github.com/bmatcuk/doublestar/v4"
 )
@@ -49,7 +49,7 @@ func (s *Script) fileExists(args ...tengo.Object) (tengo.Object, error) {
 	}
 
 	obj := tengo.TrueValue
-	if !util.FileExists(path) {
+	if !fileutil.FileExists(path) {
 		obj = tengo.FalseValue
 	}
 
@@ -71,7 +71,7 @@ func (s *Script) dirExists(args ...tengo.Object) (tengo.Object, error) {
 	}
 
 	obj := tengo.TrueValue
-	if !util.DirExists(path) {
+	if !fileutil.DirExists(path) {
 		obj = tengo.FalseValue
 	}
 
