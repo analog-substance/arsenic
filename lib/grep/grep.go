@@ -9,19 +9,29 @@ import (
 )
 
 // LineByLine passes each line of the file matching the regex to the specified function
-func LineByLine(path string, re *regexp.Regexp, action func(line string)) error {
-	err := util.ReadLineByLine(path, func(line string) {
-		if re.MatchString(line) {
-			action(line)
+func LineByLine(path string, re *regexp.Regexp) (chan string, error) {
+	lineChan, err := util.ReadFileLineByLine(path)
+	if err != nil {
+		return nil, err
+	}
+
+	matchChan := make(chan string)
+	go func() {
+		for line := range lineChan {
+			if re.MatchString(line) {
+				matchChan <- line
+			}
 		}
-	})
-	return err
+	}()
+
+	return matchChan, nil
 }
 
 // Matches returns maximum n number of matches from the file.
-//   n > 0: at most n matches
-//   n == 0: the result is nil (zero matches)
-//   n < 0: all matches
+//
+//	n > 0: at most n matches
+//	n == 0: the result is nil (zero matches)
+//	n < 0: all matches
 func Matches(path string, re *regexp.Regexp, n int) []string {
 	if n == 0 {
 		return nil

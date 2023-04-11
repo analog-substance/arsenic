@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"fmt"
+	"io"
 	"io/fs"
 	"log"
 	"math/rand"
@@ -65,7 +66,7 @@ func ExecScript(scriptPath string, args []string) int {
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
 
-	sigs := make(chan os.Signal)
+	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, os.Interrupt, syscall.SIGTERM)
 
 	// relay trapped signals to the spawned process
@@ -191,19 +192,37 @@ func ReadLines(path string) ([]string, error) {
 	return lines, scanner.Err()
 }
 
-// Maybe we can change this to return a channel that can be used
-func ReadLineByLine(path string, action func(line string)) error {
+func ReadFileLineByLine(path string) (chan string, error) {
 	file, err := os.Open(path)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	defer file.Close()
 
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		action(scanner.Text())
-	}
-	return nil
+	// Not sure if this is the best way to re-use ReadLineByLine
+	c := make(chan string)
+	go func() {
+		defer file.Close()
+
+		for s := range ReadLineByLine(file) {
+			c <- s
+		}
+		close(c)
+	}()
+
+	return c, nil
+}
+
+func ReadLineByLine(r io.Reader) chan string {
+	c := make(chan string)
+	go func() {
+		scanner := bufio.NewScanner(r)
+		for scanner.Scan() {
+			c <- scanner.Text()
+		}
+		close(c)
+	}()
+
+	return c
 }
 
 func FileExists(filename string) bool {

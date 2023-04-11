@@ -2,14 +2,15 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/Ullaakut/nmap/v2"
-	"github.com/spf13/viper"
 	"log"
 	"os"
 	"path/filepath"
 	"regexp"
 	"sort"
 	"strings"
+
+	"github.com/Ullaakut/nmap/v2"
+	"github.com/spf13/viper"
 
 	"github.com/analog-substance/arsenic/lib/scope"
 
@@ -347,12 +348,13 @@ func getResolvResults() ([]string, error) {
 	addressRegex := regexp.MustCompile("address|is an alias for")
 	files, _ := filepath.Glob("recon/domains/*/resolv-domains.txt")
 	for _, file := range files {
-		err := grep.LineByLine(file, addressRegex, func(line string) {
-			stringSet.Add(line)
-		})
-
+		c, err := grep.LineByLine(file, addressRegex)
 		if err != nil {
 			return nil, err
+		}
+
+		for line := range c {
+			stringSet.Add(line)
 		}
 	}
 

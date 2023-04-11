@@ -49,14 +49,16 @@ func GetScope(scopeType string) ([]string, error) {
 	scope := set.NewStringSet()
 
 	for _, filename := range files {
-		err := util.ReadLineByLine(filename, func(line string) {
+		c, err := util.ReadFileLineByLine(filename)
+		if err != nil {
+			return nil, err
+		}
+
+		for line := range c {
 			line = normalizeScope(line, scopeType)
 			if getScope().IsDomainInScope(line, false) {
 				scope.Add(line)
 			}
-		})
-		if err != nil {
-			return nil, err
 		}
 	}
 
@@ -74,12 +76,13 @@ func GetConstScope(scopeType string) ([]string, error) {
 	file := fmt.Sprintf("scope-%s.txt", scopeType)
 	scope := set.NewStringSet()
 
-	err := util.ReadLineByLine(file, func(line string) {
-		scope.Add(normalizeScope(line, scopeType))
-	})
-
+	c, err := util.ReadFileLineByLine(file)
 	if err != nil {
 		return nil, err
+	}
+
+	for line := range c {
+		scope.Add(normalizeScope(line, scopeType))
 	}
 
 	return scope.SortedStringSlice(), nil
