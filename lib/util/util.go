@@ -31,6 +31,8 @@ type ScriptConfig struct {
 	Order   int
 	Count   int
 	Enabled bool
+
+	totalRuns int
 }
 
 func NewScriptConfig(script string, order int, count int, enabled bool) ScriptConfig {
@@ -105,32 +107,52 @@ func ExecScript(scriptPath string, args []string) int {
 	return exitStatus
 }
 
-func executePhaseScripts(phase string, args []string, dryRun bool) (bool, string) {
-	phaseScripts := GetScripts(phase)
-	for i := 0; ; i++ {
-		scripts := phaseScripts
-		scriptsRan := false
-		for len(scripts) > 0 {
-			currentScript := scripts[0]
-			if currentScript.Enabled && currentScript.Count > i {
-				fmt.Printf("Running %s %d\n", currentScript.Script, i)
-				scriptsRan = true
-				if dryRun {
-					scripts = scripts[1:]
-				} else {
-					if ExecScript(currentScript.Script, args) == 0 {
-						scripts = scripts[1:]
-					} else {
-						return false, currentScript.Script
-					}
+func iteratePhaseScripts(phase string, done chan int) chan ScriptConfig {
+	scriptChan := make(chan ScriptConfig)
+	go func() {
+		defer func() {
+			close(scriptChan)
+			<-done // Ensure we don't hang if done is sent something after very last script
+		}()
+
+		scripts := GetScripts(phase)
+		if len(scripts) == 0 {
+			return
+		}
+
+		for _, script := range scripts {
+			if !script.Enabled {
+				continue
+			}
+
+			for script.Count > script.totalRuns {
+				script.totalRuns++
+
+				select {
+				case scriptChan <- script:
+				case <-done:
+					return
 				}
-			} else {
-				// not enabled.. remove
-				scripts = scripts[1:]
 			}
 		}
-		if !scriptsRan {
-			break
+	}()
+	return scriptChan
+}
+
+func executePhaseScripts(phase string, args []string, dryRun bool) (bool, string) {
+	done := make(chan int)
+	defer close(done)
+
+	scriptChan := iteratePhaseScripts(phase, done)
+	for script := range scriptChan {
+		fmt.Printf("Running %s %d\n", script.Script, script.totalRuns)
+		if dryRun {
+			continue
+		}
+
+		if ExecScript(script.Script, args) != 0 {
+			done <- 1
+			return false, script.Script
 		}
 	}
 
