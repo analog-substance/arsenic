@@ -6,7 +6,7 @@ import (
 
 	"github.com/NoF0rte/gocdp"
 	"github.com/analog-substance/arsenic/lib/host"
-	"github.com/analog-substance/arsenic/lib/util"
+	"github.com/analog-substance/fileutil"
 	"github.com/analog-substance/tengo/v2"
 	"github.com/analog-substance/tengo/v2/stdlib"
 )
@@ -87,7 +87,7 @@ func (h *ArsenicHost) fileExists(args ...tengo.Object) (tengo.Object, error) {
 	}
 
 	value := tengo.FalseValue
-	if util.FileExists(filepath.Join(h.Value.Dir, file)) {
+	if fileutil.FileExists(filepath.Join(h.Value.Dir, file)) {
 		value = tengo.TrueValue
 	}
 

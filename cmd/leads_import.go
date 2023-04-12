@@ -2,12 +2,13 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/analog-substance/arsenic/lib/lead"
-	"github.com/analog-substance/arsenic/lib/util"
-	"github.com/reapertechlabs/go_nessus"
-	"github.com/spf13/cobra"
 	"log"
 	"os"
+
+	"github.com/analog-substance/arsenic/lib/lead"
+	"github.com/analog-substance/fileutil"
+	nessus "github.com/reapertechlabs/go_nessus"
+	"github.com/spf13/cobra"
 )
 
 var importCmd = &cobra.Command{
@@ -25,7 +26,7 @@ var importCmd = &cobra.Command{
 			findings := map[string]*lead.NessusFinding{}
 
 			for _, file := range filesToImport {
-				util.FileExists(file)
+				fileutil.FileExists(file)
 
 				fileContents, err := os.ReadFile(file)
 

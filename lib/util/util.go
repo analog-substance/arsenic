@@ -1,10 +1,8 @@
 package util
 
 import (
-	"bufio"
 	"context"
 	"fmt"
-	"io/fs"
 	"log"
 	"math/rand"
 	"net"
@@ -21,16 +19,13 @@ import (
 	"github.com/spf13/viper"
 )
 
-const (
-	DefaultDirPerms  fs.FileMode = 0755
-	DefaultFilePerms fs.FileMode = 0644
-)
-
 type ScriptConfig struct {
 	Script  string
 	Order   int
 	Count   int
 	Enabled bool
+
+	totalRuns int
 }
 
 func NewScriptConfig(script string, order int, count int, enabled bool) ScriptConfig {
@@ -63,7 +58,7 @@ func ExecScript(scriptPath string, args []string) int {
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
 
-	sigs := make(chan os.Signal)
+	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, os.Interrupt, syscall.SIGTERM)
 
 	// relay trapped signals to the spawned process
@@ -105,32 +100,52 @@ func ExecScript(scriptPath string, args []string) int {
 	return exitStatus
 }
 
-func executePhaseScripts(phase string, args []string, dryRun bool) (bool, string) {
-	phaseScripts := GetScripts(phase)
-	for i := 0; ; i++ {
-		scripts := phaseScripts
-		scriptsRan := false
-		for len(scripts) > 0 {
-			currentScript := scripts[0]
-			if currentScript.Enabled && currentScript.Count > i {
-				fmt.Printf("Running %s %d\n", currentScript.Script, i)
-				scriptsRan = true
-				if dryRun {
-					scripts = scripts[1:]
-				} else {
-					if ExecScript(currentScript.Script, args) == 0 {
-						scripts = scripts[1:]
-					} else {
-						return false, currentScript.Script
-					}
+func iteratePhaseScripts(phase string, done chan int) chan ScriptConfig {
+	scriptChan := make(chan ScriptConfig)
+	go func() {
+		defer func() {
+			close(scriptChan)
+			<-done // Ensure we don't hang if done is sent something after very last script
+		}()
+
+		scripts := GetScripts(phase)
+		if len(scripts) == 0 {
+			return
+		}
+
+		for _, script := range scripts {
+			if !script.Enabled {
+				continue
+			}
+
+			for script.Count > script.totalRuns {
+				script.totalRuns++
+
+				select {
+				case scriptChan <- script:
+				case <-done:
+					return
 				}
-			} else {
-				// not enabled.. remove
-				scripts = scripts[1:]
 			}
 		}
-		if !scriptsRan {
-			break
+	}()
+	return scriptChan
+}
+
+func executePhaseScripts(phase string, args []string, dryRun bool) (bool, string) {
+	done := make(chan int)
+	defer close(done)
+
+	scriptChan := iteratePhaseScripts(phase, done)
+	for script := range scriptChan {
+		fmt.Printf("Running %s %d\n", script.Script, script.totalRuns)
+		if dryRun {
+			continue
+		}
+
+		if ExecScript(script.Script, args) != 0 {
+			done <- 1
+			return false, script.Script
 		}
 	}
 
@@ -152,79 +167,6 @@ func ExecutePhaseScripts(phase string, args []string, dryRun bool) {
 		timeToSleep := rand.Intn(maxWait-minWait) + minWait
 		time.Sleep(time.Duration(timeToSleep) * time.Second)
 	}
-}
-
-func ReadLines(path string) ([]string, error) {
-	file, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-
-	var lines []string
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		lines = append(lines, scanner.Text())
-	}
-	return lines, scanner.Err()
-}
-
-// Maybe we can change this to return a channel that can be used
-func ReadLineByLine(path string, action func(line string)) error {
-	file, err := os.Open(path)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		action(scanner.Text())
-	}
-	return nil
-}
-
-func FileExists(filename string) bool {
-	info, err := os.Stat(filename)
-	if os.IsNotExist(err) {
-		return false
-	}
-	return !info.IsDir()
-}
-
-func DirExists(dir string) bool {
-	info, err := os.Stat(dir)
-	if os.IsNotExist(err) {
-		return false
-	}
-	return info.IsDir()
-}
-
-func Mkdir(dirs ...string) []error {
-	var errors []error
-	for _, dir := range dirs {
-		err := os.MkdirAll(dir, DefaultDirPerms)
-		if err != nil {
-			errors = append(errors, err)
-		}
-	}
-	return errors
-}
-
-func WriteLines(path string, lines []string) error {
-	file, err := os.OpenFile(path, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, DefaultFilePerms)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	writer := bufio.NewWriter(file)
-	for _, data := range lines {
-		_, _ = writer.WriteString(data + "\n")
-	}
-
-	writer.Flush()
-	return nil
 }
 
 func StringSliceEquals(a []string, b []string) bool {
