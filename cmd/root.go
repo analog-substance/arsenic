@@ -257,6 +257,10 @@ func setConfigDefault(key string, value interface{}) {
 			structField := valueType.Field(i)
 			fieldValue := valueValue.Field(i)
 
+			if !structField.IsExported() {
+				continue
+			}
+
 			setConfigDefault(fmt.Sprintf("%s.%s", key, structField.Name), fieldValue.Interface())
 		}
 	} else {
