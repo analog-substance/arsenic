@@ -17,7 +17,7 @@ import (
 	"github.com/analog-substance/fileutil"
 	"github.com/spf13/viper"
 
-	"github.com/Ullaakut/nmap/v2"
+	"github.com/Ullaakut/nmap/v3"
 
 	"github.com/ahmetb/go-linq/v3"
 	"github.com/analog-substance/arsenic/lib/util"
@@ -649,12 +649,8 @@ func (host Host) ports() []Port {
 			continue
 		}
 
-		data, err := os.ReadFile(file)
-		if err != nil {
-			continue
-		}
-
-		nmapRun, err := nmap.Parse(data)
+		nmapRun := &nmap.Run{}
+		err := nmapRun.FromFile(file)
 		if err != nil {
 			continue
 		}
@@ -702,12 +698,8 @@ func (host Host) ports() []Port {
 
 	if !tcpPorts && len(quick) > 0 && !host.Metadata.HasFlags("ignore::nmap-quick") {
 		for _, file := range quick {
-			data, err := ioutil.ReadFile(file)
-			if err != nil {
-				continue
-			}
-
-			nmapRun, err := nmap.Parse(data)
+			nmapRun := &nmap.Run{}
+			err := nmapRun.FromFile(file)
 			if err != nil {
 				continue
 			}

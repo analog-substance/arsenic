@@ -4,7 +4,7 @@ go 1.16
 
 require (
 	github.com/NoF0rte/gocdp v0.0.6
-	github.com/Ullaakut/nmap/v2 v2.2.1
+	github.com/Ullaakut/nmap/v3 v3.0.1
 	github.com/ahmetb/go-linq/v3 v3.2.0
 	github.com/analog-substance/ffufwrap v0.0.0-20230218011643-f02cd35b3374
 	github.com/analog-substance/fileutil v0.0.1
@@ -30,4 +30,4 @@ require (
 	gopkg.in/yaml.v2 v2.4.0
 )
 
-replace github.com/Ullaakut/nmap/v2 v2.2.1 => github.com/analog-substance/nmap/v2 v2.2.2
+replace github.com/Ullaakut/nmap/v3 v3.0.1 => github.com/analog-substance/nmap/v3 v3.0.1

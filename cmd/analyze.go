@@ -9,7 +9,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/Ullaakut/nmap/v2"
+	"github.com/Ullaakut/nmap/v3"
 	"github.com/spf13/viper"
 
 	"github.com/analog-substance/arsenic/lib/scope"
@@ -370,15 +370,10 @@ func getDiscoverNmaps() {
 	for _, file := range files {
 
 		fmt.Printf("[+] Processing %s\n", file)
-		data, err := os.ReadFile(file)
+		nmapRun := &nmap.Run{}
+		err := nmapRun.FromFile(file)
 		if err != nil {
-			fmt.Printf("[!] Failed to open file: %s\n", file)
-			continue
-		}
-
-		nmapRun, err := nmap.Parse(data)
-		if err != nil {
-			fmt.Printf("[!] Failed to parse nmap.xml file: %s\n", file)
+			fmt.Printf("[!] Failed to open or parse file: %s\n", file)
 			continue
 		}
 

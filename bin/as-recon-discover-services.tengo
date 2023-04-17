@@ -88,7 +88,7 @@ tcpCmd.set_run(func(cmd, args){
       A().
       top_ports(topPorts)
     
-    run := scanner.run_direct()
+    run := scanner.run()
     check_err(run)
   }
 
@@ -126,7 +126,7 @@ tcpCmd.set_run(func(cmd, args){
       A().
       ports(ports...)
     
-    run := scanner.run_direct()
+    run := scanner.run()
     check_err(run)
   }
 
@@ -166,7 +166,7 @@ udpCmd.set_run(func(cmd, args){
       top_ports(topPorts).
       oA(filepath.from_slash(format("recon/nmap-top-%d-udp", topPorts)))
     
-    run := scanner.run_direct()
+    run := scanner.run()
     check_err(run)
   }
 
@@ -176,7 +176,7 @@ udpCmd.set_run(func(cmd, args){
       ports("-").
       oA(filepath.from_slash("recon/nmap-punched-udp"))
     
-    run := scanner.run_direct()
+    run := scanner.run()
     check_err(run)
   }
 

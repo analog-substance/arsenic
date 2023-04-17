@@ -1,13 +1,13 @@
 package engine
 
 import (
+	"context"
 	"fmt"
 	"io"
-	"os"
 	"strings"
 	"time"
 
-	"github.com/Ullaakut/nmap/v2"
+	"github.com/Ullaakut/nmap/v3"
 	"github.com/analog-substance/tengo/v2"
 	"github.com/analog-substance/tengo/v2/stdlib"
 )
@@ -15,10 +15,9 @@ import (
 // NmapScanner is the tengo wrapper object for nmap.Scanner
 type NmapScanner struct {
 	tengo.ObjectImpl
-	Value         *nmap.Scanner
-	objectMap     map[string]tengo.Object
-	script        *Script
-	xmlOutputName string
+	Value     *nmap.Scanner
+	objectMap map[string]tengo.Object
+	script    *Script
 }
 
 // addOptionA transform a function of 'func() nmap.Option' signature
@@ -198,7 +197,7 @@ func (s *NmapScanner) IndexGet(index tengo.Object) (value tengo.Object, err erro
 }
 
 func makeNmapScanner(s *Script) (*NmapScanner, error) {
-	scanner, err := nmap.NewScanner()
+	scanner, err := nmap.NewScanner(context.Background())
 	if err != nil {
 		return nil, err
 	}
@@ -277,7 +276,7 @@ func makeNmapScanner(s *Script) (*NmapScanner, error) {
 					}
 				}
 
-				nmapScanner.xmlOutputName = s1
+				nmapScanner.Value.ToFile(s1)
 
 				return nmapScanner, nil
 			},
@@ -302,7 +301,7 @@ func makeNmapScanner(s *Script) (*NmapScanner, error) {
 					nmap.WithGrepOutput(fmt.Sprintf("%s.gnmap", s1)),
 					nmap.WithNmapOutput(fmt.Sprintf("%s.nmap", s1)),
 				)
-				nmapScanner.xmlOutputName = fmt.Sprintf("%s.xml", s1)
+				nmapScanner.Value.ToFile(fmt.Sprintf("%s.xml", s1))
 
 				return nmapScanner, nil
 			},
@@ -435,41 +434,9 @@ func makeNmapScanner(s *Script) (*NmapScanner, error) {
 			Value: func(args ...tengo.Object) (tengo.Object, error) {
 				run, warnings, err := nmapScanner.Value.Run()
 				if err != nil {
-					return toError(fmt.Errorf("%v: %s", err, strings.Join(warnings, "\n"))), nil
+					return toError(fmt.Errorf("%v: %s", err, strings.Join(*warnings, "\n"))), nil
 				}
 
-				if nmapScanner.xmlOutputName != "" {
-					err = run.ToFile(nmapScanner.xmlOutputName)
-					if err != nil {
-						return toError(err), nil
-					}
-				}
-				return makeNmapRun(run), nil
-			},
-		},
-		"run_direct": &tengo.UserFunction{
-			Name: "run_direct",
-			Value: func(args ...tengo.Object) (tengo.Object, error) {
-				xmlOutput := nmapScanner.xmlOutputName
-				if xmlOutput == "" {
-					file, err := os.CreateTemp(os.TempDir(), "*")
-					if err != nil {
-						return toError(err), nil
-					}
-
-					file.Close()
-					xmlOutput = file.Name()
-				}
-
-				run, warnings, err := nmapScanner.Value.RunDirect(xmlOutput)
-				if err != nil {
-					return toError(fmt.Errorf("%v: %s", err, strings.Join(warnings, "\n"))), nil
-				}
-
-				// If xmlOutputName is empty, let's remove the temp file
-				if nmapScanner.xmlOutputName == "" {
-					os.Remove(xmlOutput)
-				}
 				return makeNmapRun(run), nil
 			},
 		},
