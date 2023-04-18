@@ -6,133 +6,21 @@ import (
 
 	"github.com/analog-substance/fileutil"
 	"github.com/analog-substance/tengo/v2"
+	"github.com/analog-substance/tengo/v2/stdlib"
 	"github.com/bmatcuk/doublestar/v4"
 )
 
 func (s *Script) FilePathModule() map[string]tengo.Object {
 	return map[string]tengo.Object{
-		"join":        &tengo.UserFunction{Name: "join", Value: s.join},
-		"file_exists": &tengo.UserFunction{Name: "file_exists", Value: s.fileExists},
-		"dir_exists":  &tengo.UserFunction{Name: "dir_exists", Value: s.dirExists},
-		"base":        &tengo.UserFunction{Name: "base", Value: s.base},
-		"abs":         &tengo.UserFunction{Name: "abs", Value: s.abs},
-		"ext":         &tengo.UserFunction{Name: "ext", Value: s.ext},
+		"join":        &tengo.UserFunction{Name: "join", Value: funcASvRS(filepath.Join)},
+		"file_exists": &tengo.UserFunction{Name: "file_exists", Value: funcASRB(fileutil.FileExists)},
+		"dir_exists":  &tengo.UserFunction{Name: "dir_exists", Value: funcASRB(fileutil.DirExists)},
+		"base":        &tengo.UserFunction{Name: "base", Value: stdlib.FuncASRS(filepath.Base)},
+		"abs":         &tengo.UserFunction{Name: "abs", Value: stdlib.FuncASRSE(filepath.Abs)},
+		"ext":         &tengo.UserFunction{Name: "ext", Value: stdlib.FuncASRS(filepath.Ext)},
 		"glob":        &tengo.UserFunction{Name: "glob", Value: s.glob},
-		"from_slash":  &tengo.UserFunction{Name: "from_slash", Value: s.fromSlash},
+		"from_slash":  &tengo.UserFunction{Name: "from_slash", Value: stdlib.FuncASRS(filepath.FromSlash)},
 	}
-}
-
-func (s *Script) join(args ...tengo.Object) (tengo.Object, error) {
-	if len(args) < 1 {
-		return nil, tengo.ErrWrongNumArguments
-	}
-
-	paths, err := sliceToStringSlice(args)
-	if err != nil {
-		return nil, err
-	}
-
-	return &tengo.String{Value: filepath.Join(paths...)}, nil
-}
-
-func (s *Script) fileExists(args ...tengo.Object) (tengo.Object, error) {
-	if len(args) != 1 {
-		return nil, tengo.ErrWrongNumArguments
-	}
-
-	path, ok := tengo.ToString(args[0])
-	if !ok {
-		return nil, tengo.ErrInvalidArgumentType{
-			Name:     "path",
-			Expected: "string",
-			Found:    args[0].TypeName(),
-		}
-	}
-
-	obj := tengo.TrueValue
-	if !fileutil.FileExists(path) {
-		obj = tengo.FalseValue
-	}
-
-	return obj, nil
-}
-
-func (s *Script) dirExists(args ...tengo.Object) (tengo.Object, error) {
-	if len(args) != 1 {
-		return nil, tengo.ErrWrongNumArguments
-	}
-
-	path, ok := tengo.ToString(args[0])
-	if !ok {
-		return nil, tengo.ErrInvalidArgumentType{
-			Name:     "path",
-			Expected: "string",
-			Found:    args[0].TypeName(),
-		}
-	}
-
-	obj := tengo.TrueValue
-	if !fileutil.DirExists(path) {
-		obj = tengo.FalseValue
-	}
-
-	return obj, nil
-}
-
-func (s *Script) base(args ...tengo.Object) (tengo.Object, error) {
-	if len(args) != 1 {
-		return nil, tengo.ErrWrongNumArguments
-	}
-
-	path, ok := tengo.ToString(args[0])
-	if !ok {
-		return nil, tengo.ErrInvalidArgumentType{
-			Name:     "path",
-			Expected: "string",
-			Found:    args[0].TypeName(),
-		}
-	}
-
-	return &tengo.String{Value: filepath.Base(path)}, nil
-}
-
-func (s *Script) abs(args ...tengo.Object) (tengo.Object, error) {
-	if len(args) != 1 {
-		return nil, tengo.ErrWrongNumArguments
-	}
-
-	path, ok := tengo.ToString(args[0])
-	if !ok {
-		return nil, tengo.ErrInvalidArgumentType{
-			Name:     "path",
-			Expected: "string",
-			Found:    args[0].TypeName(),
-		}
-	}
-
-	absPath, err := filepath.Abs(path)
-	if err != nil {
-		return toError(err), nil
-	}
-
-	return &tengo.String{Value: absPath}, nil
-}
-
-func (s *Script) ext(args ...tengo.Object) (tengo.Object, error) {
-	if len(args) != 1 {
-		return nil, tengo.ErrWrongNumArguments
-	}
-
-	path, ok := tengo.ToString(args[0])
-	if !ok {
-		return nil, tengo.ErrInvalidArgumentType{
-			Name:     "path",
-			Expected: "string",
-			Found:    args[0].TypeName(),
-		}
-	}
-
-	return &tengo.String{Value: filepath.Ext(path)}, nil
 }
 
 func (s *Script) glob(args ...tengo.Object) (tengo.Object, error) {
@@ -183,21 +71,4 @@ func (s *Script) glob(args ...tengo.Object) (tengo.Object, error) {
 	}
 
 	return sliceToStringArray(matches), nil
-}
-
-func (s *Script) fromSlash(args ...tengo.Object) (tengo.Object, error) {
-	if len(args) != 1 {
-		return nil, tengo.ErrWrongNumArguments
-	}
-
-	path, ok := tengo.ToString(args[0])
-	if !ok {
-		return nil, tengo.ErrInvalidArgumentType{
-			Name:     "path",
-			Expected: "string",
-			Found:    args[0].TypeName(),
-		}
-	}
-
-	return &tengo.String{Value: filepath.FromSlash(path)}, nil
 }

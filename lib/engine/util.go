@@ -634,6 +634,30 @@ func funcASRBE(fn func(string) (bool, error)) tengo.CallableFunc {
 	}
 }
 
+// funcASRB transform a function of 'func(string) bool' signature
+// into tengo CallableFunc type.
+func funcASRB(fn func(string) bool) tengo.CallableFunc {
+	return func(args ...tengo.Object) (tengo.Object, error) {
+		if len(args) != 1 {
+			return nil, tengo.ErrWrongNumArguments
+		}
+		s1, ok := tengo.ToString(args[0])
+		if !ok {
+			return nil, tengo.ErrInvalidArgumentType{
+				Name:     "first",
+				Expected: "string(compatible)",
+				Found:    args[0].TypeName(),
+			}
+		}
+
+		res := fn(s1)
+		if res {
+			return tengo.TrueValue, nil
+		}
+		return tengo.FalseValue, nil
+	}
+}
+
 // funcASvRSsE transform a function of 'func(...string) ([]string, error)' signature
 // into tengo CallableFunc type.
 func funcASvRSsE(fn func(...string) ([]string, error)) tengo.CallableFunc {
@@ -691,6 +715,31 @@ func funcASvRB(fn func(...string) bool) tengo.CallableFunc {
 		}
 
 		return tengo.FalseValue, nil
+	}
+}
+
+// funcASvRS transform a function of 'func(...string) string' signature
+// into tengo CallableFunc type.
+func funcASvRS(fn func(...string) string) tengo.CallableFunc {
+	return func(args ...tengo.Object) (tengo.Object, error) {
+		if len(args) == 0 {
+			return nil, tengo.ErrWrongNumArguments
+		}
+		var strings []string
+		for i, arg := range args {
+			str, ok := tengo.ToString(arg)
+			if !ok {
+				return nil, tengo.ErrInvalidArgumentType{
+					Name:     fmt.Sprintf("#%d arg", i),
+					Expected: "string(compatible)",
+					Found:    arg.TypeName(),
+				}
+			}
+
+			strings = append(strings, str)
+		}
+
+		return &tengo.String{Value: fn(strings...)}, nil
 	}
 }
 
