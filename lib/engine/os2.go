@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"os"
 	"regexp"
-	"strings"
 
 	"github.com/analog-substance/fileutil"
 	"github.com/analog-substance/tengo/v2"
@@ -50,7 +49,7 @@ func (s *Script) writeFile(args ...tengo.Object) (tengo.Object, error) {
 		}
 	}
 
-	err := os.WriteFile(path, []byte(data), fileutil.DefaultFilePerms)
+	err := fileutil.WriteString(path, data)
 	if err != nil {
 		return toError(err), nil
 	}
@@ -88,8 +87,7 @@ func (s *Script) writeFileLines(args ...tengo.Object) (tengo.Object, error) {
 		return nil, err
 	}
 
-	data := strings.Join(lines, "\n")
-	err = os.WriteFile(path, []byte(data), fileutil.DefaultFilePerms)
+	err = fileutil.WriteLines(path, lines)
 	if err != nil {
 		return toError(err), nil
 	}
@@ -143,7 +141,7 @@ func (s *Script) regexReplaceFile(args ...tengo.Object) (tengo.Object, error) {
 
 	replaced := re.ReplaceAll(data, []byte(replace))
 
-	err = os.WriteFile(path, replaced, fileutil.DefaultFilePerms)
+	err = fileutil.WriteString(path, string(replaced))
 	if err != nil {
 		return toError(err), nil
 	}
