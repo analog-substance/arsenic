@@ -16,6 +16,7 @@ func (s *Script) FilePathModule() map[string]tengo.Object {
 		"file_exists": &tengo.UserFunction{Name: "file_exists", Value: funcASRB(fileutil.FileExists)},
 		"dir_exists":  &tengo.UserFunction{Name: "dir_exists", Value: funcASRB(fileutil.DirExists)},
 		"base":        &tengo.UserFunction{Name: "base", Value: stdlib.FuncASRS(filepath.Base)},
+		"dir":         &tengo.UserFunction{Name: "dir", Value: stdlib.FuncASRS(filepath.Dir)},
 		"abs":         &tengo.UserFunction{Name: "abs", Value: stdlib.FuncASRSE(filepath.Abs)},
 		"ext":         &tengo.UserFunction{Name: "ext", Value: stdlib.FuncASRS(filepath.Ext)},
 		"glob":        &tengo.UserFunction{Name: "glob", Value: s.glob},
