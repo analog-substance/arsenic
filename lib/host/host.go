@@ -15,6 +15,7 @@ import (
 	"github.com/analog-substance/arsenic/lib/scope"
 	"github.com/analog-substance/arsenic/lib/set"
 	"github.com/analog-substance/fileutil"
+	"github.com/bmatcuk/doublestar/v4"
 	"github.com/spf13/viper"
 
 	"github.com/Ullaakut/nmap/v3"
@@ -464,7 +465,7 @@ func (host Host) SetReviewedBy(reviewer string) {
 func (host Host) Files(globs ...string) ([]string, error) {
 	var allFiles []string
 	for _, glob := range globs {
-		files, err := filepath.Glob(filepath.Join(host.Dir, glob))
+		files, err := doublestar.FilepathGlob(filepath.Join(host.Dir, glob))
 		if err != nil {
 			return nil, err
 		}

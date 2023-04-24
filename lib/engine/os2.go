@@ -8,6 +8,7 @@ import (
 	"github.com/analog-substance/fileutil"
 	"github.com/analog-substance/tengo/v2"
 	"github.com/andrew-d/go-termutil"
+	"github.com/bmatcuk/doublestar/v4"
 )
 
 // OS2Module represents the 'os2' import module
@@ -21,6 +22,7 @@ func (s *Script) OS2Module() map[string]tengo.Object {
 		"mkdir_temp":         &tengo.UserFunction{Name: "mkdir_temp", Value: s.mkdirTemp},
 		"read_stdin":         &tengo.UserFunction{Name: "read_stdin", Value: s.readStdin},
 		"temp_chdir":         &tengo.UserFunction{Name: "temp_chdir", Value: s.tempChdir},
+		"copy_files":         &tengo.UserFunction{Name: "copy_files", Value: s.copyFiles},
 	}
 }
 
@@ -289,6 +291,57 @@ func (s *Script) tempChdir(args ...tengo.Object) (tengo.Object, error) {
 
 	if path != "" {
 		err = os.Chdir(previousDir)
+		if err != nil {
+			return toError(err), nil
+		}
+	}
+
+	return nil, nil
+}
+
+// copyFiles changes the current directory, executes the function, then changes the current directory back.
+// Represents 'os2.copy_files(src string|[]string, dest string) error'
+func (s *Script) copyFiles(args ...tengo.Object) (tengo.Object, error) {
+	if len(args) != 2 {
+		return nil, tengo.ErrWrongNumArguments
+	}
+
+	var err error
+	var files []string
+
+	filesArray, ok := args[0].(*tengo.Array)
+	if ok {
+		files, err = arrayToStringSlice(filesArray)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		src, ok := tengo.ToString(args[0])
+		if !ok {
+			return nil, tengo.ErrInvalidArgumentType{
+				Name:     "src",
+				Expected: "string|[]string",
+				Found:    args[0].TypeName(),
+			}
+		}
+
+		files, err = doublestar.FilepathGlob(src)
+		if err != nil {
+			return toError(err), nil
+		}
+	}
+
+	dest, ok := tengo.ToString(args[1])
+	if !ok {
+		return nil, tengo.ErrInvalidArgumentType{
+			Name:     "dest",
+			Expected: "string",
+			Found:    args[1].TypeName(),
+		}
+	}
+
+	for _, file := range files {
+		err = fileutil.CopyFile(file, dest)
 		if err != nil {
 			return toError(err), nil
 		}
