@@ -73,6 +73,7 @@ func (s *Script) NewModuleMap() *tengo.ModuleMap {
 	moduleMap.AddBuiltinModule("scope", s.ScopeModule())
 	moduleMap.AddBuiltinModule("log", s.LogModule())
 	moduleMap.AddBuiltinModule("ffuf", s.FfufModule())
+	moduleMap.AddBuiltinModule("viper", s.ViperModule())
 
 	return moduleMap
 }

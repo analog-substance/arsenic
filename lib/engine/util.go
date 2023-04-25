@@ -743,6 +743,26 @@ func funcASvRS(fn func(...string) string) tengo.CallableFunc {
 	}
 }
 
+// funcASRI transform a function of 'func(string) int' signature into
+// CallableFunc type.
+func funcASRI(fn func(string) int) tengo.CallableFunc {
+	return func(args ...tengo.Object) (tengo.Object, error) {
+		if len(args) != 1 {
+			return nil, tengo.ErrWrongNumArguments
+		}
+		s1, ok := tengo.ToString(args[0])
+		if !ok {
+			return nil, tengo.ErrInvalidArgumentType{
+				Name:     "first",
+				Expected: "string(compatible)",
+				Found:    args[0].TypeName(),
+			}
+		}
+		i := fn(s1)
+		return &tengo.Int{Value: int64(i)}, nil
+	}
+}
+
 // funcASRBE transform a function of 'func(string)' signature
 // into tengo CallableFunc type.
 // func funcASR(fn func(string)) tengo.CallableFunc {
