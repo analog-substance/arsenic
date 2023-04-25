@@ -2,6 +2,7 @@ package engine
 
 import (
 	"bufio"
+	"fmt"
 	"os"
 	"regexp"
 
@@ -23,6 +24,7 @@ func (s *Script) OS2Module() map[string]tengo.Object {
 		"read_stdin":         &tengo.UserFunction{Name: "read_stdin", Value: s.readStdin},
 		"temp_chdir":         &tengo.UserFunction{Name: "temp_chdir", Value: s.tempChdir},
 		"copy_files":         &tengo.UserFunction{Name: "copy_files", Value: s.copyFiles},
+		"copy_dirs":          &tengo.UserFunction{Name: "copy_dirs", Value: s.copyDirs},
 	}
 }
 
@@ -299,7 +301,7 @@ func (s *Script) tempChdir(args ...tengo.Object) (tengo.Object, error) {
 	return nil, nil
 }
 
-// copyFiles changes the current directory, executes the function, then changes the current directory back.
+// copyFiles copies the specified files to the destination.
 // Represents 'os2.copy_files(src string|[]string, dest string) error'
 func (s *Script) copyFiles(args ...tengo.Object) (tengo.Object, error) {
 	if len(args) != 2 {
@@ -342,6 +344,50 @@ func (s *Script) copyFiles(args ...tengo.Object) (tengo.Object, error) {
 
 	for _, file := range files {
 		err = fileutil.CopyFile(file, dest)
+		if err != nil {
+			return toError(err), nil
+		}
+	}
+
+	return nil, nil
+}
+
+// copyDirs copies the specified directories to the destination.
+// Represents 'os2.copy_dirs(src string..., dest string) error'
+func (s *Script) copyDirs(args ...tengo.Object) (tengo.Object, error) {
+	if len(args) < 2 {
+		return nil, tengo.ErrWrongNumArguments
+	}
+
+	var srcDirs []string
+	for _, arg := range args[:len(args)-1] {
+		src, ok := tengo.ToString(arg)
+		if !ok {
+			return nil, tengo.ErrInvalidArgumentType{
+				Name:     "src",
+				Expected: "string",
+				Found:    arg.TypeName(),
+			}
+		}
+
+		srcDirs = append(srcDirs, src)
+	}
+
+	dest, ok := tengo.ToString(args[len(args)-1])
+	if !ok {
+		return nil, tengo.ErrInvalidArgumentType{
+			Name:     "dest",
+			Expected: "string",
+			Found:    args[len(args)-1].TypeName(),
+		}
+	}
+
+	if len(srcDirs) > 1 && !fileutil.DirExists(dest) {
+		return toError(fmt.Errorf("%s: No such directory", dest)), nil
+	}
+
+	for _, src := range srcDirs {
+		err := fileutil.CopyDir(src, dest)
 		if err != nil {
 			return toError(err), nil
 		}
