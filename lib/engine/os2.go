@@ -25,6 +25,7 @@ func (s *Script) OS2Module() map[string]tengo.Object {
 		"temp_chdir":         &tengo.UserFunction{Name: "temp_chdir", Value: s.tempChdir},
 		"copy_files":         &tengo.UserFunction{Name: "copy_files", Value: s.copyFiles},
 		"copy_dirs":          &tengo.UserFunction{Name: "copy_dirs", Value: s.copyDirs},
+		"prompt":             &tengo.UserFunction{Name: "prompt", Value: s.promptUser},
 	}
 }
 
@@ -394,4 +395,35 @@ func (s *Script) copyDirs(args ...tengo.Object) (tengo.Object, error) {
 	}
 
 	return nil, nil
+}
+
+// promptUser prints a message to Stdout and reads user input
+// Represents 'os2.prompt(msg string) string|error'
+func (s *Script) promptUser(args ...tengo.Object) (tengo.Object, error) {
+	if len(args) != 1 {
+		return nil, tengo.ErrWrongNumArguments
+	}
+
+	msg, ok := tengo.ToString(args[0])
+	if !ok {
+		return nil, tengo.ErrInvalidArgumentType{
+			Name:     "msg",
+			Expected: "string",
+			Found:    args[0].TypeName(),
+		}
+	}
+
+	fmt.Print(msg)
+
+	scanner := bufio.NewScanner(os.Stdin)
+	scanner.Scan()
+
+	err := scanner.Err()
+	if err != nil {
+		return toError(err), nil
+	}
+
+	return &tengo.String{
+		Value: scanner.Text(),
+	}, nil
 }
