@@ -1,6 +1,8 @@
 package engine
 
 import (
+	"strings"
+
 	"github.com/analog-substance/tengo/v2"
 	"github.com/analog-substance/tengo/v2/stdlib"
 	"github.com/spf13/cobra"
@@ -175,7 +177,7 @@ func makeCobraCmd(cmd *cobra.Command, script *Script) *CobraCmd {
 func (c *CobraCmd) addCommand(args ...tengo.Object) (tengo.Object, error) {
 	var cmds []*cobra.Command
 	for _, arg := range args {
-		c, ok := arg.(*CobraCmd)
+		cmd, ok := arg.(*CobraCmd)
 		if !ok {
 			return nil, tengo.ErrInvalidArgumentType{
 				Name:     "command arg",
@@ -183,7 +185,7 @@ func (c *CobraCmd) addCommand(args ...tengo.Object) (tengo.Object, error) {
 				Found:    arg.TypeName(),
 			}
 		}
-		cmds = append(cmds, c.Value)
+		cmds = append(cmds, cmd.Value)
 	}
 	c.Value.AddCommand(cmds...)
 	return nil, nil
@@ -195,18 +197,28 @@ func (c *CobraCmd) setRun(args ...tengo.Object) (tengo.Object, error) {
 	}
 
 	fn, ok := args[0].(*tengo.CompiledFunction)
-	if !ok {
-		return nil, tengo.ErrInvalidArgumentType{
-			Name:     "run",
-			Expected: "string",
-			Found:    args[0].TypeName(),
+	if ok {
+		c.Value.RunE = func(cmd *cobra.Command, args []string) error {
+			_, err := c.script.runCompiledFunction(fn, makeCobraCmd(cmd, c.script), sliceToStringArray(args))
+			return err
+		}
+	} else {
+		defaultCmd, ok := args[0].(*CobraCmd)
+		if !ok {
+			return nil, tengo.ErrInvalidArgumentType{
+				Name:     "run",
+				Expected: "func|cobra-cmd",
+				Found:    args[0].TypeName(),
+			}
+		}
+
+		c.Value.RunE = func(cmd *cobra.Command, args []string) error {
+			commandPathArgs := strings.Split(defaultCmd.Value.CommandPath(), " ")[1:]
+			cmd.Root().SetArgs(append(commandPathArgs, args...))
+			return defaultCmd.Value.Execute()
 		}
 	}
 
-	c.Value.RunE = func(cmd *cobra.Command, args []string) error {
-		_, err := c.script.runCompiledFunction(fn, makeCobraCmd(cmd, c.script), sliceToStringArray(args))
-		return err
-	}
 	return nil, nil
 }
 

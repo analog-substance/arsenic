@@ -102,6 +102,7 @@ scanCmd := cobra.cmd("scan", "Scan hosts that need content enumeration")
 scanCmd.flags.stringp("host", "H", "", "Host to scan. Must be used with --url.")
 scanCmd.flags.stringp("url", "u", "", "URL to scan. Must be used with --host.")
 rootCmd.add_command(scanCmd)
+rootCmd.set_run(scanCmd)
 
 scanCmd.set_run(func(cmd, args) {
   targetHost := cmd.flags.get_string("host")

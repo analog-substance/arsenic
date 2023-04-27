@@ -62,6 +62,7 @@ listCmd.set_run(func(cmd, args) {
 scanCmd := cobra.cmd("scan", "Scan hosts that need nmap UDP scans.")
 scanCmd.flags.stringp("host", "H", "", "Host to scan.")
 rootCmd.add_command(scanCmd)
+rootCmd.set_run(scanCmd)
 
 scanCmd.set_run(func(cmd, args) {
   targetHost := undefined
