@@ -8,11 +8,14 @@ json := import("json")
 filepath := import("filepath")
 slice := import("slice")
 arsenic := import("arsenic")
+scope := import("scope")
 script := import("script")
 log := import("log")
 git := import("git")
 set := import("set")
 cobra := import("cobra")
+
+inScopeOnly := false
 
 genOutputFileName := func(rawURL, wordlistName) {
   rawURL = text.replace(rawURL, "://", ".", -1)
@@ -29,6 +32,10 @@ getHostURLs := func(flags, wordlistName) {
   for host in hosts {
     urls := host.urls("http")
     check_err(urls)
+
+    if inScopeOnly {
+      urls = scope.prune(urls)
+    }
 
     for rawURL in urls {
       success := urlSet.add(rawURL)
@@ -58,10 +65,12 @@ wordlistName := ""
 
 rootCmd := cobra.root_cmd(script.name, "Run content enumeration on current scope")
 rootCmd.persistent_flags.string_slicep("flags", "f", [], "Filter hosts by flags")
+rootCmd.persistent_flags.boolp("in-scope-only", "i", false, "Prune URLs to in scope only.")
 rootCmd.add_disable_git_flag()
 
 rootCmd.set_persistent_pre_run(func(cmd, args) {
   flags = cmd.flags.get_string_slice("flags")
+  inScopeOnly = cmd.flags.get_bool("in-scope-only")
 
   wordlistFile = filepath.abs("recon/wordlist-content-discover.txt")
   check_err(wordlistFile)
@@ -83,7 +92,7 @@ listCmd := cobra.cmd("list", "Lists the hosts that need content enumeration")
 rootCmd.add_command(listCmd)
 
 listCmd.set_run(func(cmd, args) {
-	hostURLs := getHostURLs(flags, wordlistName)
+  hostURLs := getHostURLs(flags, wordlistName)
   for hostURL in hostURLs {
     fmt.println(hostURL)
   }
