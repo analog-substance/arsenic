@@ -46,7 +46,7 @@ function genOutputFileName {
 }
 
 function newGetHostUrls {
-  arsenic hosts -p http  | while read url; do
+  arsenic hosts -p http | arsenic scope prune  | while read url; do
 
     hostname=$(echo "$url" | sed 's|https\?://||g' | awk -F ':' '{print $1}')
     hostPath=$(arsenic hosts -H "$hostname" --paths)
