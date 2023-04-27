@@ -159,6 +159,14 @@ This will probably take a while... but when its done you should have port scans,
 
 Refer to the [config](docs/config.md) documentation for more information.
 
+### Tengo Scripting
+Currently some of the arsenic scripts are written in the [tengo](https://github.com/d5/tengo) scripting language. These scripts use tengo builtin functions and modules along with custom functions and modules only available to arsenic scripts.
+
+#### References
+- [Standard Library](docs/tengo/stdlib.md)
+- [Builtin Functions](docs/tengo/builtin.md)
+- [Scripting with Arsenic](docs/tengo/scripting.md)
+
 ## Collaboration
 
 Working with friends? Not a problem. [arsenic-hugo](https://github.com/analog-substance/arsenic-hugo) should make it easier to see the big picture.
