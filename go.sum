@@ -400,6 +400,8 @@ github.com/analog-substance/ffufwrap v0.0.0-20230415203818-f0500793d3e5 h1:rUJiW
 github.com/analog-substance/ffufwrap v0.0.0-20230415203818-f0500793d3e5/go.mod h1:kG9mlIG0acNoZKWeavfSTh0cG6deDTwytlC+fcNnVF8=
 github.com/analog-substance/fileutil v0.0.2 h1:6M+qEYo6PzZxLyDO3ZOySp7W/vgfdJaHwgRGHzn+vrQ=
 github.com/analog-substance/fileutil v0.0.2/go.mod h1:rQ5hl9ESB8jXhoEjGFOQzwx7wZVYoIIxPaSSHuGFNGQ=
+github.com/analog-substance/fileutil v0.0.3 h1:XL32jRq6AUl9R6hH6i4OTaxpTHzeJ+ai7wdF5uxAuTs=
+github.com/analog-substance/fileutil v0.0.3/go.mod h1:rQ5hl9ESB8jXhoEjGFOQzwx7wZVYoIIxPaSSHuGFNGQ=
 github.com/analog-substance/nmap/v3 v3.0.1 h1:EQGP2p5hVkAT3m8BnHEQTzG8AScndnjh50FO9o6lBg8=
 github.com/analog-substance/nmap/v3 v3.0.1/go.mod h1:dd5K68P7LHc5nKrFwQx6EdTt61O9UN5x3zn1R4SLcco=
 github.com/analog-substance/tengo/v2 v2.12.2 h1:53HUgMDvolzt9LlamKuptQxZegbvCZe1rZB5hzZBubE=
