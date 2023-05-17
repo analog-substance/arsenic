@@ -17,6 +17,11 @@ cobra := import("cobra")
 wordlist := import("wordlist")
 
 inScopeOnly := false
+wordlistTypes := wordlist.types()
+defaultWordlistType := "web-content"
+flags := []
+wordlistFile := ""
+wordlistName := ""
 
 genOutputFileName := func(rawURL, wordlistName) {
   rawURL = text.replace(rawURL, "://", ".", -1)
@@ -59,12 +64,6 @@ getHostURLs := func(flags, wordlistName) {
 
   return hostURLs
 }
-
-wordlistTypes := wordlist.types()
-defaultWordlistType := "web-content"
-flags := []
-wordlistFile := ""
-wordlistName := ""
 
 rootCmd := cobra.root_cmd(script.name, "Run content enumeration on current scope")
 rootCmd.persistent_flags.string_slicep("flags", "f", [], "Filter hosts by flags")
@@ -112,12 +111,14 @@ listCmd.set_run(func(cmd, args) {
 scanCmd := cobra.cmd("scan", "Scan hosts that need content enumeration")
 scanCmd.flags.stringp("host", "H", "", "Host to scan. Must be used with --url.")
 scanCmd.flags.stringp("url", "u", "", "URL to scan. Must be used with --host.")
+scanCmd.flags.stringp("proxy", "x", "", "Proxy URL (SOCKS5 or HTTP). For example: http://127.0.0.1:8080 or socks5://127.0.0.1:8080")
 rootCmd.add_command(scanCmd)
 rootCmd.set_run(scanCmd)
 
 scanCmd.set_run(func(cmd, args) {
   targetHost := cmd.flags.get_string("host")
   targetURL := cmd.flags.get_string("url")
+  proxy := cmd.flags.get_string("proxy")
 
   manual := targetHost != "" && targetURL != ""
 
@@ -128,7 +129,7 @@ scanCmd.set_run(func(cmd, args) {
 	autoSelect := func() {
     elem := slice.rand_item(getHostURLs(flags, wordlistName))
     if !elem {
-      files := arsenic.locked_files("hosts/*/recon/ffuf*.json")
+      files := arsenic.locked_files(filepath.from_slash("hosts/*/recon/ffuf*.json"))
       check_err(files)
 
       if len(files) > 0 {
@@ -173,7 +174,12 @@ scanCmd.set_run(func(cmd, args) {
 
       log.info(format("Content Discovery / %s / %s / running", host, rawURL))
 
-      err = arsenic.ffuf("-a", "Firefox", "-u", rawURL, "-w", wordlistFile, "-o", outputFile)
+      args := [ "-a", "Firefox", "-u", rawURL, "-w", wordlistFile, "-o", outputFile ]
+      if proxy != "" {
+        args = append(args, "-x", proxy)
+      }
+
+      err = arsenic.ffuf(args...)
       check_err(err)
 
       // If there were warnings (i.e. ffuf exited due to errors), let's add them to the JSON file
