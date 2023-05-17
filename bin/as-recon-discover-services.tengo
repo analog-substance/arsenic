@@ -9,6 +9,7 @@ script := import("script")
 log := import("log")
 
 topPorts := 0
+explicitPorts := []
 targets := []
 
 setupHost := func(target) {
@@ -45,6 +46,7 @@ rootCmd := cobra.root_cmd(script.name, "Run nmap scans on targets")
 rootCmd.enable_completion()
 
 rootCmd.persistent_flags.string_slicep("targets", "t", [], "The target to scan. Can be used multiple times to specify multiple targets")
+rootCmd.persistent_flags.string_slicep("ports", "p", [], "The specific ports to scan. Can be used multiple times to specify multiple targets")
 rootCmd.persistent_flags.stringp("target-file", "f", "", "The file containing the targets to scan.")
 rootCmd.persistent_flags.int("top", 0, "Scan # most common ports")
 
@@ -70,6 +72,7 @@ rootCmd.set_persistent_pre_run(func(cmd, args) {
   }
 
   topPorts = cmd.flags.get_int("top")
+  explicitPorts = cmd.flags.get_string_slice("ports")
 })
 
 // TCP Command
@@ -108,15 +111,7 @@ tcpCmd.set_run(func(cmd, args){
     return run.ports
   }
 
-  fullScan := func(target) {
-    log.msg(format("Scanning %s: all TCP ports", target))
-
-    ports := quickScan(target)
-    if len(ports) == 0 {
-      log.msg(format("%s: No open ports", target))
-      return
-    }
-
+  serviceScan := func(target, ports) {
     log.msg(format("Version scanning %v", ports))
 
     scanner := defaultScanner(target, args).
@@ -130,12 +125,27 @@ tcpCmd.set_run(func(cmd, args){
     check_err(run)
   }
 
+  fullScan := func(target) {
+    log.msg(format("Scanning %s: all TCP ports", target))
+
+    ports := quickScan(target)
+    if len(ports) == 0 {
+      log.msg(format("%s: No open ports", target))
+      return
+    }
+
+    serviceScan(target, ports)
+  }
+
   for target in targets { 
     baseDir := setupHost(target)
 
     err := os2.temp_chdir(baseDir, func(){
       if topPorts > 0 {
         topScan(target)
+      } else if len(explicitPorts) > 0 {
+        log.msg(format("Scanning %s", target))
+        serviceScan(target, explicitPorts)
       } else {
         fullScan(target)
       }
@@ -170,14 +180,18 @@ udpCmd.set_run(func(cmd, args){
     check_err(run)
   }
 
-  fullScan := func(target) {
-    log.msg(format("Scanning %s: all UDP ports", target))
+  serviceScan := func(target, ports) {
     scanner := udpScanner(target).
-      ports("-").
+      ports(ports...).
       oA(filepath.from_slash("recon/nmap-punched-udp"))
     
     run := scanner.run()
     check_err(run)
+  }
+
+  fullScan := func(target) {
+    log.msg(format("Scanning %s: all UDP ports", target))
+    serviceScan(target, ["-"])
   }
 
   for target in targets {
@@ -186,6 +200,8 @@ udpCmd.set_run(func(cmd, args){
     err := os2.temp_chdir(baseDir, func(){
       if topPorts > 0 {
         topScan(target)
+      } else if len(explicitPorts) > 0{
+        serviceScan(target, explicitPorts)
       } else {
         fullScan(target)
       }

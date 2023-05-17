@@ -157,6 +157,26 @@ func (h *ArsenicHost) contentDiscoveryURLs(args ...tengo.Object) (tengo.Object, 
 	return sliceToStringArray(urls), nil
 }
 
+func (h *ArsenicHost) tcpPorts() tengo.Object {
+	var ports []tengo.Object
+	for _, port := range h.Value.Metadata.TCPPorts {
+		ports = append(ports, &tengo.Int{Value: int64(port)})
+	}
+	return &tengo.ImmutableArray{
+		Value: ports,
+	}
+}
+
+func (h *ArsenicHost) udpPorts() tengo.Object {
+	var ports []tengo.Object
+	for _, port := range h.Value.Metadata.UDPPorts {
+		ports = append(ports, &tengo.Int{Value: int64(port)})
+	}
+	return &tengo.ImmutableArray{
+		Value: ports,
+	}
+}
+
 func makeArsenicHost(h *host.Host) *ArsenicHost {
 	arsenicHost := &ArsenicHost{
 		Value: h,
@@ -173,6 +193,8 @@ func makeArsenicHost(h *host.Host) *ArsenicHost {
 			Name:  "has_flags",
 			Value: funcASvRB(h.Metadata.HasFlags),
 		},
+		"tcp_ports": arsenicHost.tcpPorts(),
+		"udp_ports": arsenicHost.udpPorts(),
 		"has_any_port": &tengo.UserFunction{
 			Name:  "has_any_port",
 			Value: stdlib.FuncARB(h.Metadata.HasAnyPort),
