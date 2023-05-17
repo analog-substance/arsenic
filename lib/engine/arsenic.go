@@ -11,7 +11,6 @@ import (
 	"strings"
 
 	"github.com/NoF0rte/gocdp"
-	"github.com/analog-substance/arsenic/lib"
 	"github.com/analog-substance/arsenic/lib/host"
 	"github.com/analog-substance/arsenic/lib/set"
 	"github.com/analog-substance/arsenic/lib/util"
@@ -23,7 +22,6 @@ func (s *Script) ArsenicModule() map[string]tengo.Object {
 		"host_urls":              &tengo.UserFunction{Name: "host_urls", Value: s.hostUrls},
 		"host":                   &tengo.UserFunction{Name: "host", Value: s.host},
 		"hosts":                  &tengo.UserFunction{Name: "hosts", Value: s.hosts},
-		"gen_wordlist":           &tengo.UserFunction{Name: "gen_wordlist", Value: s.generateWordlist},
 		"locked_files":           &tengo.UserFunction{Name: "locked_files", Value: s.lockedFiles},
 		"ffuf":                   &tengo.UserFunction{Name: "ffuf", Value: s.ffuf},
 		"content_discovery_urls": &tengo.UserFunction{Name: "content_discovery_urls", Value: s.contentDiscoveryURLs},
@@ -137,42 +135,6 @@ func (s *Script) hosts(args ...tengo.Object) (tengo.Object, error) {
 	}
 
 	return &tengo.ImmutableArray{Value: hosts}, nil
-}
-
-func (s *Script) generateWordlist(args ...tengo.Object) (tengo.Object, error) {
-	if len(args) != 2 {
-		return nil, tengo.ErrWrongNumArguments
-	}
-
-	wordlist, ok := tengo.ToString(args[0])
-	if !ok {
-		return nil, tengo.ErrInvalidArgumentType{
-			Name:     "wordlist",
-			Expected: "string",
-			Found:    args[0].TypeName(),
-		}
-	}
-
-	path, ok := tengo.ToString(args[1])
-	if !ok {
-		return nil, tengo.ErrInvalidArgumentType{
-			Name:     "path",
-			Expected: "string",
-			Found:    args[1].TypeName(),
-		}
-	}
-
-	wordlistSet := set.NewStringSet()
-	lib.GenerateWordlist(wordlist, wordlistSet)
-
-	file, err := os.Create(path)
-	if err != nil {
-		return toError(err), nil
-	}
-	defer file.Close()
-	wordlistSet.WriteSorted(file)
-
-	return nil, nil
 }
 
 func (s *Script) lockedFiles(args ...tengo.Object) (tengo.Object, error) {
