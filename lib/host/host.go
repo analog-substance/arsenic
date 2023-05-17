@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/NoF0rte/gocdp"
 	"github.com/analog-substance/arsenic/lib/scope"
 	"github.com/analog-substance/arsenic/lib/set"
 	"github.com/analog-substance/fileutil"
@@ -583,8 +584,9 @@ func (host Host) flags() []string {
 	// Make the auto flags configurable
 	flags := []string{}
 
+	var globbed []string
 	checkGlob := func(glob string) bool {
-		globbed, _ := filepath.Glob(filepath.Join(host.Dir, "recon", glob))
+		globbed, _ = filepath.Glob(filepath.Join(host.Dir, "recon", glob))
 		return len(globbed) > 0
 	}
 
@@ -600,23 +602,43 @@ func (host Host) flags() []string {
 		flags = append(flags, "nmap-udp")
 	}
 
+	hasResults := false
 	hasGobuster := checkGlob("gobuster.*")
 	if hasGobuster {
-		flags = append(flags, "Gobuster")
+		flags = append(flags, "web-content::gobuster")
+
+		results, _ := gocdp.SmartParseFiles(globbed)
+		if len(results) > 0 {
+			hasResults = true
+		}
 	}
 
 	hasFfuf := checkGlob("ffuf.*")
 	if hasFfuf {
-		flags = append(flags, "Ffuf")
+		flags = append(flags, "web-content::ffuf")
+
+		results, _ := gocdp.SmartParseFiles(globbed)
+		if !hasResults && len(results) > 0 {
+			hasResults = true
+		}
 	}
 
 	hasDirb := checkGlob("dirb.*")
 	if hasDirb {
-		flags = append(flags, "Dirb")
+		flags = append(flags, "web-content::dirb")
+
+		results, _ := gocdp.SmartParseFiles(globbed)
+		if !hasResults && len(results) > 0 {
+			hasResults = true
+		}
 	}
 
 	if hasGobuster || hasFfuf || hasDirb {
 		flags = append(flags, "web-content")
+	}
+
+	if hasResults {
+		flags = append(flags, "web-content::results")
 	}
 
 	if checkGlob("aquatone-*") {
@@ -624,7 +646,7 @@ func (host Host) flags() []string {
 	}
 
 	checkGlob = func(glob string) bool {
-		globbed, _ := filepath.Glob(filepath.Join(host.Dir, "loot", glob))
+		globbed, _ = filepath.Glob(filepath.Join(host.Dir, "loot", glob))
 		return len(globbed) > 0
 	}
 
