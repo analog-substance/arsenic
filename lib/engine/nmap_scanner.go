@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"os"
 	"strings"
 	"time"
 
@@ -201,6 +202,8 @@ func makeNmapScanner(s *Script) (*NmapScanner, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	scanner.Streamer(os.Stdout)
 
 	nmapScanner := &NmapScanner{
 		Value:  scanner,
