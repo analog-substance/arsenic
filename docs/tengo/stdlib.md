@@ -10,7 +10,7 @@
 - [os2](os2.md): additional platform-independent OS functionality not implemented in the tengo `os` module. 
 - [set](set.md): create/use a simple implementation of the set data structure.
 - [cobra](cobra.md): add arguments, commands, and flags to scripts. Wrapper around the [Cobra](https://github.com/spf13/cobra) go library. 
-- [nmap](nmap.md): run nmap scans programmatically with parsed results. Wrapper around the [nmap](https://github.com/Ullaakut/nmap) go library.
+- [nmap](nmap.md): run nmap scans programmatically with parsed results. Wrapper around the [nmap](https://github.com/analog-substance/nmap) go library.
 - [ffuf](ffuf.md): run ffuf content discovery scans programmatically. Wrapper around the [ffufwrap](https://github.com/analog-substance/ffufwrap) go library. 
 - [viper](viper.md): configuration related functionality. Wrapper around the [viper](https://github.com/spf13/viper) go library with some arsenic related functionality added in.
 - [scope](scope.md): retrieve current scope and filter out of scope hosts.

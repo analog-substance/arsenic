@@ -398,12 +398,10 @@ github.com/alecthomas/units v0.0.0-20190717042225-c3de453c63f4/go.mod h1:ybxpYRF
 github.com/alecthomas/units v0.0.0-20190924025748-f65c72e2690d/go.mod h1:rBZYJk541a8SKzHPHnH3zbiI+7dagKZ0cgpgrD7Fyho=
 github.com/analog-substance/ffufwrap v0.0.0-20230415203818-f0500793d3e5 h1:rUJiW8sxXEvc3Y//qSt9sriobepgAE4W/b14IQdXCkQ=
 github.com/analog-substance/ffufwrap v0.0.0-20230415203818-f0500793d3e5/go.mod h1:kG9mlIG0acNoZKWeavfSTh0cG6deDTwytlC+fcNnVF8=
-github.com/analog-substance/fileutil v0.0.2 h1:6M+qEYo6PzZxLyDO3ZOySp7W/vgfdJaHwgRGHzn+vrQ=
-github.com/analog-substance/fileutil v0.0.2/go.mod h1:rQ5hl9ESB8jXhoEjGFOQzwx7wZVYoIIxPaSSHuGFNGQ=
 github.com/analog-substance/fileutil v0.0.3 h1:XL32jRq6AUl9R6hH6i4OTaxpTHzeJ+ai7wdF5uxAuTs=
 github.com/analog-substance/fileutil v0.0.3/go.mod h1:rQ5hl9ESB8jXhoEjGFOQzwx7wZVYoIIxPaSSHuGFNGQ=
-github.com/analog-substance/nmap/v3 v3.0.1 h1:EQGP2p5hVkAT3m8BnHEQTzG8AScndnjh50FO9o6lBg8=
-github.com/analog-substance/nmap/v3 v3.0.1/go.mod h1:dd5K68P7LHc5nKrFwQx6EdTt61O9UN5x3zn1R4SLcco=
+github.com/analog-substance/nmap/v3 v3.0.2 h1:wUiNkE/JiYTJmMEImPKptk7kXVJ+wwFu7TRZfgQEDRI=
+github.com/analog-substance/nmap/v3 v3.0.2/go.mod h1:PE2PY7j0w37MJdsa0kZDzCDc7L3ftVvBPU+P9mSUHgA=
 github.com/analog-substance/tengo/v2 v2.12.2 h1:53HUgMDvolzt9LlamKuptQxZegbvCZe1rZB5hzZBubE=
 github.com/analog-substance/tengo/v2 v2.12.2/go.mod h1:C/tj9BF8bQ4j8IRKzEfHXSktCUvbSyYuP9xjDYMjkdQ=
 github.com/andrew-d/go-termutil v0.0.0-20150726205930-009166a695a2 h1:axBiC50cNZOs7ygH5BgQp4N+aYrZ2DNpWZ1KG3VOSOM=

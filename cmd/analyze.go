@@ -9,7 +9,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/Ullaakut/nmap/v3"
+	"github.com/analog-substance/nmap/v3"
 	"github.com/spf13/viper"
 
 	"github.com/analog-substance/arsenic/lib/scope"

@@ -19,7 +19,7 @@ import (
 	"github.com/bmatcuk/doublestar/v4"
 	"github.com/spf13/viper"
 
-	"github.com/Ullaakut/nmap/v3"
+	"github.com/analog-substance/nmap/v3"
 
 	"github.com/ahmetb/go-linq/v3"
 	"github.com/analog-substance/arsenic/lib/util"

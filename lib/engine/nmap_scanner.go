@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Ullaakut/nmap/v3"
+	"github.com/analog-substance/nmap/v3"
 	"github.com/analog-substance/tengo/v2"
 	"github.com/analog-substance/tengo/v2/stdlib"
 )
@@ -431,6 +431,10 @@ func makeNmapScanner(s *Script) (*NmapScanner, error) {
 		"privileged": &tengo.UserFunction{
 			Name:  "privileged",
 			Value: nmapScanner.addOptionA(nmap.WithPrivileged),
+		},
+		"sudo": &tengo.UserFunction{
+			Name:  "sudo",
+			Value: nmapScanner.addOptionA(nmap.WithSudo),
 		},
 		"run": &tengo.UserFunction{
 			Name: "run",
