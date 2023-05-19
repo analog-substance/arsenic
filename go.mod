@@ -9,7 +9,7 @@ require (
 	github.com/analog-substance/fileutil v0.0.3
 	github.com/analog-substance/nmap/v3 v3.0.2
 	github.com/analog-substance/tengo/v2 v2.13.1
-	github.com/analog-substance/tengomod v0.2.0
+	github.com/analog-substance/tengomod v0.2.1
 	github.com/bmatcuk/doublestar/v4 v4.6.0
 	github.com/bytedance/sonic v1.8.7 // indirect
 	github.com/gin-contrib/cors v1.4.0
@@ -35,3 +35,5 @@ require (
 	google.golang.org/protobuf v1.30.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0
 )
+
+replace github.com/analog-substance/tengomod v0.2.0 => /home/parallels/opt/personal/tengomod
