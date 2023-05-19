@@ -5,7 +5,6 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
-	"regexp"
 
 	"github.com/analog-substance/fileutil"
 	"github.com/analog-substance/tengo/v2"
@@ -37,14 +36,14 @@ func NewScript(path string) (*Script, error) {
 		isGit:  fileutil.DirExists(".git"),
 	}
 
-	// Might want to change this so it just removes any shebang
-	shebangRe := regexp.MustCompile(`#!\s*/usr/bin/env arsenic\s*`)
 	bytes, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
 
-	bytes = shebangRe.ReplaceAll(bytes, []byte{})
+	if len(bytes) > 1 && string(bytes[:2]) == "#!" {
+		copy(bytes, "//")
+	}
 
 	s := tengo.NewScript(bytes)
 	s.SetImports(script.NewModuleMap())
