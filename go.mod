@@ -35,5 +35,3 @@ require (
 	google.golang.org/protobuf v1.30.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0
 )
-
-replace github.com/analog-substance/tengomod v0.2.0 => /home/parallels/opt/personal/tengomod
