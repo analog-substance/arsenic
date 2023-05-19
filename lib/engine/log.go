@@ -3,6 +3,7 @@ package engine
 import (
 	"github.com/analog-substance/arsenic/lib/util"
 	"github.com/analog-substance/tengo/v2"
+	"github.com/analog-substance/tengomod/interop"
 )
 
 func (s *Script) LogModule() map[string]tengo.Object {
@@ -16,7 +17,7 @@ func (s *Script) LogModule() map[string]tengo.Object {
 func (s *Script) logMsg(args ...tengo.Object) (tengo.Object, error) {
 	err := s.log("[+]", args...)
 	if err != nil {
-		return toError(err), nil
+		return interop.GoErrToTErr(err), nil
 	}
 
 	return nil, nil
@@ -25,7 +26,7 @@ func (s *Script) logMsg(args ...tengo.Object) (tengo.Object, error) {
 func (s *Script) logWarn(args ...tengo.Object) (tengo.Object, error) {
 	err := s.log("[!]", args...)
 	if err != nil {
-		return toError(err), nil
+		return interop.GoErrToTErr(err), nil
 	}
 
 	return nil, nil
@@ -34,7 +35,7 @@ func (s *Script) logWarn(args ...tengo.Object) (tengo.Object, error) {
 func (s *Script) logInfo(args ...tengo.Object) (tengo.Object, error) {
 	err := s.log("[-]", args...)
 	if err != nil {
-		return toError(err), nil
+		return interop.GoErrToTErr(err), nil
 	}
 
 	return nil, nil

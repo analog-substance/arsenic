@@ -7,6 +7,7 @@ import (
 	"github.com/analog-substance/tengo/v2"
 	"github.com/analog-substance/tengo/v2/stdlib"
 	"github.com/analog-substance/tengo/v2/stdlib/json"
+	"github.com/analog-substance/tengomod/interop"
 )
 
 type Fuzzer struct {
@@ -120,7 +121,7 @@ func (f *Fuzzer) funcASvRF(fn func(...string) *ffuf.Fuzzer) tengo.CallableFunc {
 		if len(args) != 0 {
 			return nil, tengo.ErrWrongNumArguments
 		}
-		slice, err := sliceToStringSlice(args)
+		slice, err := interop.GoTSliceToGoStrSlice(args, "first")
 		if err != nil {
 			return nil, err
 		}
@@ -136,7 +137,7 @@ func (f *Fuzzer) funcASsRF(fn func([]string) *ffuf.Fuzzer) tengo.CallableFunc {
 			return nil, tengo.ErrWrongNumArguments
 		}
 
-		slice, err := arrayToStringSlice(args[0].(*tengo.Array))
+		slice, err := interop.TArrayToGoStrSlice(args[0], "first")
 		if err != nil {
 			return nil, err
 		}
@@ -159,7 +160,7 @@ func (f *Fuzzer) funcASMSRF(fn func(map[string]string) *ffuf.Fuzzer) tengo.Calla
 			return nil, tengo.ErrWrongNumArguments
 		}
 
-		m, err := toStringMapString(args[0])
+		m, err := interop.TMapToGoStrMapStr(args[0], "first")
 		if err != nil {
 			return nil, err
 		}
@@ -244,7 +245,7 @@ func (f *Fuzzer) postJSON(args ...tengo.Object) (tengo.Object, error) {
 
 	bytes, err := json.Encode(args[0])
 	if err != nil {
-		return toError(err), nil
+		return interop.GoErrToTErr(err), nil
 	}
 
 	f.Value.PostString(string(bytes))
@@ -290,7 +291,7 @@ func (f *Fuzzer) customArguments(args ...tengo.Object) (tengo.Object, error) {
 		return nil, tengo.ErrWrongNumArguments
 	}
 
-	slice, err := sliceToStringSlice(args)
+	slice, err := interop.GoTSliceToGoStrSlice(args, "args")
 	if err != nil {
 		return nil, err
 	}

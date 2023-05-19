@@ -5,6 +5,7 @@ import (
 
 	"github.com/analog-substance/tengo/v2"
 	"github.com/analog-substance/tengo/v2/stdlib"
+	"github.com/analog-substance/tengomod/interop"
 	"github.com/spf13/cobra"
 )
 
@@ -27,23 +28,23 @@ func makeCobraCmd(cmd *cobra.Command, script *Script) *CobraCmd {
 			Value: map[string]tengo.Object{
 				"boolp": &tengo.UserFunction{
 					Name:  "boolp",
-					Value: funcASSBSRBp(cobraCmd.Value.Flags().BoolP),
+					Value: interop.FuncASSBSRBp(cobraCmd.Value.Flags().BoolP),
 				},
 				"bool": &tengo.UserFunction{
 					Name:  "bool",
-					Value: funcASBSRBp(cobraCmd.Value.Flags().Bool),
+					Value: interop.FuncASBSRBp(cobraCmd.Value.Flags().Bool),
 				},
 				"get_bool": &tengo.UserFunction{
 					Name:  "get_bool",
-					Value: funcASRBE(cobraCmd.Value.Flags().GetBool),
+					Value: interop.FuncASRBE(cobraCmd.Value.Flags().GetBool),
 				},
 				"intp": &tengo.UserFunction{
 					Name:  "intp",
-					Value: funcASSISRIp(cobraCmd.Value.Flags().IntP),
+					Value: interop.FuncASSISRIp(cobraCmd.Value.Flags().IntP),
 				},
 				"int": &tengo.UserFunction{
 					Name:  "int",
-					Value: funcASISRIp(cobraCmd.Value.Flags().Int),
+					Value: interop.FuncASISRIp(cobraCmd.Value.Flags().Int),
 				},
 				"get_int": &tengo.UserFunction{
 					Name:  "get_int",
@@ -51,11 +52,11 @@ func makeCobraCmd(cmd *cobra.Command, script *Script) *CobraCmd {
 				},
 				"stringp": &tengo.UserFunction{
 					Name:  "stringp",
-					Value: funcASSSSRSp(cobraCmd.Value.Flags().StringP),
+					Value: interop.FuncASSSSRSp(cobraCmd.Value.Flags().StringP),
 				},
 				"string": &tengo.UserFunction{
 					Name:  "string",
-					Value: funcASSSRSp(cobraCmd.Value.Flags().String),
+					Value: interop.FuncASSSRSp(cobraCmd.Value.Flags().String),
 				},
 				"get_string": &tengo.UserFunction{
 					Name:  "get_string",
@@ -63,15 +64,15 @@ func makeCobraCmd(cmd *cobra.Command, script *Script) *CobraCmd {
 				},
 				"string_slicep": &tengo.UserFunction{
 					Name:  "string_slicep",
-					Value: funcASSSsSRSsp(cobraCmd.Value.Flags().StringSliceP),
+					Value: interop.FuncASSSsSRSsp(cobraCmd.Value.Flags().StringSliceP),
 				},
 				"string_slice": &tengo.UserFunction{
 					Name:  "string_slice",
-					Value: funcASSsSRSsp(cobraCmd.Value.Flags().StringSlice),
+					Value: interop.FuncASSsSRSsp(cobraCmd.Value.Flags().StringSlice),
 				},
 				"get_string_slice": &tengo.UserFunction{
 					Name:  "get_string_slice",
-					Value: funcASRSsE(cobraCmd.Value.Flags().GetStringSlice),
+					Value: interop.FuncASRSsE(cobraCmd.Value.Flags().GetStringSlice),
 				},
 			},
 		},
@@ -79,35 +80,35 @@ func makeCobraCmd(cmd *cobra.Command, script *Script) *CobraCmd {
 			Value: map[string]tengo.Object{
 				"boolp": &tengo.UserFunction{
 					Name:  "boolp",
-					Value: funcASSBSRBp(cobraCmd.Value.PersistentFlags().BoolP),
+					Value: interop.FuncASSBSRBp(cobraCmd.Value.PersistentFlags().BoolP),
 				},
 				"bool": &tengo.UserFunction{
 					Name:  "bool",
-					Value: funcASBSRBp(cobraCmd.Value.PersistentFlags().Bool),
+					Value: interop.FuncASBSRBp(cobraCmd.Value.PersistentFlags().Bool),
 				},
 				"intp": &tengo.UserFunction{
 					Name:  "intp",
-					Value: funcASSISRIp(cobraCmd.Value.PersistentFlags().IntP),
+					Value: interop.FuncASSISRIp(cobraCmd.Value.PersistentFlags().IntP),
 				},
 				"int": &tengo.UserFunction{
 					Name:  "int",
-					Value: funcASISRIp(cobraCmd.Value.PersistentFlags().Int),
+					Value: interop.FuncASISRIp(cobraCmd.Value.PersistentFlags().Int),
 				},
 				"stringp": &tengo.UserFunction{
 					Name:  "stringp",
-					Value: funcASSSSRSp(cobraCmd.Value.PersistentFlags().StringP),
+					Value: interop.FuncASSSSRSp(cobraCmd.Value.PersistentFlags().StringP),
 				},
 				"string": &tengo.UserFunction{
 					Name:  "string",
-					Value: funcASSSRSp(cobraCmd.Value.PersistentFlags().String),
+					Value: interop.FuncASSSRSp(cobraCmd.Value.PersistentFlags().String),
 				},
 				"string_slicep": &tengo.UserFunction{
 					Name:  "string_slicep",
-					Value: funcASSSsSRSsp(cobraCmd.Value.PersistentFlags().StringSliceP),
+					Value: interop.FuncASSSsSRSsp(cobraCmd.Value.PersistentFlags().StringSliceP),
 				},
 				"string_slice": &tengo.UserFunction{
 					Name:  "string_slice",
-					Value: funcASSsSRSsp(cobraCmd.Value.PersistentFlags().StringSlice),
+					Value: interop.FuncASSsSRSsp(cobraCmd.Value.PersistentFlags().StringSlice),
 				},
 			},
 		},
@@ -199,7 +200,7 @@ func (c *CobraCmd) setRun(args ...tengo.Object) (tengo.Object, error) {
 	fn, ok := args[0].(*tengo.CompiledFunction)
 	if ok {
 		c.Value.RunE = func(cmd *cobra.Command, args []string) error {
-			_, err := c.script.runCompiledFunction(fn, makeCobraCmd(cmd, c.script), sliceToStringArray(args))
+			_, err := c.script.runCompiledFunction(fn, makeCobraCmd(cmd, c.script), interop.GoStrSliceToTArray(args))
 			return err
 		}
 	} else {
@@ -245,7 +246,7 @@ func (c *CobraCmd) setPersistentPreRun(args ...tengo.Object) (tengo.Object, erro
 		}
 
 		c.cobraRootCmdPersistentPreRun(cmd, args)
-		_, err := c.script.runCompiledFunction(fn, makeCobraCmd(cmd, c.script), sliceToStringArray(args))
+		_, err := c.script.runCompiledFunction(fn, makeCobraCmd(cmd, c.script), interop.GoStrSliceToTArray(args))
 		return err
 	}
 	return nil, nil
@@ -275,7 +276,7 @@ func (c *CobraCmd) registerFlagCompletionFunc(args ...tengo.Object) (tengo.Objec
 	}
 
 	c.Value.RegisterFlagCompletionFunc(flag, func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-		res, err := c.script.runCompiledFunction(fn, makeCobraCmd(cmd, c.script), sliceToStringArray(args), &tengo.String{Value: toComplete})
+		res, err := c.script.runCompiledFunction(fn, makeCobraCmd(cmd, c.script), interop.GoStrSliceToTArray(args), &tengo.String{Value: toComplete})
 		if err != nil {
 			return nil, cobra.ShellCompDirectiveError
 		}
@@ -285,7 +286,7 @@ func (c *CobraCmd) registerFlagCompletionFunc(args ...tengo.Object) (tengo.Objec
 			return nil, cobra.ShellCompDirectiveError
 		}
 
-		slice, err := arrayToStringSlice(res.(*tengo.Array))
+		slice, err := interop.TArrayToGoStrSlice(res, "")
 		if err != nil {
 			return nil, cobra.ShellCompDirectiveError
 		}
@@ -325,7 +326,7 @@ func (c *CobraCmd) CanIterate() bool {
 func (c *CobraCmd) Call(args ...tengo.Object) (tengo.Object, error) {
 	err := c.Value.ExecuteContext(c.script.ctx)
 	if err != nil {
-		return toError(err), nil
+		return interop.GoErrToTErr(err), nil
 	}
 	return nil, nil
 }

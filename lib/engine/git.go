@@ -10,6 +10,7 @@ import (
 	"github.com/analog-substance/arsenic/lib/util"
 	"github.com/analog-substance/fileutil"
 	"github.com/analog-substance/tengo/v2"
+	"github.com/analog-substance/tengomod/interop"
 )
 
 func (s *Script) GitModule() map[string]tengo.Object {
@@ -27,7 +28,7 @@ func (s *Script) tengoPull(args ...tengo.Object) (tengo.Object, error) {
 
 	err := s.pull(true)
 	if err != nil {
-		return toError(err), nil
+		return interop.GoErrToTErr(err), nil
 	}
 	return nil, nil
 }
@@ -92,7 +93,7 @@ func (s *Script) tengoCommit(args ...tengo.Object) (tengo.Object, error) {
 
 	err := s.commit(path, message, mode)
 	if err != nil {
-		return toError(err), nil
+		return interop.GoErrToTErr(err), nil
 	}
 	return nil, nil
 }
@@ -220,7 +221,7 @@ func (s *Script) tengoLock(args ...tengo.Object) (tengo.Object, error) {
 
 	err := s.lock(lockFile, msg)
 	if err != nil {
-		return toError(err), nil
+		return interop.GoErrToTErr(err), nil
 	}
 
 	return nil, nil

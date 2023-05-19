@@ -10,6 +10,9 @@ import (
 	"github.com/analog-substance/fileutil"
 	"github.com/analog-substance/tengo/v2"
 	"github.com/analog-substance/tengo/v2/stdlib"
+	"github.com/analog-substance/tengomod"
+	modexec "github.com/analog-substance/tengomod/exec"
+	"github.com/analog-substance/tengomod/interop"
 )
 
 type Script struct {
@@ -57,23 +60,19 @@ func NewScript(path string) (*Script, error) {
 }
 
 func (s *Script) NewModuleMap() *tengo.ModuleMap {
-	moduleMap := stdlib.GetModuleMap(stdlib.AllModuleNames()...)
+	moduleMap := tengomod.GetModuleMap(tengomod.WithCompiledFunc(func() (*tengo.Compiled, context.Context) {
+		return s.compiled, s.ctx
+	}))
 
-	moduleMap.AddBuiltinModule("filepath", s.FilePathModule())
+	moduleMap.AddMap(stdlib.GetModuleMap(stdlib.AllModuleNames()...))
+
 	moduleMap.AddBuiltinModule("git", s.GitModule())
-	moduleMap.AddBuiltinModule("slice", s.SliceModule())
-	moduleMap.AddBuiltinModule("url", s.URLModule())
 	moduleMap.AddBuiltinModule("arsenic", s.ArsenicModule())
 	moduleMap.AddBuiltinModule("script", s.ScriptModule())
-	moduleMap.AddBuiltinModule("exec", s.ExecModule())
-	moduleMap.AddBuiltinModule("os2", s.OS2Module())
-	moduleMap.AddBuiltinModule("set", s.SetModule())
 	moduleMap.AddBuiltinModule("cobra", s.CobraModule())
-	moduleMap.AddBuiltinModule("nmap", s.NmapModule())
 	moduleMap.AddBuiltinModule("scope", s.ScopeModule())
 	moduleMap.AddBuiltinModule("log", s.LogModule())
 	moduleMap.AddBuiltinModule("ffuf", s.FfufModule())
-	moduleMap.AddBuiltinModule("viper", s.ViperModule())
 	moduleMap.AddBuiltinModule("wordlist", s.WordlistModule())
 
 	return moduleMap
@@ -94,7 +93,7 @@ func (s *Script) Run(args []string) error {
 
 func (s *Script) Signal() {
 	s.signaled = true
-	s.stop(ErrSignaled.Error())
+	s.stop(modexec.ErrSignaled.Error())
 }
 
 func (s *Script) runCompiledFunction(fn *tengo.CompiledFunction, args ...tengo.Object) (tengo.Object, error) {
@@ -104,7 +103,7 @@ func (s *Script) runCompiledFunction(fn *tengo.CompiledFunction, args ...tengo.O
 	go func() {
 		obj, err := vm.RunCompiled(fn, args...)
 		if err != nil {
-			ch <- toError(err)
+			ch <- interop.GoErrToTErr(err)
 			return
 		}
 

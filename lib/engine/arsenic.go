@@ -15,6 +15,8 @@ import (
 	"github.com/analog-substance/arsenic/lib/set"
 	"github.com/analog-substance/arsenic/lib/util"
 	"github.com/analog-substance/tengo/v2"
+	modexec "github.com/analog-substance/tengomod/exec"
+	"github.com/analog-substance/tengomod/interop"
 )
 
 func (s *Script) ArsenicModule() map[string]tengo.Object {
@@ -33,32 +35,14 @@ func (s *Script) hostUrls(args ...tengo.Object) (tengo.Object, error) {
 		return nil, tengo.ErrWrongNumArguments
 	}
 
-	protocolsArray, ok := args[0].(*tengo.Array)
-	if !ok {
-		return nil, tengo.ErrInvalidArgumentType{
-			Name:     "protocols",
-			Expected: "string",
-			Found:    args[0].TypeName(),
-		}
-	}
-
-	protocols, err := arrayToStringSlice(protocolsArray)
+	protocols, err := interop.TArrayToGoStrSlice(args[0], "protocols")
 	if err != nil {
 		return nil, err
 	}
 
 	var flags []string
 	if len(args) == 2 {
-		flagsArray, ok := args[1].(*tengo.Array)
-		if !ok {
-			return nil, tengo.ErrInvalidArgumentType{
-				Name:     "flags",
-				Expected: "string",
-				Found:    args[1].TypeName(),
-			}
-		}
-
-		flags, err = arrayToStringSlice(flagsArray)
+		flags, err = interop.TArrayToGoStrSlice(args[1], "flags")
 		if err != nil {
 			return nil, err
 		}
@@ -82,7 +66,7 @@ func (s *Script) hostUrls(args ...tengo.Object) (tengo.Object, error) {
 		}
 	}
 
-	return sliceToStringArray(validHostURLs.SortedStringSlice()), nil
+	return interop.GoStrSliceToTArray(validHostURLs.SortedStringSlice()), nil
 }
 
 func (s *Script) host(args ...tengo.Object) (tengo.Object, error) {
@@ -110,17 +94,8 @@ func (s *Script) host(args ...tengo.Object) (tengo.Object, error) {
 func (s *Script) hosts(args ...tengo.Object) (tengo.Object, error) {
 	var flags []string
 	if len(args) == 1 {
-		flagsArray, ok := args[0].(*tengo.Array)
-		if !ok {
-			return nil, tengo.ErrInvalidArgumentType{
-				Name:     "flags",
-				Expected: "string",
-				Found:    args[0].TypeName(),
-			}
-		}
-
 		var err error
-		flags, err = arrayToStringSlice(flagsArray)
+		flags, err = interop.TArrayToGoStrSlice(args[0], "flags")
 		if err != nil {
 			return nil, err
 		}
@@ -153,7 +128,7 @@ func (s *Script) lockedFiles(args ...tengo.Object) (tengo.Object, error) {
 
 	matches, err := filepath.Glob(glob)
 	if err != nil {
-		return toError(err), nil
+		return interop.GoErrToTErr(err), nil
 	}
 
 	lockRegex := regexp.MustCompile(`^lock::`)
@@ -171,7 +146,7 @@ func (s *Script) lockedFiles(args ...tengo.Object) (tengo.Object, error) {
 		}
 	}
 
-	return sliceToStringArray(locked), nil
+	return interop.GoStrSliceToTArray(locked), nil
 }
 
 func (s *Script) ffuf(args ...tengo.Object) (tengo.Object, error) {
@@ -179,7 +154,7 @@ func (s *Script) ffuf(args ...tengo.Object) (tengo.Object, error) {
 		return nil, tengo.ErrWrongNumArguments
 	}
 
-	cmdArgs, err := sliceToStringSlice(args)
+	cmdArgs, err := interop.GoTSliceToGoStrSlice(args, "args")
 	if err != nil {
 		return nil, err
 	}
@@ -192,9 +167,9 @@ func (s *Script) ffuf(args ...tengo.Object) (tengo.Object, error) {
 	errBuf := new(bytes.Buffer)
 	cmd.Stderr = io.MultiWriter(errBuf, os.Stderr)
 
-	err = s.runCmdWithSigHandler(cmd)
+	err = modexec.RunCmdWithSigHandler(cmd)
 	if err != nil {
-		return toError(err), nil
+		return interop.GoErrToTErr(err), nil
 	}
 
 	warnRe := regexp.MustCompile(`(?m)\[WARN\]\s*(.*)$`)
@@ -216,30 +191,12 @@ func (s *Script) contentDiscoveryURLs(args ...tengo.Object) (tengo.Object, error
 		return nil, tengo.ErrWrongNumArguments
 	}
 
-	patternsArray, ok := args[0].(*tengo.Array)
-	if !ok {
-		return nil, tengo.ErrInvalidArgumentType{
-			Name:     "patterns",
-			Expected: "string",
-			Found:    args[0].TypeName(),
-		}
-	}
-
-	patterns, err := arrayToStringSlice(patternsArray)
+	patterns, err := interop.TArrayToGoStrSlice(args[0], "patterns")
 	if err != nil {
 		return nil, err
 	}
 
-	codesArray, ok := args[1].(*tengo.Array)
-	if !ok {
-		return nil, tengo.ErrInvalidArgumentType{
-			Name:     "codes",
-			Expected: "string",
-			Found:    args[1].TypeName(),
-		}
-	}
-
-	codes, err := arrayToIntSlice(codesArray)
+	codes, err := interop.TArrayToGoIntSlice(args[1], "codes")
 	if err != nil {
 		return nil, err
 	}
@@ -248,14 +205,14 @@ func (s *Script) contentDiscoveryURLs(args ...tengo.Object) (tengo.Object, error
 	for _, pattern := range patterns {
 		matches, err := filepath.Glob(pattern)
 		if err != nil {
-			return toError(err), nil
+			return interop.GoErrToTErr(err), nil
 		}
 		files = append(files, matches...)
 	}
 
 	allResults, err := gocdp.SmartParseFiles(files)
 	if err != nil {
-		return toError(err), nil
+		return interop.GoErrToTErr(err), nil
 	}
 	grouped := allResults.GroupByStatus()
 
@@ -271,5 +228,5 @@ func (s *Script) contentDiscoveryURLs(args ...tengo.Object) (tengo.Object, error
 		}
 	}
 
-	return sliceToStringArray(urls), nil
+	return interop.GoStrSliceToTArray(urls), nil
 }

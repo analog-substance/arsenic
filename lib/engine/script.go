@@ -11,6 +11,8 @@ import (
 	"time"
 
 	"github.com/analog-substance/tengo/v2"
+	modexec "github.com/analog-substance/tengomod/exec"
+	"github.com/analog-substance/tengomod/interop"
 )
 
 // ScriptModule represents the 'script' import module
@@ -22,7 +24,7 @@ func (s *Script) ScriptModule() map[string]tengo.Object {
 		},
 		"run_script": &tengo.UserFunction{
 			Name:  "run_script",
-			Value: s.tengoRunScript,
+			Value: interop.NewCallable(s.tengoRunScript, interop.WithMinArgs(1)),
 		},
 		"run_script_with_sig_handler": &tengo.UserFunction{
 			Name:  "run_script_with_sig_handler",
@@ -41,7 +43,7 @@ func (s *Script) ScriptModule() map[string]tengo.Object {
 		"args": &tengo.UserFunction{
 			Name: "args",
 			Value: func(args ...tengo.Object) (tengo.Object, error) {
-				return sliceToStringArray(s.args), nil
+				return interop.GoStrSliceToTArray(s.args), nil
 			},
 		},
 	}
@@ -50,27 +52,19 @@ func (s *Script) ScriptModule() map[string]tengo.Object {
 // tengoRunScript is the tengo function version of runScript.
 // Represents 'script.run_script(path string, args ...string) error'
 func (s *Script) tengoRunScript(args ...tengo.Object) (tengo.Object, error) {
-	if len(args) == 0 {
-		return nil, tengo.ErrWrongNumArguments
+	path, err := interop.TStrToGoStr(args[0], "path")
+	if err != nil {
+		return nil, err
 	}
 
-	path, ok := tengo.ToString(args[0])
-	if !ok {
-		return nil, tengo.ErrInvalidArgumentType{
-			Name:     "path",
-			Expected: "string",
-			Found:    args[0].TypeName(),
-		}
-	}
-
-	scriptArgs, err := sliceToStringSlice(args[1:])
+	scriptArgs, err := interop.GoTSliceToGoStrSlice(args[1:], "args")
 	if err != nil {
 		return nil, err
 	}
 
 	err = s.runScript(path, scriptArgs...)
 	if err != nil {
-		return toError(err), nil
+		return interop.GoErrToTErr(err), nil
 	}
 	return nil, nil
 }
@@ -91,14 +85,14 @@ func (s *Script) tengoRunScriptWithSigHandler(args ...tengo.Object) (tengo.Objec
 		}
 	}
 
-	scriptArgs, err := sliceToStringSlice(args[1:])
+	scriptArgs, err := interop.GoTSliceToGoStrSlice(args[1:], "args")
 	if err != nil {
 		return nil, err
 	}
 
 	err = s.runScriptWithSigHandler(path, scriptArgs...)
 	if err != nil {
-		return toError(err), nil
+		return interop.GoErrToTErr(err), nil
 	}
 	return nil, nil
 }
@@ -153,7 +147,7 @@ func (s *Script) runScriptWithSigHandler(path string, args ...string) error {
 	}
 
 	if signaled {
-		return ErrSignaled
+		return modexec.ErrSignaled
 	}
 
 	return nil
@@ -177,7 +171,7 @@ func (s *Script) tengoFindScript(args ...tengo.Object) (tengo.Object, error) {
 
 	fullPath, err := s.findScript(path)
 	if err != nil {
-		return toError(err), nil
+		return interop.GoErrToTErr(err), nil
 	}
 
 	return &tengo.String{Value: fullPath}, nil

@@ -9,12 +9,13 @@ import (
 	"github.com/analog-substance/fileutil"
 	"github.com/analog-substance/tengo/v2"
 	"github.com/analog-substance/tengo/v2/stdlib"
+	"github.com/analog-substance/tengomod/interop"
+	"github.com/analog-substance/tengomod/types"
 )
 
 type ArsenicHost struct {
-	tengo.ObjectImpl
-	Value     *host.Host
-	objectMap map[string]tengo.Object
+	types.PropObject
+	Value *host.Host
 }
 
 func (h *ArsenicHost) TypeName() string {
@@ -37,21 +38,8 @@ func (h *ArsenicHost) CanIterate() bool {
 	return false
 }
 
-func (h *ArsenicHost) IndexGet(index tengo.Object) (tengo.Object, error) {
-	strIdx, ok := tengo.ToString(index)
-	if !ok {
-		return nil, tengo.ErrInvalidIndexType
-	}
-
-	res, ok := h.objectMap[strIdx]
-	if !ok {
-		res = tengo.UndefinedValue
-	}
-	return res, nil
-}
-
 func (h *ArsenicHost) urls(args ...tengo.Object) (tengo.Object, error) {
-	protocols, err := sliceToStringSlice(args)
+	protocols, err := interop.GoTSliceToGoStrSlice(args, "protocols")
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +57,7 @@ func (h *ArsenicHost) urls(args ...tengo.Object) (tengo.Object, error) {
 		}
 	}
 
-	return sliceToStringArray(urls), nil
+	return interop.GoStrSliceToTArray(urls), nil
 }
 
 func (h *ArsenicHost) fileExists(args ...tengo.Object) (tengo.Object, error) {
@@ -99,30 +87,12 @@ func (h *ArsenicHost) contentDiscoveryURLs(args ...tengo.Object) (tengo.Object, 
 		return nil, tengo.ErrWrongNumArguments
 	}
 
-	patternsArray, ok := args[0].(*tengo.Array)
-	if !ok {
-		return nil, tengo.ErrInvalidArgumentType{
-			Name:     "patterns",
-			Expected: "string",
-			Found:    args[0].TypeName(),
-		}
-	}
-
-	patterns, err := arrayToStringSlice(patternsArray)
+	patterns, err := interop.TArrayToGoStrSlice(args[0], "patterns")
 	if err != nil {
 		return nil, err
 	}
 
-	codesArray, ok := args[1].(*tengo.Array)
-	if !ok {
-		return nil, tengo.ErrInvalidArgumentType{
-			Name:     "codes",
-			Expected: "string",
-			Found:    args[1].TypeName(),
-		}
-	}
-
-	codes, err := arrayToIntSlice(codesArray)
+	codes, err := interop.TArrayToGoIntSlice(args[1], "codes")
 	if err != nil {
 		return nil, err
 	}
@@ -131,14 +101,14 @@ func (h *ArsenicHost) contentDiscoveryURLs(args ...tengo.Object) (tengo.Object, 
 	for _, pattern := range patterns {
 		matches, err := filepath.Glob(pattern)
 		if err != nil {
-			return toError(err), nil
+			return interop.GoErrToTErr(err), nil
 		}
 		files = append(files, matches...)
 	}
 
 	allResults, err := gocdp.SmartParseFiles(files)
 	if err != nil {
-		return toError(err), nil
+		return interop.GoErrToTErr(err), nil
 	}
 	grouped := allResults.GroupByStatus()
 
@@ -154,7 +124,22 @@ func (h *ArsenicHost) contentDiscoveryURLs(args ...tengo.Object) (tengo.Object, 
 		}
 	}
 
-	return sliceToStringArray(urls), nil
+	return interop.GoStrSliceToTArray(urls), nil
+}
+
+func (h *ArsenicHost) sync(args ...tengo.Object) (tengo.Object, error) {
+	err := h.Value.SyncMetadata(host.SyncOptions{
+		IPAddresses: true,
+		Hostnames:   true,
+		Ports:       true,
+		Flags:       true,
+	})
+	if err != nil {
+		return interop.GoErrToTErr(err), nil
+	}
+
+	h.Value.SaveMetadata()
+	return nil, nil
 }
 
 func (h *ArsenicHost) tcpPorts() tengo.Object {
@@ -183,25 +168,17 @@ func makeArsenicHost(h *host.Host) *ArsenicHost {
 	}
 
 	objectMap := map[string]tengo.Object{
-		"dir": &tengo.String{
-			Value: h.Dir,
-		},
-		"name": &tengo.String{
-			Value: h.Metadata.Name,
-		},
 		"has_flags": &tengo.UserFunction{
 			Name:  "has_flags",
-			Value: funcASvRB(h.Metadata.HasFlags),
+			Value: interop.FuncASvRB(h.Metadata.HasFlags),
 		},
-		"tcp_ports": arsenicHost.tcpPorts(),
-		"udp_ports": arsenicHost.udpPorts(),
 		"has_any_port": &tengo.UserFunction{
 			Name:  "has_any_port",
 			Value: stdlib.FuncARB(h.Metadata.HasAnyPort),
 		},
 		"files": &tengo.UserFunction{
 			Name:  "files",
-			Value: funcASvRSsE(h.Files),
+			Value: interop.FuncASvRSsE(h.Files),
 		},
 		"urls": &tengo.UserFunction{
 			Name:  "urls",
@@ -215,9 +192,39 @@ func makeArsenicHost(h *host.Host) *ArsenicHost {
 			Name:  "content_discovery_urls",
 			Value: arsenicHost.contentDiscoveryURLs,
 		},
+		"sync": &tengo.UserFunction{
+			Name:  "sync",
+			Value: arsenicHost.sync,
+		},
 	}
 
-	arsenicHost.objectMap = objectMap
+	properties := map[string]types.Property{
+		"dir": {
+			Get: func() tengo.Object {
+				return &tengo.String{
+					Value: h.Dir,
+				}
+			},
+		},
+		"name": {
+			Get: func() tengo.Object {
+				return &tengo.String{
+					Value: h.Metadata.Name,
+				}
+			},
+		},
+		"tcp_ports": {
+			Get: arsenicHost.tcpPorts,
+		},
+		"udp_ports": {
+			Get: arsenicHost.udpPorts,
+		},
+	}
+
+	arsenicHost.PropObject = types.PropObject{
+		ObjectMap:  objectMap,
+		Properties: properties,
+	}
 
 	return arsenicHost
 }

@@ -6,6 +6,7 @@ import (
 
 	"github.com/analog-substance/arsenic/lib/scope"
 	"github.com/analog-substance/tengo/v2"
+	"github.com/analog-substance/tengomod/interop"
 )
 
 // ScopeModule represents the 'scope' import module
@@ -39,10 +40,10 @@ func (s *Script) ScopeModule() map[string]tengo.Object {
 func (s *Script) domains(args ...tengo.Object) (tengo.Object, error) {
 	domains, err := scope.GetScope("domains")
 	if err != nil {
-		return toError(err), nil
+		return interop.GoErrToTErr(err), nil
 	}
 
-	return sliceToStringArray(domains), nil
+	return interop.GoStrSliceToTArray(domains), nil
 }
 
 // rootDomains returns the in scope root domains
@@ -64,11 +65,11 @@ func (s *Script) rootDomains(args ...tengo.Object) (tengo.Object, error) {
 
 	domains, err := scope.GetScope("domains")
 	if err != nil {
-		return toError(err), nil
+		return interop.GoErrToTErr(err), nil
 	}
 
 	rootDomains := scope.GetRootDomains(domains, pruneBlacklisted)
-	return sliceToStringArray(rootDomains), nil
+	return interop.GoStrSliceToTArray(rootDomains), nil
 }
 
 // constDomains returns the domains which are always in scope contained in the scope-domains.txt file
@@ -76,10 +77,10 @@ func (s *Script) rootDomains(args ...tengo.Object) (tengo.Object, error) {
 func (s *Script) constDomains(args ...tengo.Object) (tengo.Object, error) {
 	constDomains, err := scope.GetConstScope("domains")
 	if err != nil {
-		return toError(err), nil
+		return interop.GoErrToTErr(err), nil
 	}
 
-	return sliceToStringArray(constDomains), nil
+	return interop.GoStrSliceToTArray(constDomains), nil
 }
 
 // constSubDomains returns the sub-domains of the specified domain which are always in scope contained in the scope-domains.txt file
@@ -102,7 +103,7 @@ func (s *Script) constSubDomains(args ...tengo.Object) (tengo.Object, error) {
 
 	constDomains, err := scope.GetConstScope("domains")
 	if err != nil {
-		return toError(err), nil
+		return interop.GoErrToTErr(err), nil
 	}
 
 	var constSubDomains []string
@@ -112,7 +113,7 @@ func (s *Script) constSubDomains(args ...tengo.Object) (tengo.Object, error) {
 		}
 	}
 
-	return sliceToStringArray(constSubDomains), nil
+	return interop.GoStrSliceToTArray(constSubDomains), nil
 }
 
 // prune will only return the in scope ips/domains from the provided items
@@ -128,14 +129,14 @@ func (s *Script) prune(args ...tengo.Object) (tengo.Object, error) {
 		case *tengo.String:
 			allItems = append(allItems, o.Value)
 		case *tengo.Array:
-			items, err := sliceToStringSlice(o.Value)
+			items, err := interop.GoTSliceToGoStrSlice(o.Value, "items")
 			if err != nil {
 				return nil, err
 			}
 
 			allItems = append(allItems, items...)
 		case *tengo.ImmutableArray:
-			items, err := sliceToStringSlice(o.Value)
+			items, err := interop.GoTSliceToGoStrSlice(o.Value, "items")
 			if err != nil {
 				return nil, err
 			}
@@ -157,5 +158,5 @@ func (s *Script) prune(args ...tengo.Object) (tengo.Object, error) {
 		}
 	}
 
-	return sliceToStringArray(inScope), nil
+	return interop.GoStrSliceToTArray(inScope), nil
 }
