@@ -4,18 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"os/exec"
-
-	"github.com/analog-substance/tengo/v2"
 )
-
-// toWarning creates a Warning object from a string
-func toWarning(value string) tengo.Object {
-	return &Warning{
-		Value: &tengo.String{
-			Value: value,
-		},
-	}
-}
 
 func runWithError(cmd *exec.Cmd) error {
 	buf := new(bytes.Buffer)

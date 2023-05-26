@@ -11,9 +11,11 @@ import (
 	"github.com/analog-substance/tengo/v2/stdlib"
 	"github.com/analog-substance/tengomod"
 	modexec "github.com/analog-substance/tengomod/exec"
+	"github.com/analog-substance/tengomod/interop"
 )
 
 type Script struct {
+	caller   *Script
 	path     string
 	name     string
 	ctx      context.Context
@@ -23,6 +25,7 @@ type Script struct {
 	args     []string
 	isGit    bool
 	signaled bool
+	err      error
 }
 
 func NewScript(path string) (*Script, error) {
@@ -92,7 +95,12 @@ func (s *Script) Run(args []string) error {
 
 	s.compiled = compiled
 
-	return s.compiled.RunContext(s.ctx)
+	err = s.compiled.RunContext(s.ctx)
+	if err != nil {
+		s.err = err
+	}
+
+	return s.err
 }
 
 func (s *Script) updateFileSet(fileSet *parser.SourceFileSet) {
@@ -113,7 +121,10 @@ func (s *Script) checkErr(args ...tengo.Object) (tengo.Object, error) {
 	for _, arg := range args {
 		errObj, ok := arg.(*tengo.Error)
 		if ok {
-			s.tengoStop(errObj)
+			argMap := interop.ArgMap{
+				"message": errObj,
+			}
+			s.tengoStop(argMap)
 			break
 		}
 	}

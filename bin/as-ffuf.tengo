@@ -1,0 +1,227 @@
+#!/usr/bin/env arsenic
+
+cobra := import("cobra")
+os := import("os")
+os2 := import("os2")
+filepath := import("filepath")
+nmap := import("nmap")
+script := import("script")
+log := import("log")
+ffuf := import("ffuf")
+text := import("text")
+fmt := import("fmt")
+url := import("url")
+arsenic := import("arsenic")
+net := import("net")
+
+urls := []
+presetUA := {
+	"firefox": "Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101 Firefox/68.0",
+	"chrome": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36",
+	"safari": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_2) AppleWebKit/601.3.9 (KHTML, like Gecko) Version/9.0.2 Safari/601.3.9"
+}
+outputFileFormat := "ffuf.%s.%s.%s.json"
+wordlistFile := ""
+wordlistName := ""
+method := ""
+
+genOutputFileName := func(output, rawURL) {
+	if output != "" {
+		return output
+	}
+
+	rawURL = text.replace(rawURL, "://", ".", -1)
+	rawURL = text.replace(rawURL, "/", ".", -1)
+	return format(outputFileFormat, rawURL, method, wordlistName)
+}
+
+rootCmd := cobra.root_cmd(script.name, "Run ffuf content enumeration scans")
+rootCmd.flags.sort_flags = false
+
+rootCmd.flags.string_slicep("header", "H", [], "Header '\"Name: Value\"', separated by colon. Multiple -H flags are accepted.")
+rootCmd.flags.string("auth", "", "Authorization header value")
+rootCmd.flags.stringp("token", "t", "", "Bearer token to be put in the Authorization header")
+rootCmd.flags.stringp("useragent", "a", "Firefox", `The user agent string to use. Use supplied presets (Firefox, Chrome, Safari) or a custom string`)
+rootCmd.flags.stringp("method", "X", "GET", "HTTP method to use")
+rootCmd.flags.int("recursion-depth", 0, "Maximum recursion depth.")
+rootCmd.flags.stringp("proxy", "x", "", "Proxy URL (SOCKS5 or HTTP). For example: http://127.0.0.1:8080 or socks5://127.0.0.1:8080")
+
+rootCmd.flags.bool("ac", false, "Automatically calibrate filtering options")
+rootCmd.flags.stringp("delay", "p", "", `Seconds of 'delay' between requests, or a range of random delay. For example "0.1" or "0.1-2.0"`)
+rootCmd.flags.bool("sa", true, "Stop on all error cases. Disable with --sa=false")
+
+rootCmd.flags.string_slice("mc", ["all"], "Match HTTP status codes, or 'all' for everything.")
+rootCmd.flags.int("ml", -1, "Match amount of lines in response")
+rootCmd.flags.int("ms", -1, "Match HTTP response size")
+rootCmd.flags.int("mw", -1, "Match amount of words in response")
+rootCmd.flags.string("mr", "", "Match regexp")
+
+rootCmd.flags.string_slice("fc", ["404"], "List of HTTP status codes to filter from response.")
+rootCmd.flags.string_slice("fl", [], "Filter by amount of lines in response. Comma separated list of line counts and ranges")
+rootCmd.flags.string_slice("fs", [], "Filter HTTP response size. Comma separated list of sizes and ranges")
+rootCmd.flags.string_slice("fw", [], "Filter by amount of words in response. Comma separated list of word counts and ranges")
+rootCmd.flags.string("fr", "", "Filter regexp")
+
+rootCmd.flags.string_slicep("extensions", "e", [], "List of extensions. Extends FUZZ keyword.")
+rootCmd.flags.stringp("wordlist", "w", "", "Path to the wordlist")
+
+rootCmd.flags.stringp("output", "o", "", "Name of the file to write the results to. Default: ffuf.{HTTP_METHOD}.{URL}.{WORDLIST}.json")
+
+rootCmd.enable_completion()
+
+rootCmd.persistent_flags.string_slicep("url", "u", [], "The target URL. Can be used multiple times to specify multiple URLs")
+rootCmd.persistent_flags.stringp("list", "l", "", "The file containing the target urls.")
+
+rootCmd.set_persistent_pre_run(func(cmd, args) {
+	urls = cmd.flags.get_string_slice("url")
+	file := cmd.flags.get_string("list")
+	wordlist := cmd.flags.get_string("wordlist")
+
+	if wordlist == "" {
+		script.stop("No wordlist specified")
+	}
+
+	wordlistFile = filepath.abs(wordlist)
+	check_err(wordlistFile)
+
+	wordlistName = filepath.base(wordlistFile)
+	wordlistName = text.trim_suffix(wordlistName, filepath.ext(wordlistName))
+
+	if file != "" {
+		lines := os2.read_file_lines(file)
+		check_err(lines)
+
+		for line in lines {
+			urls = append(urls, line)
+		}
+	}
+
+	for line in os2.read_stdin() {
+		urls = append(urls, line)
+	}
+
+	if len(urls) == 0 {
+		script.stop("No URLs specified")
+	}
+})
+
+rootCmd.set_run(func(cmd, args) {
+	headers := cmd.flags.get_string_slice("header")
+	depth := cmd.flags.get_int("recursion-depth")
+	delay := cmd.flags.get_string("delay")
+	extensions := cmd.flags.get_string_slice("extensions")
+	autoCalibrate := cmd.flags.get_bool("ac")
+	stopOnErrors := cmd.flags.get_bool("sa")
+
+	matchCodes := cmd.flags.get_string_slice("mc")
+	matchLines := cmd.flags.get_int("ml")
+	matchSize := cmd.flags.get_int("ms")
+	matchWords := cmd.flags.get_int("mw")
+	matchRegex := cmd.flags.get_string("mr")
+
+	filterCodes := cmd.flags.get_string_slice("fc")
+	filterLines := cmd.flags.get_string_slice("fl")
+	filterSize := cmd.flags.get_string_slice("fs")
+	filterWords := cmd.flags.get_string_slice("fw")
+	filterRegex := cmd.flags.get_string("fr")
+
+	method = text.to_upper(cmd.flags.get_string("method"))
+	token := cmd.flags.get_string("token")
+	auth := cmd.flags.get_string("auth")
+	
+	userAgent := cmd.flags.get_string("useragent")
+
+	preset := presetUA[text.to_lower(userAgent)]
+	if !is_undefined(preset) {
+		userAgent = preset
+	}
+
+	output := cmd.flags.get_string("output")
+	proxy := cmd.flags.get_string("proxy")
+
+	fuzzer := ffuf.fuzzer().
+		auto_append_keyword().
+		add_json_warnings().
+		exts(extensions).
+		delay(delay).		
+		headers_raw(headers...).
+		user_agent(userAgent).
+		match_codes(matchCodes...).
+		match_lines(matchLines).
+		match_size(matchSize).
+		match_words(matchWords).
+		match_regex(matchRegex).
+		filter_codes(filterCodes...).
+		filter_lines(filterLines...).
+		filter_size(filterSize...).
+		filter_words(filterWords...).
+		filter_regex(filterRegex).
+		output_format(ffuf.format.json).
+		wordlist(wordlistFile).
+		verbose()
+
+	if autoCalibrate {
+		fuzzer.auto_calibrate()
+	}
+
+	if depth > 0 {
+		fuzzer.recursion().recursion_depth(depth)
+	}
+
+	if auth != "" {
+		fuzzer.authorization(auth)
+	}
+
+	if token != "" {
+		fuzzer.bearer_token(token)
+	}
+
+	if proxy != "" {
+		fuzzer.proxy(proxy)
+	}
+
+	if stopOnErrors {
+		fuzzer.stop_on_all_errors()
+	}
+
+	fuzzer.custom_arguments(args...)
+
+	scan := func(targetURL) {
+		fuzzer.target(targetURL)
+
+		outputFile := genOutputFileName(output, targetURL)
+		outputPath := filepath.join("recon", outputFile)
+
+		hostname := url.hostname(targetURL)
+		check_err(hostname)
+
+		if filepath.dir_exists("hosts") {
+			host := arsenic.host(hostname)
+			if is_undefined(host) {
+				hostnames := []
+				ips := []
+
+				if net.is_ip(hostname) {
+					ips = append(ips, hostname)
+				} else {
+					hostnames = append(hostnames, hostname)
+				}
+
+				host = arsenic.add_host(hostnames, ips)
+				check_err(host)
+			}
+
+			outputPath = filepath.join(host.dir, outputPath)
+		}
+
+		err := fuzzer.output_file(outputPath).target(targetURL).run()
+		check_err(err)
+	}
+
+	for target in urls {
+		scan(target)
+	}
+})
+
+err := rootCmd()
+check_err(err)

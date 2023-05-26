@@ -3,8 +3,6 @@
 fmt := import("fmt")
 text := import("text")
 os := import("os")
-os2 := import("os2")
-json := import("json")
 filepath := import("filepath")
 slice := import("slice")
 arsenic := import("arsenic")
@@ -26,7 +24,7 @@ wordlistName := ""
 genOutputFileName := func(rawURL, wordlistName) {
   rawURL = text.replace(rawURL, "://", ".", -1)
   rawURL = text.replace(rawURL, "/", ".", -1)
-  return fmt.sprintf("ffuf.%s.%s.json", rawURL, wordlistName)
+  return format("ffuf.%s.%s.json", rawURL, wordlistName)
 }
 
 getHostURLs := func(flags, wordlistName) {
@@ -179,28 +177,8 @@ scanCmd.set_run(func(cmd, args) {
         args = append(args, "-x", proxy)
       }
 
-      err = arsenic.ffuf(args...)
+      err = script.run_script("as-ffuf.tengo", args...)
       check_err(err)
-
-      // If there were warnings (i.e. ffuf exited due to errors), let's add them to the JSON file
-      if type_name(err) == "array" && len(err) != 0 && type_name(err[0]) == "warning" {
-        content := os.read_file(outputPath)
-        check_err(content)
-
-        obj := json.decode(content)
-
-        warnings := []
-        for warning in err {
-          warnings = append(warnings, warning.value)
-        }
-        obj.warnings = warnings
-
-        content = json.encode(obj)
-        content = json.indent(content, "", "  ")
-
-        err = os2.write_file(outputPath, content)
-        check_err(err)
-      }
 
       log.info(format("Content Discovery / %s / %s / complete", host, rawURL))
     }

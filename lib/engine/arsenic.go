@@ -1,23 +1,28 @@
 package engine
 
 import (
-	"bytes"
-	"context"
-	"io"
+	"errors"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"regexp"
 
 	"github.com/analog-substance/arsenic/lib/host"
 	"github.com/analog-substance/arsenic/lib/util"
 	"github.com/analog-substance/tengo/v2"
-	modexec "github.com/analog-substance/tengomod/exec"
 	"github.com/analog-substance/tengomod/interop"
 )
 
 func (s *Script) ArsenicModule() map[string]tengo.Object {
 	return map[string]tengo.Object{
+		"add_host": &interop.AdvFunction{
+			Name:    "add_host",
+			NumArgs: interop.ExactArgs(2),
+			Args: []interop.AdvArg{
+				interop.StrSliceArg("hostnames", false),
+				interop.StrSliceArg("ips", false),
+			},
+			Value: s.addHost,
+		},
 		"host": &interop.AdvFunction{
 			Name:    "host",
 			NumArgs: interop.ExactArgs(1),
@@ -35,12 +40,6 @@ func (s *Script) ArsenicModule() map[string]tengo.Object {
 			NumArgs: interop.ExactArgs(1),
 			Args:    []interop.AdvArg{interop.StrArg("glob")},
 			Value:   s.lockedFiles,
-		},
-		"ffuf": &interop.AdvFunction{
-			Name:    "ffuf",
-			NumArgs: interop.MinArgs(1),
-			Args:    []interop.AdvArg{interop.StrSliceArg("args", true)},
-			Value:   s.ffuf,
 		},
 	}
 }
@@ -96,32 +95,18 @@ func (s *Script) lockedFiles(args interop.ArgMap) (tengo.Object, error) {
 	return interop.GoStrSliceToTArray(locked), nil
 }
 
-func (s *Script) ffuf(args interop.ArgMap) (tengo.Object, error) {
-	cmdArgs, _ := args.GetStringSlice("args")
+func (s *Script) addHost(args interop.ArgMap) (tengo.Object, error) {
+	hostnames, _ := args.GetStringSlice("hostnames")
+	ips, _ := args.GetStringSlice("ips")
 
-	cmd := exec.CommandContext(context.Background(), "as-ffuf", cmdArgs...)
-
-	cmd.Stdout = os.Stdout
-	cmd.Stdin = os.Stdin
-
-	errBuf := new(bytes.Buffer)
-	cmd.Stderr = io.MultiWriter(errBuf, os.Stderr)
-
-	err := modexec.RunCmdWithSigHandler(cmd)
+	h, err := host.AddHost(hostnames, ips)
 	if err != nil {
 		return interop.GoErrToTErr(err), nil
 	}
 
-	warnRe := regexp.MustCompile(`(?m)\[WARN\]\s*(.*)$`)
-	matches := warnRe.FindAllStringSubmatch(errBuf.String(), -1)
-	if len(matches) != 0 {
-		var warnings []tengo.Object
-		for _, match := range matches {
-			warnings = append(warnings, toWarning(match[1]))
-		}
-
-		return &tengo.Array{Value: warnings}, nil
+	if h == nil {
+		return interop.GoErrToTErr(errors.New("must supply hostnames and ips")), nil
 	}
 
-	return nil, nil
+	return makeArsenicHost(h), nil
 }

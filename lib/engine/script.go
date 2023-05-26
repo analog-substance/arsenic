@@ -2,6 +2,7 @@ package engine
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -24,9 +25,11 @@ func (s *Script) ScriptModule() map[string]tengo.Object {
 		"name": &tengo.String{
 			Value: s.name,
 		},
-		"stop": &tengo.UserFunction{
-			Name:  "stop",
-			Value: s.tengoStop,
+		"stop": &interop.AdvFunction{
+			Name:    "stop",
+			NumArgs: interop.MaxArgs(1),
+			Args:    []interop.AdvArg{interop.ObjectArg("message")},
+			Value:   s.tengoStop,
 		},
 		"run_script": &interop.AdvFunction{
 			Name:    "run_script",
@@ -101,6 +104,8 @@ func (s *Script) runScript(path string, args ...string) error {
 		return err
 	}
 
+	script.caller = s
+
 	return script.Run(args)
 }
 
@@ -116,6 +121,8 @@ func (s *Script) runScriptWithSigHandler(path string, args ...string) error {
 	if err != nil {
 		return err
 	}
+
+	script.caller = s
 
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, os.Interrupt, syscall.SIGTERM)
@@ -176,29 +183,27 @@ func (s *Script) findScript(path string) (string, error) {
 
 // tengoStop is the tengo function version of stop.
 // Represents 'script.stop(msg string|error)'
-func (s *Script) tengoStop(args ...tengo.Object) (tengo.Object, error) {
-	var messages []string
-	for _, arg := range args {
-		msg, _ := tengo.ToString(arg)
-		messages = append(messages, msg)
+func (s *Script) tengoStop(args interop.ArgMap) (tengo.Object, error) {
+	message := ""
+	obj, ok := args.GetObject("message")
+	if ok {
+		message, _ = tengo.ToString(obj)
 	}
 
-	s.stop(messages...)
+	s.stop(message)
 	return nil, nil
 }
 
 // stop prints the message and stops the current script.
-func (s *Script) stop(args ...string) {
-	for _, arg := range args {
-		if arg == "" {
-			continue
-		}
+func (s *Script) stop(message string) {
+	message = strings.ReplaceAll(message, `\n`, "\n")
+	message = strings.ReplaceAll(message, `\t`, "\t")
 
-		message := strings.ReplaceAll(arg, `\n`, "\n")
-		message = strings.ReplaceAll(message, `\t`, "\t")
-
+	if message != "" {
 		fmt.Println(message)
 	}
+
+	s.err = errors.New(message)
 
 	go func() {
 		s.cancel()
