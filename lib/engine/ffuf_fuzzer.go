@@ -8,13 +8,13 @@ import (
 	"github.com/analog-substance/tengo/v2/stdlib"
 	"github.com/analog-substance/tengo/v2/stdlib/json"
 	"github.com/analog-substance/tengomod/interop"
+	"github.com/analog-substance/tengomod/types"
 )
 
 type Fuzzer struct {
-	tengo.ObjectImpl
-	Value     *ffuf.Fuzzer
-	objectMap map[string]tengo.Object
-	script    *Script
+	types.PropObject
+	Value  *ffuf.Fuzzer
+	script *Script
 }
 
 func (f *Fuzzer) TypeName() string {
@@ -37,114 +37,75 @@ func (f *Fuzzer) CanIterate() bool {
 	return false
 }
 
-func (f *Fuzzer) IndexGet(index tengo.Object) (tengo.Object, error) {
-	strIdx, ok := tengo.ToString(index)
-	if !ok {
-		return nil, tengo.ErrInvalidIndexType
-	}
-
-	res, ok := f.objectMap[strIdx]
-	if !ok {
-		res = tengo.UndefinedValue
-	}
-	return res, nil
-}
-
 func (f *Fuzzer) funcASRF(fn func(string) *ffuf.Fuzzer) tengo.CallableFunc {
-	return func(args ...tengo.Object) (tengo.Object, error) {
-		if len(args) != 1 {
-			return nil, tengo.ErrWrongNumArguments
-		}
-		s1, ok := tengo.ToString(args[0])
-		if !ok {
-			return nil, tengo.ErrInvalidArgumentType{
-				Name:     "first",
-				Expected: "string(compatible)",
-				Found:    args[0].TypeName(),
-			}
-		}
+	advFunc := interop.AdvFunction{
+		NumArgs: interop.ExactArgs(1),
+		Args:    []interop.AdvArg{interop.StrArg("first")},
+		Value: func(args interop.ArgMap) (tengo.Object, error) {
+			s1, _ := args.GetString("first")
 
-		fn(s1)
-		return f, nil
+			fn(s1)
+			return f, nil
+		},
 	}
+	return advFunc.Call
 }
 
 func (f *Fuzzer) funcAIRF(fn func(int) *ffuf.Fuzzer) tengo.CallableFunc {
-	return func(args ...tengo.Object) (tengo.Object, error) {
-		if len(args) != 1 {
-			return nil, tengo.ErrWrongNumArguments
-		}
-		i1, ok := tengo.ToInt(args[0])
-		if !ok {
-			return nil, tengo.ErrInvalidArgumentType{
-				Name:     "first",
-				Expected: "int(compatible)",
-				Found:    args[0].TypeName(),
-			}
-		}
+	advFunc := interop.AdvFunction{
+		NumArgs: interop.ExactArgs(1),
+		Args:    []interop.AdvArg{interop.IntArg("first")},
+		Value: func(args interop.ArgMap) (tengo.Object, error) {
+			i1, _ := args.GetInt("first")
 
-		fn(i1)
-		return f, nil
+			fn(i1)
+			return f, nil
+		},
 	}
+	return advFunc.Call
 }
 
 func (f *Fuzzer) funcASSRF(fn func(string, string) *ffuf.Fuzzer) tengo.CallableFunc {
-	return func(args ...tengo.Object) (tengo.Object, error) {
-		if len(args) != 2 {
-			return nil, tengo.ErrWrongNumArguments
-		}
-		s1, ok := tengo.ToString(args[0])
-		if !ok {
-			return nil, tengo.ErrInvalidArgumentType{
-				Name:     "first",
-				Expected: "string(compatible)",
-				Found:    args[0].TypeName(),
-			}
-		}
+	advFunc := interop.AdvFunction{
+		NumArgs: interop.ExactArgs(2),
+		Args:    []interop.AdvArg{interop.StrArg("first"), interop.StrArg("second")},
+		Value: func(args interop.ArgMap) (tengo.Object, error) {
+			s1, _ := args.GetString("first")
+			s2, _ := args.GetString("second")
 
-		s2, ok := tengo.ToString(args[1])
-		if !ok {
-			return nil, tengo.ErrInvalidArgumentType{
-				Name:     "second",
-				Expected: "string(compatible)",
-				Found:    args[1].TypeName(),
-			}
-		}
-
-		fn(s1, s2)
-		return f, nil
+			fn(s1, s2)
+			return f, nil
+		},
 	}
+	return advFunc.Call
 }
 
 func (f *Fuzzer) funcASvRF(fn func(...string) *ffuf.Fuzzer) tengo.CallableFunc {
-	return func(args ...tengo.Object) (tengo.Object, error) {
-		if len(args) != 0 {
-			return nil, tengo.ErrWrongNumArguments
-		}
-		slice, err := interop.GoTSliceToGoStrSlice(args, "first")
-		if err != nil {
-			return nil, err
-		}
+	advFunc := interop.AdvFunction{
+		NumArgs: interop.MinArgs(1),
+		Args:    []interop.AdvArg{interop.StrSliceArg("first", true)},
+		Value: func(args interop.ArgMap) (tengo.Object, error) {
+			slice, _ := args.GetStringSlice("first")
 
-		fn(slice...)
-		return f, nil
+			fn(slice...)
+			return f, nil
+		},
 	}
+	return advFunc.Call
 }
 
 func (f *Fuzzer) funcASsRF(fn func([]string) *ffuf.Fuzzer) tengo.CallableFunc {
-	return func(args ...tengo.Object) (tengo.Object, error) {
-		if len(args) != 1 {
-			return nil, tengo.ErrWrongNumArguments
-		}
+	advFunc := interop.AdvFunction{
+		NumArgs: interop.ExactArgs(1),
+		Args:    []interop.AdvArg{interop.StrSliceArg("first", false)},
+		Value: func(args interop.ArgMap) (tengo.Object, error) {
+			slice, _ := args.GetStringSlice("first")
 
-		slice, err := interop.TArrayToGoStrSlice(args[0], "first")
-		if err != nil {
-			return nil, err
-		}
-
-		fn(slice)
-		return f, nil
+			fn(slice)
+			return f, nil
+		},
 	}
+	return advFunc.Call
 }
 
 func (f *Fuzzer) funcARF(fn func() *ffuf.Fuzzer) tengo.CallableFunc {
@@ -155,95 +116,50 @@ func (f *Fuzzer) funcARF(fn func() *ffuf.Fuzzer) tengo.CallableFunc {
 }
 
 func (f *Fuzzer) funcASMSRF(fn func(map[string]string) *ffuf.Fuzzer) tengo.CallableFunc {
-	return func(args ...tengo.Object) (tengo.Object, error) {
-		if len(args) != 1 {
-			return nil, tengo.ErrWrongNumArguments
-		}
+	advFunc := interop.AdvFunction{
+		NumArgs: interop.ExactArgs(1),
+		Args:    []interop.AdvArg{interop.StrMapStrArg("first")},
+		Value: func(args interop.ArgMap) (tengo.Object, error) {
+			m, _ := args.GetStrMapStr("first")
 
-		m, err := interop.TMapToGoStrMapStr(args[0], "first")
-		if err != nil {
-			return nil, err
-		}
-
-		fn(m)
-		return f, nil
+			fn(m)
+			return f, nil
+		},
 	}
+	return advFunc.Call
 }
 
-func (f *Fuzzer) recursionStrategy(args ...tengo.Object) (tengo.Object, error) {
-	if len(args) != 1 {
-		return nil, tengo.ErrWrongNumArguments
-	}
-	s1, ok := tengo.ToString(args[0])
-	if !ok {
-		return nil, tengo.ErrInvalidArgumentType{
-			Name:     "first",
-			Expected: "string(compatible)",
-			Found:    args[0].TypeName(),
-		}
-	}
+func (f *Fuzzer) recursionStrategy(args interop.ArgMap) (tengo.Object, error) {
+	strategy, _ := args.GetString("strategy")
 
-	f.Value.RecursionStrategy(ffuf.RecursionStrategy(s1))
+	f.Value.RecursionStrategy(ffuf.RecursionStrategy(strategy))
 	return f, nil
 }
 
-func (f *Fuzzer) autoCalibrateStrategy(args ...tengo.Object) (tengo.Object, error) {
-	if len(args) != 1 {
-		return nil, tengo.ErrWrongNumArguments
-	}
-	s1, ok := tengo.ToString(args[0])
-	if !ok {
-		return nil, tengo.ErrInvalidArgumentType{
-			Name:     "first",
-			Expected: "string(compatible)",
-			Found:    args[0].TypeName(),
-		}
-	}
+func (f *Fuzzer) autoCalibrateStrategy(args interop.ArgMap) (tengo.Object, error) {
+	strategy, _ := args.GetString("strategy")
 
-	f.Value.AutoCalibrateStrategy(ffuf.AutoCalibrateStrategy(s1))
+	f.Value.AutoCalibrateStrategy(ffuf.AutoCalibrateStrategy(strategy))
 	return f, nil
 }
 
-func (f *Fuzzer) matchOperator(args ...tengo.Object) (tengo.Object, error) {
-	if len(args) != 1 {
-		return nil, tengo.ErrWrongNumArguments
-	}
-	s1, ok := tengo.ToString(args[0])
-	if !ok {
-		return nil, tengo.ErrInvalidArgumentType{
-			Name:     "first",
-			Expected: "string(compatible)",
-			Found:    args[0].TypeName(),
-		}
-	}
+func (f *Fuzzer) matchOperator(args interop.ArgMap) (tengo.Object, error) {
+	operator, _ := args.GetString("operator")
 
-	f.Value.MatchOperator(ffuf.SetOperator(s1))
+	f.Value.MatchOperator(ffuf.SetOperator(operator))
 	return f, nil
 }
 
-func (f *Fuzzer) filterOperator(args ...tengo.Object) (tengo.Object, error) {
-	if len(args) != 1 {
-		return nil, tengo.ErrWrongNumArguments
-	}
-	s1, ok := tengo.ToString(args[0])
-	if !ok {
-		return nil, tengo.ErrInvalidArgumentType{
-			Name:     "first",
-			Expected: "string(compatible)",
-			Found:    args[0].TypeName(),
-		}
-	}
+func (f *Fuzzer) filterOperator(args interop.ArgMap) (tengo.Object, error) {
+	operator, _ := args.GetString("operator")
 
-	f.Value.FilterOperator(ffuf.SetOperator(s1))
+	f.Value.FilterOperator(ffuf.SetOperator(operator))
 	return f, nil
 }
 
-func (f *Fuzzer) postJSON(args ...tengo.Object) (tengo.Object, error) {
-	if len(args) != 1 {
-		return nil, tengo.ErrWrongNumArguments
-	}
-
-	bytes, err := json.Encode(args[0])
+func (f *Fuzzer) postJSON(args interop.ArgMap) (tengo.Object, error) {
+	body, _ := args.GetObject("body")
+	bytes, err := json.Encode(body)
 	if err != nil {
 		return interop.GoErrToTErr(err), nil
 	}
@@ -252,49 +168,22 @@ func (f *Fuzzer) postJSON(args ...tengo.Object) (tengo.Object, error) {
 	return f, nil
 }
 
-func (f *Fuzzer) wordlistMode(args ...tengo.Object) (tengo.Object, error) {
-	if len(args) != 1 {
-		return nil, tengo.ErrWrongNumArguments
-	}
-	s1, ok := tengo.ToString(args[0])
-	if !ok {
-		return nil, tengo.ErrInvalidArgumentType{
-			Name:     "first",
-			Expected: "string(compatible)",
-			Found:    args[0].TypeName(),
-		}
-	}
+func (f *Fuzzer) wordlistMode(args interop.ArgMap) (tengo.Object, error) {
+	mode, _ := args.GetString("mode")
 
-	f.Value.WordlistMode(ffuf.WordlistMode(s1))
+	f.Value.WordlistMode(ffuf.WordlistMode(mode))
 	return f, nil
 }
 
-func (f *Fuzzer) outputFormat(args ...tengo.Object) (tengo.Object, error) {
-	if len(args) != 1 {
-		return nil, tengo.ErrWrongNumArguments
-	}
-	s1, ok := tengo.ToString(args[0])
-	if !ok {
-		return nil, tengo.ErrInvalidArgumentType{
-			Name:     "first",
-			Expected: "string(compatible)",
-			Found:    args[0].TypeName(),
-		}
-	}
+func (f *Fuzzer) outputFormat(args interop.ArgMap) (tengo.Object, error) {
+	format, _ := args.GetString("format")
 
-	f.Value.OutputFormat(ffuf.OutputFormat(s1))
+	f.Value.OutputFormat(ffuf.OutputFormat(format))
 	return f, nil
 }
 
-func (f *Fuzzer) customArguments(args ...tengo.Object) (tengo.Object, error) {
-	if len(args) == 0 {
-		return nil, tengo.ErrWrongNumArguments
-	}
-
-	slice, err := interop.GoTSliceToGoStrSlice(args, "args")
-	if err != nil {
-		return nil, err
-	}
+func (f *Fuzzer) customArguments(args interop.ArgMap) (tengo.Object, error) {
+	slice, _ := args.GetStringSlice("args")
 
 	f.Value.CustomArguments(slice...)
 	return f, nil
@@ -344,9 +233,11 @@ func makeFfufFuzzer(s *Script, f *ffuf.Fuzzer) *Fuzzer {
 			Name:  "recursion",
 			Value: fuzzer.funcARF(f.Recursion),
 		},
-		"recursion_strategy": &tengo.UserFunction{
-			Name:  "recursion_strategy",
-			Value: fuzzer.recursionStrategy,
+		"recursion_strategy": &interop.AdvFunction{
+			Name:    "recursion_strategy",
+			NumArgs: interop.ExactArgs(1),
+			Args:    []interop.AdvArg{interop.StrArg("strategy")},
+			Value:   fuzzer.recursionStrategy,
 		},
 		"replay_proxy": &tengo.UserFunction{
 			Name:  "replay_proxy",
@@ -375,7 +266,7 @@ func makeFfufFuzzer(s *Script, f *ffuf.Fuzzer) *Fuzzer {
 			Value: fuzzer.funcARF(f.PerHostAutoCalibrate),
 		},
 		"ach": fuzzer.aliasFunc("ach", "per_host_auto_calibrate"),
-		"auto_calibrate_strategy": &tengo.UserFunction{
+		"auto_calibrate_strategy": &interop.AdvFunction{
 			Name:  "auto_calibrate_strategy",
 			Value: fuzzer.autoCalibrateStrategy,
 		},
@@ -472,9 +363,11 @@ func makeFfufFuzzer(s *Script, f *ffuf.Fuzzer) *Fuzzer {
 			Name:  "match_time",
 			Value: fuzzer.funcAIRF(f.MatchTime),
 		},
-		"match_operator": &tengo.UserFunction{
-			Name:  "match_operator",
-			Value: fuzzer.matchOperator,
+		"match_operator": &interop.AdvFunction{
+			Name:    "match_operator",
+			NumArgs: interop.ExactArgs(1),
+			Args:    []interop.AdvArg{interop.StrArg("operator")},
+			Value:   fuzzer.matchOperator,
 		},
 		"filter_codes": &tengo.UserFunction{
 			Name:  "filter_codes",
@@ -500,9 +393,11 @@ func makeFfufFuzzer(s *Script, f *ffuf.Fuzzer) *Fuzzer {
 			Name:  "filter_time",
 			Value: fuzzer.funcAIRF(f.FilterTime),
 		},
-		"filter_operator": &tengo.UserFunction{
-			Name:  "filter_operator",
-			Value: fuzzer.filterOperator,
+		"filter_operator": &interop.AdvFunction{
+			Name:    "filter_operator",
+			NumArgs: interop.ExactArgs(1),
+			Args:    []interop.AdvArg{interop.StrArg("operator")},
+			Value:   fuzzer.filterOperator,
 		},
 		"authorization": &tengo.UserFunction{
 			Name:  "authorization",
@@ -520,9 +415,11 @@ func makeFfufFuzzer(s *Script, f *ffuf.Fuzzer) *Fuzzer {
 			Name:  "post_string",
 			Value: fuzzer.funcASRF(f.PostString),
 		},
-		"post_json": &tengo.UserFunction{
-			Name:  "post_json",
-			Value: fuzzer.postJSON,
+		"post_json": &interop.AdvFunction{
+			Name:    "post_json",
+			NumArgs: interop.ExactArgs(1),
+			Args:    []interop.AdvArg{interop.ObjectArg("body")},
+			Value:   fuzzer.postJSON,
 		},
 		"target": &tengo.UserFunction{
 			Name:  "target",
@@ -564,9 +461,11 @@ func makeFfufFuzzer(s *Script, f *ffuf.Fuzzer) *Fuzzer {
 			Name:  "input_shell",
 			Value: fuzzer.funcASRF(f.InputShell),
 		},
-		"wordlist_mode": &tengo.UserFunction{
-			Name:  "wordlist_mode",
-			Value: fuzzer.wordlistMode,
+		"wordlist_mode": &interop.AdvFunction{
+			Name:    "wordlist_mode",
+			NumArgs: interop.ExactArgs(1),
+			Args:    []interop.AdvArg{interop.StrArg("mode")},
+			Value:   fuzzer.wordlistMode,
 		},
 		"raw_request_file": &tengo.UserFunction{
 			Name:  "raw_request_file",
@@ -592,17 +491,21 @@ func makeFfufFuzzer(s *Script, f *ffuf.Fuzzer) *Fuzzer {
 			Name:  "output_dir",
 			Value: fuzzer.funcASRF(f.OutputDir),
 		},
-		"output_format": &tengo.UserFunction{
-			Name:  "output_format",
-			Value: fuzzer.outputFormat,
+		"output_format": &interop.AdvFunction{
+			Name:    "output_format",
+			NumArgs: interop.ExactArgs(1),
+			Args:    []interop.AdvArg{interop.StrArg("format")},
+			Value:   fuzzer.outputFormat,
 		},
 		"no_empty_output": &tengo.UserFunction{
 			Name:  "no_empty_output",
 			Value: fuzzer.funcARF(f.NoEmptyOutput),
 		},
-		"custom_arguments": &tengo.UserFunction{
-			Name:  "custom_arguments",
-			Value: fuzzer.customArguments,
+		"custom_arguments": &interop.AdvFunction{
+			Name:    "custom_arguments",
+			NumArgs: interop.MinArgs(1),
+			Args:    []interop.AdvArg{interop.StrSliceArg("args", true)},
+			Value:   fuzzer.customArguments,
 		},
 		"args": &tengo.UserFunction{
 			Name:  "args",
@@ -618,7 +521,10 @@ func makeFfufFuzzer(s *Script, f *ffuf.Fuzzer) *Fuzzer {
 		},
 	}
 
-	fuzzer.objectMap = objectMap
+	fuzzer.PropObject = types.PropObject{
+		ObjectMap:  objectMap,
+		Properties: make(map[string]types.Property),
+	}
 
 	return fuzzer
 }

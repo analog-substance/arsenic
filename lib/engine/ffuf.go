@@ -11,53 +11,69 @@ func (s *Script) FfufModule() map[string]tengo.Object {
 			Name:  "fuzzer",
 			Value: s.ffufFuzzer,
 		},
-		"default_strategy": &tengo.String{
-			Value: string(ffuf.DefaultStrategy),
+		"strategy": &tengo.ImmutableMap{
+			Value: map[string]tengo.Object{
+				"default": &tengo.String{
+					Value: string(ffuf.DefaultStrategy),
+				},
+				"greedy": &tengo.String{
+					Value: string(ffuf.GreedyStrategy),
+				},
+				"basic": &tengo.String{
+					Value: string(ffuf.BasicStrategy),
+				},
+				"advanced": &tengo.String{
+					Value: string(ffuf.AdvancedStrategy),
+				},
+			},
 		},
-		"greedy_strategy": &tengo.String{
-			Value: string(ffuf.GreedyStrategy),
+		"operator": &tengo.ImmutableMap{
+			Value: map[string]tengo.Object{
+				"or": &tengo.String{
+					Value: string(ffuf.OrOperator),
+				},
+				"and": &tengo.String{
+					Value: string(ffuf.AndOperator),
+				},
+			},
 		},
-		"basic_strategy": &tengo.String{
-			Value: string(ffuf.BasicStrategy),
+		"mode": &tengo.ImmutableMap{
+			Value: map[string]tengo.Object{
+				"cluster_bomb": &tengo.String{
+					Value: string(ffuf.ModeClusterBomb),
+				},
+				"pitch_fork": &tengo.String{
+					Value: string(ffuf.ModePitchFork),
+				},
+				"sniper": &tengo.String{
+					Value: string(ffuf.ModeSniper),
+				},
+			},
 		},
-		"advanced_strategy": &tengo.String{
-			Value: string(ffuf.AdvancedStrategy),
-		},
-		"or_operator": &tengo.String{
-			Value: string(ffuf.OrOperator),
-		},
-		"and_operator": &tengo.String{
-			Value: string(ffuf.AndOperator),
-		},
-		"cluster_bomb": &tengo.String{
-			Value: string(ffuf.ModeClusterBomb),
-		},
-		"pitch_fork": &tengo.String{
-			Value: string(ffuf.ModePitchFork),
-		},
-		"sniper": &tengo.String{
-			Value: string(ffuf.ModeSniper),
-		},
-		"format_all": &tengo.String{
-			Value: string(ffuf.FormatAll),
-		},
-		"format_json": &tengo.String{
-			Value: string(ffuf.FormatJSON),
-		},
-		"format_ejson": &tengo.String{
-			Value: string(ffuf.FormatEJSON),
-		},
-		"format_html": &tengo.String{
-			Value: string(ffuf.FormatHTML),
-		},
-		"format_md": &tengo.String{
-			Value: string(ffuf.FormatMarkdown),
-		},
-		"format_csv": &tengo.String{
-			Value: string(ffuf.FormatCSV),
-		},
-		"format_ecsv": &tengo.String{
-			Value: string(ffuf.FormatECSV),
+		"format": &tengo.ImmutableMap{
+			Value: map[string]tengo.Object{
+				"all": &tengo.String{
+					Value: string(ffuf.FormatAll),
+				},
+				"json": &tengo.String{
+					Value: string(ffuf.FormatJSON),
+				},
+				"ejson": &tengo.String{
+					Value: string(ffuf.FormatEJSON),
+				},
+				"html": &tengo.String{
+					Value: string(ffuf.FormatHTML),
+				},
+				"md": &tengo.String{
+					Value: string(ffuf.FormatMarkdown),
+				},
+				"csv": &tengo.String{
+					Value: string(ffuf.FormatCSV),
+				},
+				"ecsv": &tengo.String{
+					Value: string(ffuf.FormatECSV),
+				},
+			},
 		},
 	}
 }
