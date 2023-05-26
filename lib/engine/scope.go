@@ -16,21 +16,27 @@ func (s *Script) ScopeModule() map[string]tengo.Object {
 			Name:  "domains",
 			Value: s.domains,
 		},
-		"root_domains": &tengo.UserFunction{
-			Name:  "root_domains",
-			Value: s.rootDomains,
+		"root_domains": &interop.AdvFunction{
+			Name:    "root_domains",
+			NumArgs: interop.MaxArgs(1),
+			Args:    []interop.AdvArg{interop.BoolArg("all-root-domains")},
+			Value:   s.rootDomains,
 		},
 		"const_domains": &tengo.UserFunction{
 			Name:  "const_domains",
 			Value: s.constDomains,
 		},
-		"const_subdomains": &tengo.UserFunction{
-			Name:  "const_subdomains",
-			Value: s.constSubDomains,
+		"const_subdomains": &interop.AdvFunction{
+			Name:    "const_subdomains",
+			NumArgs: interop.ExactArgs(1),
+			Args:    []interop.AdvArg{interop.StrArg("domain")},
+			Value:   s.constSubDomains,
 		},
-		"prune": &tengo.UserFunction{
-			Name:  "prune",
-			Value: s.prune,
+		"prune": &interop.AdvFunction{
+			Name:    "prune",
+			NumArgs: interop.MinArgs(1),
+			Args:    []interop.AdvArg{interop.StrSliceArg("items", true)},
+			Value:   s.prune,
 		},
 	}
 }
@@ -48,19 +54,10 @@ func (s *Script) domains(args ...tengo.Object) (tengo.Object, error) {
 
 // rootDomains returns the in scope root domains
 // Represents 'scope.root_domains(all_root_domains bool = false)'
-func (s *Script) rootDomains(args ...tengo.Object) (tengo.Object, error) {
+func (s *Script) rootDomains(args map[string]interface{}) (tengo.Object, error) {
 	pruneBlacklisted := true
-	if len(args) > 0 {
-		value, ok := tengo.ToBool(args[0])
-		if !ok {
-			return nil, tengo.ErrInvalidArgumentType{
-				Name:     "all_root_domains",
-				Expected: "bool",
-				Found:    args[0].TypeName(),
-			}
-		}
-
-		pruneBlacklisted = !value
+	if value, ok := args["all-root-domains"]; ok {
+		pruneBlacklisted = !(value.(bool))
 	}
 
 	domains, err := scope.GetScope("domains")
@@ -85,19 +82,8 @@ func (s *Script) constDomains(args ...tengo.Object) (tengo.Object, error) {
 
 // constSubDomains returns the sub-domains of the specified domain which are always in scope contained in the scope-domains.txt file
 // Represents 'scope.const_domains'
-func (s *Script) constSubDomains(args ...tengo.Object) (tengo.Object, error) {
-	if len(args) != 1 {
-		return nil, tengo.ErrWrongNumArguments
-	}
-
-	domain, ok := tengo.ToString(args[0])
-	if !ok {
-		return nil, tengo.ErrInvalidArgumentType{
-			Name:     "domain",
-			Expected: "string",
-			Found:    args[0].TypeName(),
-		}
-	}
+func (s *Script) constSubDomains(args map[string]interface{}) (tengo.Object, error) {
+	domain := args["domain"].(string)
 
 	re := regexp.MustCompile(fmt.Sprintf(`(?i)%s$`, regexp.QuoteMeta(domain)))
 
@@ -117,39 +103,9 @@ func (s *Script) constSubDomains(args ...tengo.Object) (tengo.Object, error) {
 }
 
 // prune will only return the in scope ips/domains from the provided items
-// Represents 'scope.prune(items ....(string|[]string))'
-func (s *Script) prune(args ...tengo.Object) (tengo.Object, error) {
-	if len(args) == 0 {
-		return nil, tengo.ErrWrongNumArguments
-	}
-
-	var allItems []string
-	for _, arg := range args {
-		switch o := arg.(type) {
-		case *tengo.String:
-			allItems = append(allItems, o.Value)
-		case *tengo.Array:
-			items, err := interop.GoTSliceToGoStrSlice(o.Value, "items")
-			if err != nil {
-				return nil, err
-			}
-
-			allItems = append(allItems, items...)
-		case *tengo.ImmutableArray:
-			items, err := interop.GoTSliceToGoStrSlice(o.Value, "items")
-			if err != nil {
-				return nil, err
-			}
-
-			allItems = append(allItems, items...)
-		default:
-			return nil, tengo.ErrInvalidArgumentType{
-				Name:     "item(s)",
-				Expected: "array|string",
-				Found:    arg.TypeName(),
-			}
-		}
-	}
+// Represents 'scope.prune(items ....string)'
+func (s *Script) prune(args map[string]interface{}) (tengo.Object, error) {
+	allItems := args["items"].([]string)
 
 	var inScope []string
 	for _, item := range allItems {

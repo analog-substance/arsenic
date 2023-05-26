@@ -19,7 +19,7 @@ func (o *Warning) String() string {
 	if o.Value != nil {
 		return o.Value.String()
 	}
-	return "warning"
+	return "<warning>"
 }
 
 // IsFalsy returns true if the value of the type is falsy.

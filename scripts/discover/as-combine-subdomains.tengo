@@ -36,14 +36,14 @@ rootCmd.set_run(func(cmd, args) {
 
 		// Always write in scope subdomains to a txt file
 		err = os2.write_file_lines(filepath.join(rootDomainPath, "subdomains-scope.txt"), subDomains)
-		check_err(subDomains)
+		check_err(err)
 
 		matches := filepath.glob(filepath.join(rootDomainPath, "subdomains-*.txt"))
 		check_err(matches)
 
 		log.msg("Combining discovered subdomains")
 
-		subdomainSet := set.new_string_set()
+		subdomainSet := set.string_set()
 		for match in matches {
 			lines := os2.read_file_lines(match)
 			check_err(lines)
@@ -51,7 +51,7 @@ rootCmd.set_run(func(cmd, args) {
 			subdomainSet.add_range(lines)
 		}
 
-		inScope := scope.prune(subdomainSet.sorted_string_slice())
+		inScope := scope.prune(subdomainSet.sorted_slice())
 		err = os2.write_file_lines(filepath.join(rootDomainPath, "subdomains.txt"), inScope)
 		check_err(err)
 

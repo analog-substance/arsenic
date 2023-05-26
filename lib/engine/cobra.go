@@ -2,19 +2,30 @@ package engine
 
 import (
 	"github.com/analog-substance/tengo/v2"
+	"github.com/analog-substance/tengomod/interop"
 	"github.com/spf13/cobra"
 )
 
 // CobraModule represents the 'cobra' import module
 func (s *Script) CobraModule() map[string]tengo.Object {
 	return map[string]tengo.Object{
-		"root_cmd": &tengo.UserFunction{Name: "root_cmd", Value: s.cobraRootCmd},
-		"cmd":      &tengo.UserFunction{Name: "cmd", Value: s.cobraCmd},
+		"root_cmd": &interop.AdvFunction{
+			Name:    "root_cmd",
+			NumArgs: interop.ArgRange(1, 2),
+			Args:    []interop.AdvArg{interop.StrArg("use"), interop.StrArg("short-description")},
+			Value:   s.cobraRootCmd,
+		},
+		"cmd": &interop.AdvFunction{
+			Name:    "cmd",
+			NumArgs: interop.ArgRange(1, 2),
+			Args:    []interop.AdvArg{interop.StrArg("use"), interop.StrArg("short-description")},
+			Value:   s.cobraCmd,
+		},
 	}
 }
 
-func (s *Script) cobraRootCmd(args ...tengo.Object) (tengo.Object, error) {
-	cmd, err := s.cobraCmd(args...)
+func (s *Script) cobraRootCmd(args map[string]interface{}) (tengo.Object, error) {
+	cmd, err := s.cobraCmd(args)
 	if err != nil {
 		return nil, err
 	}
@@ -35,35 +46,15 @@ func (s *Script) cobraRootCmd(args ...tengo.Object) (tengo.Object, error) {
 	return cmd, nil
 }
 
-func (s *Script) cobraCmd(args ...tengo.Object) (tengo.Object, error) {
-	if len(args) < 1 || len(args) >= 3 {
-		return nil, tengo.ErrWrongNumArguments
-	}
-
-	use, ok := tengo.ToString(args[0])
-	if !ok {
-		return nil, tengo.ErrInvalidArgumentType{
-			Name:     "use",
-			Expected: "string",
-			Found:    args[0].TypeName(),
-		}
-	}
-
+func (s *Script) cobraCmd(args map[string]interface{}) (tengo.Object, error) {
+	use := args["use"].(string)
 	cmd := &cobra.Command{
 		Use:         use,
 		Annotations: map[string]string{"type": "sub"},
 	}
 
-	if len(args) == 2 {
-		shortDesc, ok := tengo.ToString(args[1])
-		if !ok {
-			return nil, tengo.ErrInvalidArgumentType{
-				Name:     "short description",
-				Expected: "string",
-				Found:    args[1].TypeName(),
-			}
-		}
-		cmd.Short = shortDesc
+	if value, ok := args["short-description"]; ok {
+		cmd.Short = value.(string)
 	}
 
 	return makeCobraCmd(cmd, s), nil

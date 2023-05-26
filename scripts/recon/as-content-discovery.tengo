@@ -34,7 +34,7 @@ getHostURLs := func(flags, wordlistName) {
   check_err(hosts)
 
   hostURLs := []
-  urlSet := set.new_string_set()
+  urlSet := set.string_set()
   for host in hosts {
     urls := host.urls("http")
     check_err(urls)

@@ -6,13 +6,13 @@ import (
 	"github.com/analog-substance/tengo/v2"
 	"github.com/analog-substance/tengo/v2/stdlib"
 	"github.com/analog-substance/tengomod/interop"
+	"github.com/analog-substance/tengomod/types"
 	"github.com/spf13/cobra"
 )
 
 type CobraCmd struct {
-	tengo.ObjectImpl
+	types.PropObject
 	Value                 *cobra.Command
-	objectMap             map[string]tengo.Object
 	script                *Script
 	disableGitFlagEnabled bool
 }
@@ -24,105 +24,27 @@ func makeCobraCmd(cmd *cobra.Command, script *Script) *CobraCmd {
 	}
 
 	objectMap := map[string]tengo.Object{
-		"flags": &tengo.ImmutableMap{
-			Value: map[string]tengo.Object{
-				"boolp": &tengo.UserFunction{
-					Name:  "boolp",
-					Value: interop.FuncASSBSRBp(cobraCmd.Value.Flags().BoolP),
-				},
-				"bool": &tengo.UserFunction{
-					Name:  "bool",
-					Value: interop.FuncASBSRBp(cobraCmd.Value.Flags().Bool),
-				},
-				"get_bool": &tengo.UserFunction{
-					Name:  "get_bool",
-					Value: interop.FuncASRBE(cobraCmd.Value.Flags().GetBool),
-				},
-				"intp": &tengo.UserFunction{
-					Name:  "intp",
-					Value: interop.FuncASSISRIp(cobraCmd.Value.Flags().IntP),
-				},
-				"int": &tengo.UserFunction{
-					Name:  "int",
-					Value: interop.FuncASISRIp(cobraCmd.Value.Flags().Int),
-				},
-				"get_int": &tengo.UserFunction{
-					Name:  "get_int",
-					Value: stdlib.FuncASRIE(cobraCmd.Value.Flags().GetInt),
-				},
-				"stringp": &tengo.UserFunction{
-					Name:  "stringp",
-					Value: interop.FuncASSSSRSp(cobraCmd.Value.Flags().StringP),
-				},
-				"string": &tengo.UserFunction{
-					Name:  "string",
-					Value: interop.FuncASSSRSp(cobraCmd.Value.Flags().String),
-				},
-				"get_string": &tengo.UserFunction{
-					Name:  "get_string",
-					Value: stdlib.FuncASRSE(cobraCmd.Value.Flags().GetString),
-				},
-				"string_slicep": &tengo.UserFunction{
-					Name:  "string_slicep",
-					Value: interop.FuncASSSsSRSsp(cobraCmd.Value.Flags().StringSliceP),
-				},
-				"string_slice": &tengo.UserFunction{
-					Name:  "string_slice",
-					Value: interop.FuncASSsSRSsp(cobraCmd.Value.Flags().StringSlice),
-				},
-				"get_string_slice": &tengo.UserFunction{
-					Name:  "get_string_slice",
-					Value: interop.FuncASRSsE(cobraCmd.Value.Flags().GetStringSlice),
-				},
-			},
-		},
-		"persistent_flags": &tengo.ImmutableMap{
-			Value: map[string]tengo.Object{
-				"boolp": &tengo.UserFunction{
-					Name:  "boolp",
-					Value: interop.FuncASSBSRBp(cobraCmd.Value.PersistentFlags().BoolP),
-				},
-				"bool": &tengo.UserFunction{
-					Name:  "bool",
-					Value: interop.FuncASBSRBp(cobraCmd.Value.PersistentFlags().Bool),
-				},
-				"intp": &tengo.UserFunction{
-					Name:  "intp",
-					Value: interop.FuncASSISRIp(cobraCmd.Value.PersistentFlags().IntP),
-				},
-				"int": &tengo.UserFunction{
-					Name:  "int",
-					Value: interop.FuncASISRIp(cobraCmd.Value.PersistentFlags().Int),
-				},
-				"stringp": &tengo.UserFunction{
-					Name:  "stringp",
-					Value: interop.FuncASSSSRSp(cobraCmd.Value.PersistentFlags().StringP),
-				},
-				"string": &tengo.UserFunction{
-					Name:  "string",
-					Value: interop.FuncASSSRSp(cobraCmd.Value.PersistentFlags().String),
-				},
-				"string_slicep": &tengo.UserFunction{
-					Name:  "string_slicep",
-					Value: interop.FuncASSSsSRSsp(cobraCmd.Value.PersistentFlags().StringSliceP),
-				},
-				"string_slice": &tengo.UserFunction{
-					Name:  "string_slice",
-					Value: interop.FuncASSsSRSsp(cobraCmd.Value.PersistentFlags().StringSlice),
-				},
-			},
-		},
 		"add_command": &tengo.UserFunction{
 			Name:  "add_command",
 			Value: cobraCmd.addCommand,
 		},
-		"set_persistent_pre_run": &tengo.UserFunction{
-			Name:  "set_persistent_pre_run",
-			Value: cobraCmd.setPersistentPreRun,
+		"new_command": &interop.AdvFunction{
+			Name:    "new_command",
+			NumArgs: interop.ArgRange(1, 2),
+			Args:    []interop.AdvArg{interop.StrArg("use"), interop.StrArg("short-description")},
+			Value:   cobraCmd.newCommand,
 		},
-		"set_run": &tengo.UserFunction{
-			Name:  "set_run",
-			Value: cobraCmd.setRun,
+		"set_persistent_pre_run": &interop.AdvFunction{
+			Name:    "set_persistent_pre_run",
+			NumArgs: interop.ExactArgs(1),
+			Args:    []interop.AdvArg{interop.CompileFuncArg("persistent-pre-run")},
+			Value:   cobraCmd.setPersistentPreRun,
+		},
+		"set_run": &interop.AdvFunction{
+			Name:    "set_run",
+			NumArgs: interop.ExactArgs(1),
+			Args:    []interop.AdvArg{interop.UnionArg("run", interop.CompileFuncType, interop.CustomType(&CobraCmd{}))},
+			Value:   cobraCmd.setRun,
 		},
 		"name": &tengo.UserFunction{
 			Name:  "name",
@@ -165,13 +87,31 @@ func makeCobraCmd(cmd *cobra.Command, script *Script) *CobraCmd {
 				return nil, nil
 			},
 		},
-		"register_flag_completion_func": &tengo.UserFunction{
-			Name:  "register_flag_completion_func",
-			Value: cobraCmd.registerFlagCompletionFunc,
+		"register_flag_completion_func": &interop.AdvFunction{
+			Name:    "register_flag_completion_func",
+			NumArgs: interop.ExactArgs(2),
+			Args:    []interop.AdvArg{interop.StrArg("flag"), interop.CompileFuncArg("fn")},
+			Value:   cobraCmd.registerFlagCompletionFunc,
+		},
+	}
+	properties := map[string]types.Property{
+		"flags": {
+			Get: func() tengo.Object {
+				return makeCobraFlagSet(cobraCmd.Value.Flags(), cobraCmd.script)
+			},
+		},
+		"persistent_flags": {
+			Get: func() tengo.Object {
+				return makeCobraFlagSet(cobraCmd.Value.PersistentFlags(), cobraCmd.script)
+			},
 		},
 	}
 
-	cobraCmd.objectMap = objectMap
+	cobraCmd.PropObject = types.PropObject{
+		ObjectMap:  objectMap,
+		Properties: properties,
+	}
+
 	return cobraCmd
 }
 
@@ -192,27 +132,23 @@ func (c *CobraCmd) addCommand(args ...tengo.Object) (tengo.Object, error) {
 	return nil, nil
 }
 
-func (c *CobraCmd) setRun(args ...tengo.Object) (tengo.Object, error) {
-	if len(args) != 1 {
-		return nil, tengo.ErrWrongNumArguments
+func (c *CobraCmd) newCommand(args map[string]interface{}) (tengo.Object, error) {
+	cobraCmd, err := c.script.cobraCmd(args)
+	if err != nil {
+		return nil, err
 	}
+	return c.addCommand(cobraCmd)
+}
 
-	fn, ok := args[0].(*tengo.CompiledFunction)
-	if ok {
+func (c *CobraCmd) setRun(args map[string]interface{}) (tengo.Object, error) {
+	if fn, ok := args["run"].(*tengo.CompiledFunction); ok {
 		c.Value.RunE = func(cmd *cobra.Command, args []string) error {
-			_, err := c.script.runCompiledFunction(fn, makeCobraCmd(cmd, c.script), interop.GoStrSliceToTArray(args))
+			runner := interop.NewCompiledFuncRunner(fn, c.script.compiled, c.script.ctx)
+			_, err := runner.Run(makeCobraCmd(cmd, c.script), interop.GoStrSliceToTArray(args))
 			return err
 		}
 	} else {
-		defaultCmd, ok := args[0].(*CobraCmd)
-		if !ok {
-			return nil, tengo.ErrInvalidArgumentType{
-				Name:     "run",
-				Expected: "func|cobra-cmd",
-				Found:    args[0].TypeName(),
-			}
-		}
-
+		defaultCmd := args["run"].(*CobraCmd)
 		c.Value.RunE = func(cmd *cobra.Command, args []string) error {
 			commandPathArgs := strings.Split(defaultCmd.Value.CommandPath(), " ")[1:]
 			cmd.Root().SetArgs(append(commandPathArgs, args...))
@@ -223,19 +159,8 @@ func (c *CobraCmd) setRun(args ...tengo.Object) (tengo.Object, error) {
 	return nil, nil
 }
 
-func (c *CobraCmd) setPersistentPreRun(args ...tengo.Object) (tengo.Object, error) {
-	if len(args) != 1 {
-		return nil, tengo.ErrWrongNumArguments
-	}
-
-	fn, ok := args[0].(*tengo.CompiledFunction)
-	if !ok {
-		return nil, tengo.ErrInvalidArgumentType{
-			Name:     "persistent_pre_run",
-			Expected: "string",
-			Found:    args[0].TypeName(),
-		}
-	}
+func (c *CobraCmd) setPersistentPreRun(args map[string]interface{}) (tengo.Object, error) {
+	fn := args["persistent-pre-run"].(*tengo.CompiledFunction)
 
 	c.Value.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
 		// If completion command isn't disabled and the current command is one of the "completion" sub commands
@@ -246,37 +171,20 @@ func (c *CobraCmd) setPersistentPreRun(args ...tengo.Object) (tengo.Object, erro
 		}
 
 		c.cobraRootCmdPersistentPreRun(cmd, args)
-		_, err := c.script.runCompiledFunction(fn, makeCobraCmd(cmd, c.script), interop.GoStrSliceToTArray(args))
+		runner := interop.NewCompiledFuncRunner(fn, c.script.compiled, c.script.ctx)
+		_, err := runner.Run(makeCobraCmd(cmd, c.script), interop.GoStrSliceToTArray(args))
 		return err
 	}
 	return nil, nil
 }
 
-func (c *CobraCmd) registerFlagCompletionFunc(args ...tengo.Object) (tengo.Object, error) {
-	if len(args) != 2 {
-		return nil, tengo.ErrWrongNumArguments
-	}
-
-	flag, ok := tengo.ToString(args[0])
-	if !ok {
-		return nil, tengo.ErrInvalidArgumentType{
-			Name:     "flag",
-			Expected: "string",
-			Found:    args[0].TypeName(),
-		}
-	}
-
-	fn, ok := args[1].(*tengo.CompiledFunction)
-	if !ok {
-		return nil, tengo.ErrInvalidArgumentType{
-			Name:     "persistent_pre_run",
-			Expected: "string",
-			Found:    args[1].TypeName(),
-		}
-	}
+func (c *CobraCmd) registerFlagCompletionFunc(args map[string]interface{}) (tengo.Object, error) {
+	flag := args["flag"].(string)
+	fn := args["fn"].(*tengo.CompiledFunction)
 
 	c.Value.RegisterFlagCompletionFunc(flag, func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-		res, err := c.script.runCompiledFunction(fn, makeCobraCmd(cmd, c.script), interop.GoStrSliceToTArray(args), &tengo.String{Value: toComplete})
+		runner := interop.NewCompiledFuncRunner(fn, c.script.compiled, c.script.ctx)
+		res, err := runner.Run(makeCobraCmd(cmd, c.script), interop.GoStrSliceToTArray(args), &tengo.String{Value: toComplete})
 		if err != nil {
 			return nil, cobra.ShellCompDirectiveError
 		}
@@ -334,19 +242,6 @@ func (c *CobraCmd) Call(args ...tengo.Object) (tengo.Object, error) {
 // CanCall should return whether the Object can be Called.
 func (c *CobraCmd) CanCall() bool {
 	return true
-}
-
-func (c *CobraCmd) IndexGet(index tengo.Object) (tengo.Object, error) {
-	strIdx, ok := tengo.ToString(index)
-	if !ok {
-		return nil, tengo.ErrInvalidIndexType
-	}
-
-	res, ok := c.objectMap[strIdx]
-	if !ok {
-		res = tengo.UndefinedValue
-	}
-	return res, nil
 }
 
 func (c *CobraCmd) cobraRootCmdPersistentPreRun(cmd *cobra.Command, args []string) {

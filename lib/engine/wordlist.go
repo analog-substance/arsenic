@@ -12,9 +12,11 @@ import (
 
 func (s *Script) WordlistModule() map[string]tengo.Object {
 	return map[string]tengo.Object{
-		"generate": &tengo.UserFunction{
-			Name:  "generate",
-			Value: interop.NewCallable(s.generateWordlist, interop.WithExactArgs(2)),
+		"generate": &interop.AdvFunction{
+			Name:    "generate",
+			NumArgs: interop.ExactArgs(2),
+			Args:    []interop.AdvArg{interop.StrArg("wordlist"), interop.StrArg("path")},
+			Value:   s.generateWordlist,
 		},
 		"types": &tengo.UserFunction{
 			Name:  "types",
@@ -23,16 +25,9 @@ func (s *Script) WordlistModule() map[string]tengo.Object {
 	}
 }
 
-func (s *Script) generateWordlist(args ...tengo.Object) (tengo.Object, error) {
-	wordlist, err := interop.TStrToGoStr(args[0], "wordlist")
-	if err != nil {
-		return nil, err
-	}
-
-	path, err := interop.TStrToGoStr(args[1], "path")
-	if err != nil {
-		return nil, err
-	}
+func (s *Script) generateWordlist(args map[string]interface{}) (tengo.Object, error) {
+	wordlist := args["wordlist"].(string)
+	path := args["path"].(string)
 
 	wordlistSet := set.NewStringSet()
 	lib.GenerateWordlist(wordlist, wordlistSet)
