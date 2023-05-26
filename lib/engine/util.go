@@ -31,17 +31,3 @@ func runWithError(cmd *exec.Cmd) error {
 	}
 	return nil
 }
-
-// aliasFunc is used to call the same tengo function using a different name
-func aliasFunc(obj tengo.Object, name string, src string) *tengo.UserFunction {
-	return &tengo.UserFunction{
-		Name: name,
-		Value: func(args ...tengo.Object) (tengo.Object, error) {
-			fn, err := obj.IndexGet(&tengo.String{Value: src})
-			if err != nil {
-				return nil, err
-			}
-			return fn.(*tengo.UserFunction).Value(args...)
-		},
-	}
-}
