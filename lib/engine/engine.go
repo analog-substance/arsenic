@@ -58,9 +58,12 @@ func NewScript(path string) (*Script, error) {
 }
 
 func (s *Script) NewModuleMap() *tengo.ModuleMap {
-	moduleMap := tengomod.GetModuleMap(tengomod.WithCompiledFunc(func() *tengo.Compiled {
-		return s.compiled
-	}), tengomod.WithContext(s.ctx))
+	moduleMap := tengomod.GetModuleMap(
+		tengomod.WithContext(s.ctx),
+		tengomod.WithCompiledFunc(func() *tengo.Compiled {
+			return s.compiled
+		}),
+	)
 
 	moduleMap.AddMap(stdlib.GetModuleMap(stdlib.AllModuleNames()...))
 

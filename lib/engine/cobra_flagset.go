@@ -71,9 +71,26 @@ func makeCobraFlagSet(flagSet *pflag.FlagSet, script *Script) *CobraFlagSet {
 		},
 	}
 
+	properties := map[string]types.Property{
+		"sort_flags": {
+			Get: func() tengo.Object {
+				return interop.GoBoolToTBool(flagSet.SortFlags)
+			},
+			Set: func(o tengo.Object) error {
+				b1, err := interop.TBoolToGoBool(o, "sort_flags")
+				if err != nil {
+					return err
+				}
+
+				flagSet.SortFlags = b1
+				return nil
+			},
+		},
+	}
+
 	cobraFlagSet.PropObject = types.PropObject{
 		ObjectMap:  objectMap,
-		Properties: make(map[string]types.Property),
+		Properties: properties,
 	}
 
 	return cobraFlagSet
