@@ -29,7 +29,7 @@ func (s *Script) generateWordlist(args ...tengo.Object) (tengo.Object, error) {
 		return nil, err
 	}
 
-	path, err := interop.TStrToGoStr(args[0], "path")
+	path, err := interop.TStrToGoStr(args[1], "path")
 	if err != nil {
 		return nil, err
 	}
