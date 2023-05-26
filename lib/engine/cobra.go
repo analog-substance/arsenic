@@ -24,7 +24,7 @@ func (s *Script) CobraModule() map[string]tengo.Object {
 	}
 }
 
-func (s *Script) cobraRootCmd(args map[string]interface{}) (tengo.Object, error) {
+func (s *Script) cobraRootCmd(args interop.ArgMap) (tengo.Object, error) {
 	cmd, err := s.cobraCmd(args)
 	if err != nil {
 		return nil, err
@@ -46,15 +46,14 @@ func (s *Script) cobraRootCmd(args map[string]interface{}) (tengo.Object, error)
 	return cmd, nil
 }
 
-func (s *Script) cobraCmd(args map[string]interface{}) (tengo.Object, error) {
-	use := args["use"].(string)
+func (s *Script) cobraCmd(args interop.ArgMap) (tengo.Object, error) {
+	use, _ := args.GetString("use")
+	shortDesc, _ := args.GetString("short-description")
+
 	cmd := &cobra.Command{
 		Use:         use,
 		Annotations: map[string]string{"type": "sub"},
-	}
-
-	if value, ok := args["short-description"]; ok {
-		cmd.Short = value.(string)
+		Short:       shortDesc,
 	}
 
 	return makeCobraCmd(cmd, s), nil

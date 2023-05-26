@@ -54,10 +54,10 @@ func (s *Script) domains(args ...tengo.Object) (tengo.Object, error) {
 
 // rootDomains returns the in scope root domains
 // Represents 'scope.root_domains(all_root_domains bool = false)'
-func (s *Script) rootDomains(args map[string]interface{}) (tengo.Object, error) {
+func (s *Script) rootDomains(args interop.ArgMap) (tengo.Object, error) {
 	pruneBlacklisted := true
-	if value, ok := args["all-root-domains"]; ok {
-		pruneBlacklisted = !(value.(bool))
+	if value, ok := args.GetBool("all-root-domains"); ok {
+		pruneBlacklisted = !value
 	}
 
 	domains, err := scope.GetScope("domains")
@@ -82,8 +82,8 @@ func (s *Script) constDomains(args ...tengo.Object) (tengo.Object, error) {
 
 // constSubDomains returns the sub-domains of the specified domain which are always in scope contained in the scope-domains.txt file
 // Represents 'scope.const_domains'
-func (s *Script) constSubDomains(args map[string]interface{}) (tengo.Object, error) {
-	domain := args["domain"].(string)
+func (s *Script) constSubDomains(args interop.ArgMap) (tengo.Object, error) {
+	domain, _ := args.GetString("domain")
 
 	re := regexp.MustCompile(fmt.Sprintf(`(?i)%s$`, regexp.QuoteMeta(domain)))
 
@@ -104,8 +104,8 @@ func (s *Script) constSubDomains(args map[string]interface{}) (tengo.Object, err
 
 // prune will only return the in scope ips/domains from the provided items
 // Represents 'scope.prune(items ....string)'
-func (s *Script) prune(args map[string]interface{}) (tengo.Object, error) {
-	allItems := args["items"].([]string)
+func (s *Script) prune(args interop.ArgMap) (tengo.Object, error) {
+	allItems, _ := args.GetStringSlice("items")
 
 	var inScope []string
 	for _, item := range allItems {

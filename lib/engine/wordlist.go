@@ -25,9 +25,9 @@ func (s *Script) WordlistModule() map[string]tengo.Object {
 	}
 }
 
-func (s *Script) generateWordlist(args map[string]interface{}) (tengo.Object, error) {
-	wordlist := args["wordlist"].(string)
-	path := args["path"].(string)
+func (s *Script) generateWordlist(args interop.ArgMap) (tengo.Object, error) {
+	wordlist, _ := args.GetString("wordlist")
+	path, _ := args.GetString("path")
 
 	wordlistSet := set.NewStringSet()
 	lib.GenerateWordlist(wordlist, wordlistSet)

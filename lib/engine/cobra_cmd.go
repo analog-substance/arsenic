@@ -132,7 +132,7 @@ func (c *CobraCmd) addCommand(args ...tengo.Object) (tengo.Object, error) {
 	return nil, nil
 }
 
-func (c *CobraCmd) newCommand(args map[string]interface{}) (tengo.Object, error) {
+func (c *CobraCmd) newCommand(args interop.ArgMap) (tengo.Object, error) {
 	cobraCmd, err := c.script.cobraCmd(args)
 	if err != nil {
 		return nil, err
@@ -140,8 +140,8 @@ func (c *CobraCmd) newCommand(args map[string]interface{}) (tengo.Object, error)
 	return c.addCommand(cobraCmd)
 }
 
-func (c *CobraCmd) setRun(args map[string]interface{}) (tengo.Object, error) {
-	if fn, ok := args["run"].(*tengo.CompiledFunction); ok {
+func (c *CobraCmd) setRun(args interop.ArgMap) (tengo.Object, error) {
+	if fn, ok := args.GetCompiledFunc("run"); ok {
 		c.Value.RunE = func(cmd *cobra.Command, args []string) error {
 			runner := interop.NewCompiledFuncRunner(fn, c.script.compiled, c.script.ctx)
 			_, err := runner.Run(makeCobraCmd(cmd, c.script), interop.GoStrSliceToTArray(args))
@@ -159,8 +159,8 @@ func (c *CobraCmd) setRun(args map[string]interface{}) (tengo.Object, error) {
 	return nil, nil
 }
 
-func (c *CobraCmd) setPersistentPreRun(args map[string]interface{}) (tengo.Object, error) {
-	fn := args["persistent-pre-run"].(*tengo.CompiledFunction)
+func (c *CobraCmd) setPersistentPreRun(args interop.ArgMap) (tengo.Object, error) {
+	fn, _ := args.GetCompiledFunc("persistent-pre-run")
 
 	c.Value.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
 		// If completion command isn't disabled and the current command is one of the "completion" sub commands
@@ -178,9 +178,9 @@ func (c *CobraCmd) setPersistentPreRun(args map[string]interface{}) (tengo.Objec
 	return nil, nil
 }
 
-func (c *CobraCmd) registerFlagCompletionFunc(args map[string]interface{}) (tengo.Object, error) {
-	flag := args["flag"].(string)
-	fn := args["fn"].(*tengo.CompiledFunction)
+func (c *CobraCmd) registerFlagCompletionFunc(args interop.ArgMap) (tengo.Object, error) {
+	flag, _ := args.GetString("flag")
+	fn, _ := args.GetCompiledFunc("fn")
 
 	c.Value.RegisterFlagCompletionFunc(flag, func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		runner := interop.NewCompiledFuncRunner(fn, c.script.compiled, c.script.ctx)

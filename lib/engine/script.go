@@ -65,9 +65,9 @@ func (s *Script) ScriptModule() map[string]tengo.Object {
 
 // tengoRunScript is the tengo function version of runScript.
 // Represents 'script.run_script(path string, args ...string) error'
-func (s *Script) tengoRunScript(args map[string]interface{}) (tengo.Object, error) {
-	path := args["path"].(string)
-	scriptArgs := args["args"].([]string)
+func (s *Script) tengoRunScript(args interop.ArgMap) (tengo.Object, error) {
+	path, _ := args.GetString("path")
+	scriptArgs, _ := args.GetStringSlice("args")
 
 	err := s.runScript(path, scriptArgs...)
 	if err != nil {
@@ -78,9 +78,9 @@ func (s *Script) tengoRunScript(args map[string]interface{}) (tengo.Object, erro
 
 // tengoRunScriptWithSigHandler is the tengo function version of runScriptWithSigHandler.
 // Represents 'script.run_script_with_sig_handler(path string, args ...string) error'
-func (s *Script) tengoRunScriptWithSigHandler(args map[string]interface{}) (tengo.Object, error) {
-	path := args["path"].(string)
-	scriptArgs := args["args"].([]string)
+func (s *Script) tengoRunScriptWithSigHandler(args interop.ArgMap) (tengo.Object, error) {
+	path, _ := args.GetString("path")
+	scriptArgs, _ := args.GetStringSlice("args")
 
 	err := s.runScriptWithSigHandler(path, scriptArgs...)
 	if err != nil {
@@ -148,8 +148,8 @@ func (s *Script) runScriptWithSigHandler(path string, args ...string) error {
 
 // tengoFindScript is the tengo function version of findScript.
 // Represents 'script.find(script string) string|error'
-func (s *Script) tengoFindScript(args map[string]interface{}) (tengo.Object, error) {
-	path := args["path"].(string)
+func (s *Script) tengoFindScript(args interop.ArgMap) (tengo.Object, error) {
+	path, _ := args.GetString("path")
 
 	fullPath, err := s.findScript(path)
 	if err != nil {

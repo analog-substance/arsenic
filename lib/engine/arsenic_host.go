@@ -38,12 +38,8 @@ func (h *ArsenicHost) CanIterate() bool {
 	return false
 }
 
-func (h *ArsenicHost) urls(args map[string]interface{}) (tengo.Object, error) {
-	var protocols []string
-	if value, ok := args["protocols"]; ok {
-		protocols = value.([]string)
-	}
-
+func (h *ArsenicHost) urls(args interop.ArgMap) (tengo.Object, error) {
+	protocols, _ := args.GetStringSlice("protocols")
 	if len(protocols) == 0 {
 		protocols = append(protocols, "all")
 	}
@@ -60,16 +56,16 @@ func (h *ArsenicHost) urls(args map[string]interface{}) (tengo.Object, error) {
 	return interop.GoStrSliceToTArray(urls), nil
 }
 
-func (h *ArsenicHost) fileExists(args map[string]interface{}) (tengo.Object, error) {
-	file := args["path"].(string)
+func (h *ArsenicHost) fileExists(args interop.ArgMap) (tengo.Object, error) {
+	file, _ := args.GetString("path")
 
 	exists := fileutil.FileExists(filepath.Join(h.Value.Dir, file))
 	return interop.GoBoolToTBool(exists), nil
 }
 
-func (h *ArsenicHost) contentDiscoveryURLs(args map[string]interface{}) (tengo.Object, error) {
-	patterns := args["patterns"].([]string)
-	codes := args["codes"].([]int)
+func (h *ArsenicHost) contentDiscoveryURLs(args interop.ArgMap) (tengo.Object, error) {
+	patterns, _ := args.GetStringSlice("patterns")
+	codes, _ := args.GetIntSlice("codes")
 
 	var files []string
 	for _, pattern := range patterns {

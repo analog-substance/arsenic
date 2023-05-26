@@ -45,8 +45,8 @@ func (s *Script) ArsenicModule() map[string]tengo.Object {
 	}
 }
 
-func (s *Script) host(args map[string]interface{}) (tengo.Object, error) {
-	hostname := args["hostname"].(string)
+func (s *Script) host(args interop.ArgMap) (tengo.Object, error) {
+	hostname, _ := args.GetString("hostname")
 
 	foundHost := host.GetFirst(hostname)
 	if foundHost == nil {
@@ -56,11 +56,8 @@ func (s *Script) host(args map[string]interface{}) (tengo.Object, error) {
 	return makeArsenicHost(foundHost), nil
 }
 
-func (s *Script) hosts(args map[string]interface{}) (tengo.Object, error) {
-	var flags []string
-	if value, ok := args["flags"]; ok {
-		flags = value.([]string)
-	}
+func (s *Script) hosts(args interop.ArgMap) (tengo.Object, error) {
+	flags, _ := args.GetStringSlice("flags")
 
 	var hosts []tengo.Object
 	for _, h := range host.All() {
@@ -73,8 +70,8 @@ func (s *Script) hosts(args map[string]interface{}) (tengo.Object, error) {
 	return &tengo.ImmutableArray{Value: hosts}, nil
 }
 
-func (s *Script) lockedFiles(args map[string]interface{}) (tengo.Object, error) {
-	glob := args["glob"].(string)
+func (s *Script) lockedFiles(args interop.ArgMap) (tengo.Object, error) {
+	glob, _ := args.GetString("glob")
 
 	matches, err := filepath.Glob(glob)
 	if err != nil {
@@ -99,11 +96,8 @@ func (s *Script) lockedFiles(args map[string]interface{}) (tengo.Object, error) 
 	return interop.GoStrSliceToTArray(locked), nil
 }
 
-func (s *Script) ffuf(args map[string]interface{}) (tengo.Object, error) {
-	var cmdArgs []string
-	if value, ok := args["args"]; ok {
-		cmdArgs = value.([]string)
-	}
+func (s *Script) ffuf(args interop.ArgMap) (tengo.Object, error) {
+	cmdArgs, _ := args.GetStringSlice("args")
 
 	cmd := exec.CommandContext(context.Background(), "as-ffuf", cmdArgs...)
 
