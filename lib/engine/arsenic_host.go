@@ -38,12 +38,8 @@ func (h *ArsenicHost) CanIterate() bool {
 	return false
 }
 
-func (h *ArsenicHost) urls(args ...tengo.Object) (tengo.Object, error) {
-	protocols, err := interop.GoTSliceToGoStrSlice(args, "protocols")
-	if err != nil {
-		return nil, err
-	}
-
+func (h *ArsenicHost) urls(args interop.ArgMap) (tengo.Object, error) {
+	protocols, _ := args.GetStringSlice("protocols")
 	if len(protocols) == 0 {
 		protocols = append(protocols, "all")
 	}
@@ -60,42 +56,16 @@ func (h *ArsenicHost) urls(args ...tengo.Object) (tengo.Object, error) {
 	return interop.GoStrSliceToTArray(urls), nil
 }
 
-func (h *ArsenicHost) fileExists(args ...tengo.Object) (tengo.Object, error) {
-	if len(args) != 1 {
-		return nil, tengo.ErrWrongNumArguments
-	}
+func (h *ArsenicHost) fileExists(args interop.ArgMap) (tengo.Object, error) {
+	file, _ := args.GetString("path")
 
-	file, ok := tengo.ToString(args[0])
-	if !ok {
-		return nil, tengo.ErrInvalidArgumentType{
-			Name:     "path",
-			Expected: "string",
-			Found:    args[0].TypeName(),
-		}
-	}
-
-	value := tengo.FalseValue
-	if fileutil.FileExists(filepath.Join(h.Value.Dir, file)) {
-		value = tengo.TrueValue
-	}
-
-	return value, nil
+	exists := fileutil.FileExists(filepath.Join(h.Value.Dir, file))
+	return interop.GoBoolToTBool(exists), nil
 }
 
-func (h *ArsenicHost) contentDiscoveryURLs(args ...tengo.Object) (tengo.Object, error) {
-	if len(args) != 2 {
-		return nil, tengo.ErrWrongNumArguments
-	}
-
-	patterns, err := interop.TArrayToGoStrSlice(args[0], "patterns")
-	if err != nil {
-		return nil, err
-	}
-
-	codes, err := interop.TArrayToGoIntSlice(args[1], "codes")
-	if err != nil {
-		return nil, err
-	}
+func (h *ArsenicHost) contentDiscoveryURLs(args interop.ArgMap) (tengo.Object, error) {
+	patterns, _ := args.GetStringSlice("patterns")
+	codes, _ := args.GetIntSlice("codes")
 
 	var files []string
 	for _, pattern := range patterns {
@@ -180,17 +150,22 @@ func makeArsenicHost(h *host.Host) *ArsenicHost {
 			Name:  "files",
 			Value: interop.FuncASvRSsE(h.Files),
 		},
-		"urls": &tengo.UserFunction{
+		"urls": &interop.AdvFunction{
 			Name:  "urls",
+			Args:  []interop.AdvArg{interop.StrSliceArg("protocols", true)},
 			Value: arsenicHost.urls,
 		},
-		"file_exists": &tengo.UserFunction{
-			Name:  "file_exists",
-			Value: arsenicHost.fileExists,
+		"file_exists": &interop.AdvFunction{
+			Name:    "file_exists",
+			NumArgs: interop.ExactArgs(1),
+			Args:    []interop.AdvArg{interop.StrArg("path")},
+			Value:   arsenicHost.fileExists,
 		},
-		"content_discovery_urls": &tengo.UserFunction{
-			Name:  "content_discovery_urls",
-			Value: arsenicHost.contentDiscoveryURLs,
+		"content_discovery_urls": &interop.AdvFunction{
+			Name:    "content_discovery_urls",
+			NumArgs: interop.ExactArgs(2),
+			Args:    []interop.AdvArg{interop.StrSliceArg("patterns", false), interop.IntSliceArg("codes", false)},
+			Value:   arsenicHost.contentDiscoveryURLs,
 		},
 		"sync": &tengo.UserFunction{
 			Name:  "sync",

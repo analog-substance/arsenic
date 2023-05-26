@@ -2,6 +2,7 @@ package engine
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -18,27 +19,43 @@ import (
 // ScriptModule represents the 'script' import module
 func (s *Script) ScriptModule() map[string]tengo.Object {
 	return map[string]tengo.Object{
-		"stop": &tengo.UserFunction{
-			Name:  "stop",
-			Value: s.tengoStop,
-		},
-		"run_script": &tengo.UserFunction{
-			Name:  "run_script",
-			Value: interop.NewCallable(s.tengoRunScript, interop.WithMinArgs(1)),
-		},
-		"run_script_with_sig_handler": &tengo.UserFunction{
-			Name:  "run_script_with_sig_handler",
-			Value: s.tengoRunScriptWithSigHandler,
-		},
-		"find": &tengo.UserFunction{
-			Name:  "find",
-			Value: s.tengoFindScript,
-		},
 		"path": &tengo.String{
 			Value: s.path,
 		},
 		"name": &tengo.String{
 			Value: s.name,
+		},
+		"stop": &interop.AdvFunction{
+			Name:    "stop",
+			NumArgs: interop.MaxArgs(1),
+			Args:    []interop.AdvArg{interop.ObjectArg("message")},
+			Value:   s.tengoStop,
+		},
+		"run_script": &interop.AdvFunction{
+			Name:    "run_script",
+			NumArgs: interop.MinArgs(1),
+			Args: []interop.AdvArg{
+				interop.StrArg("path"),
+				interop.StrSliceArg("args", true),
+			},
+			Value: s.tengoRunScript,
+		},
+		"run_script_with_sig_handler": &interop.AdvFunction{
+			Name:    "run_script_with_sig_handler",
+			NumArgs: interop.MinArgs(1),
+			Args: []interop.AdvArg{
+				interop.StrArg("path"),
+				interop.StrSliceArg("args", true),
+			},
+			Value: s.tengoRunScriptWithSigHandler,
+		},
+		"find": &interop.AdvFunction{
+			Name:    "find",
+			NumArgs: interop.ExactArgs(1),
+			Args: []interop.AdvArg{
+				interop.StrArg("path"),
+			},
+			Value: s.tengoFindScript,
 		},
 		"args": &tengo.UserFunction{
 			Name: "args",
@@ -51,18 +68,11 @@ func (s *Script) ScriptModule() map[string]tengo.Object {
 
 // tengoRunScript is the tengo function version of runScript.
 // Represents 'script.run_script(path string, args ...string) error'
-func (s *Script) tengoRunScript(args ...tengo.Object) (tengo.Object, error) {
-	path, err := interop.TStrToGoStr(args[0], "path")
-	if err != nil {
-		return nil, err
-	}
+func (s *Script) tengoRunScript(args interop.ArgMap) (tengo.Object, error) {
+	path, _ := args.GetString("path")
+	scriptArgs, _ := args.GetStringSlice("args")
 
-	scriptArgs, err := interop.GoTSliceToGoStrSlice(args[1:], "args")
-	if err != nil {
-		return nil, err
-	}
-
-	err = s.runScript(path, scriptArgs...)
+	err := s.runScript(path, scriptArgs...)
 	if err != nil {
 		return interop.GoErrToTErr(err), nil
 	}
@@ -71,26 +81,11 @@ func (s *Script) tengoRunScript(args ...tengo.Object) (tengo.Object, error) {
 
 // tengoRunScriptWithSigHandler is the tengo function version of runScriptWithSigHandler.
 // Represents 'script.run_script_with_sig_handler(path string, args ...string) error'
-func (s *Script) tengoRunScriptWithSigHandler(args ...tengo.Object) (tengo.Object, error) {
-	if len(args) == 0 {
-		return nil, tengo.ErrWrongNumArguments
-	}
+func (s *Script) tengoRunScriptWithSigHandler(args interop.ArgMap) (tengo.Object, error) {
+	path, _ := args.GetString("path")
+	scriptArgs, _ := args.GetStringSlice("args")
 
-	path, ok := tengo.ToString(args[0])
-	if !ok {
-		return nil, tengo.ErrInvalidArgumentType{
-			Name:     "path",
-			Expected: "string",
-			Found:    args[0].TypeName(),
-		}
-	}
-
-	scriptArgs, err := interop.GoTSliceToGoStrSlice(args[1:], "args")
-	if err != nil {
-		return nil, err
-	}
-
-	err = s.runScriptWithSigHandler(path, scriptArgs...)
+	err := s.runScriptWithSigHandler(path, scriptArgs...)
 	if err != nil {
 		return interop.GoErrToTErr(err), nil
 	}
@@ -108,6 +103,9 @@ func (s *Script) runScript(path string, args ...string) error {
 	if err != nil {
 		return err
 	}
+
+	script.caller = s
+
 	return script.Run(args)
 }
 
@@ -123,6 +121,8 @@ func (s *Script) runScriptWithSigHandler(path string, args ...string) error {
 	if err != nil {
 		return err
 	}
+
+	script.caller = s
 
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, os.Interrupt, syscall.SIGTERM)
@@ -155,19 +155,8 @@ func (s *Script) runScriptWithSigHandler(path string, args ...string) error {
 
 // tengoFindScript is the tengo function version of findScript.
 // Represents 'script.find(script string) string|error'
-func (s *Script) tengoFindScript(args ...tengo.Object) (tengo.Object, error) {
-	if len(args) != 1 {
-		return nil, tengo.ErrWrongNumArguments
-	}
-
-	path, ok := tengo.ToString(args[0])
-	if !ok {
-		return nil, tengo.ErrInvalidArgumentType{
-			Name:     "path",
-			Expected: "string",
-			Found:    args[0].TypeName(),
-		}
-	}
+func (s *Script) tengoFindScript(args interop.ArgMap) (tengo.Object, error) {
+	path, _ := args.GetString("path")
 
 	fullPath, err := s.findScript(path)
 	if err != nil {
@@ -194,29 +183,27 @@ func (s *Script) findScript(path string) (string, error) {
 
 // tengoStop is the tengo function version of stop.
 // Represents 'script.stop(msg string|error)'
-func (s *Script) tengoStop(args ...tengo.Object) (tengo.Object, error) {
-	var messages []string
-	for _, arg := range args {
-		msg, _ := tengo.ToString(arg)
-		messages = append(messages, msg)
+func (s *Script) tengoStop(args interop.ArgMap) (tengo.Object, error) {
+	message := ""
+	obj, ok := args.GetObject("message")
+	if ok {
+		message, _ = tengo.ToString(obj)
 	}
 
-	s.stop(messages...)
+	s.stop(message)
 	return nil, nil
 }
 
 // stop prints the message and stops the current script.
-func (s *Script) stop(args ...string) {
-	for _, arg := range args {
-		if arg == "" {
-			continue
-		}
+func (s *Script) stop(message string) {
+	message = strings.ReplaceAll(message, `\n`, "\n")
+	message = strings.ReplaceAll(message, `\t`, "\t")
 
-		message := strings.ReplaceAll(arg, `\n`, "\n")
-		message = strings.ReplaceAll(message, `\t`, "\t")
-
+	if message != "" {
 		fmt.Println(message)
 	}
+
+	s.err = errors.New(message)
 
 	go func() {
 		s.cancel()
