@@ -3,14 +3,15 @@ package cmd
 import (
 	"bufio"
 	"fmt"
-	"github.com/analog-substance/arsenic/lib/scope"
-	"github.com/spf13/cobra"
 	"log"
 	"os"
+
+	"github.com/analog-substance/arsenic/lib/scope"
+	"github.com/spf13/cobra"
 )
 
-// pruneCmd represents the prune command
-var pruneCmd = &cobra.Command{
+// scopePruneCmd represents the prune command
+var scopePruneCmd = &cobra.Command{
 	Use:   "prune",
 	Short: "read stdin remove out of scope things and print it to stdout.",
 	Long:  `read stdin remove out of scope things and print it to stdout.`,
@@ -33,8 +34,7 @@ var pruneCmd = &cobra.Command{
 }
 
 func init() {
-	scopeCmd.AddCommand(pruneCmd)
+	scopeCmd.AddCommand(scopePruneCmd)
 
-	pruneCmd.Flags().BoolP("root-domains", "r", false, "remove domains that belong to a blacklisted root domain, even if they are in the scope-domains.txt")
-
+	scopePruneCmd.Flags().BoolP("root-domains", "r", false, "remove domains that belong to a blacklisted root domain, even if they are in the scope-domains.txt")
 }

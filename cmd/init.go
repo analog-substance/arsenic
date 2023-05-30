@@ -1,9 +1,9 @@
 package cmd
 
 import (
-	"github.com/analog-substance/arsenic/lib/util"
-	"github.com/spf13/cobra"
 	"os"
+
+	"github.com/spf13/cobra"
 )
 
 // initCmd represents the init command
@@ -16,7 +16,7 @@ var initCmd = &cobra.Command{
 		os.MkdirAll(args[0], 0755)
 		os.Chdir(args[0])
 		dryRun, _ := cmd.Flags().GetBool("dry-run")
-		util.ExecutePhaseScripts("init", []string{}, dryRun)
+		ExecutePhaseScripts("init", []string{}, dryRun)
 	},
 }
 

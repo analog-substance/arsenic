@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"github.com/analog-substance/arsenic/lib/util"
 	"github.com/spf13/cobra"
 )
 
@@ -12,7 +11,7 @@ var huntCmd = &cobra.Command{
 	Long:  `Find interesting things`,
 	Run: func(cmd *cobra.Command, args []string) {
 		dryRun, _ := cmd.Flags().GetBool("dry-run")
-		util.ExecutePhaseScripts("hunt", []string{}, dryRun)
+		ExecutePhaseScripts("hunt", []string{}, dryRun)
 	},
 }
 

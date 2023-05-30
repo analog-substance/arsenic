@@ -3,10 +3,12 @@ package lib
 import (
 	"bytes"
 	"fmt"
-	"github.com/analog-substance/arsenic/lib/set"
-	"github.com/spf13/viper"
 	"reflect"
 	"testing"
+
+	"github.com/analog-substance/arsenic/lib/config"
+	"github.com/analog-substance/arsenic/lib/set"
+	"github.com/spf13/viper"
 )
 
 func Test_cleanLine(t *testing.T) {
@@ -40,17 +42,18 @@ func Test_cleanLine(t *testing.T) {
 }
 
 func Test_shouldIgnoreLine(t *testing.T) {
-
-	wordlists := make(map[string][]string)
-	wordlists["web-content"] = []string{}
-
-	wordlists["sqli"] = []string{}
-
-	wordlists["xss"] = []string{}
+	wordlists := config.Wordlists{
+		Types: map[string][]string{
+			"web-content": {},
+			"sqli":        {},
+			"xss":         {},
+		},
+	}
 	setConfigDefault("wordlists", wordlists)
-	//
-	//viper.AutomaticEnv() // read in environment variables that match
-	//viper.ReadInConfig()
+
+	var c config.Config
+	viper.Unmarshal(&c)
+	config.Set(&c)
 
 	type args struct {
 		wordlistType string
@@ -133,7 +136,26 @@ func setConfigDefault(key string, value interface{}) {
 			structField := valueType.Field(i)
 			fieldValue := valueValue.Field(i)
 
-			setConfigDefault(fmt.Sprintf("%s.%s", key, structField.Name), fieldValue.Interface())
+			if !structField.IsExported() {
+				continue
+			}
+
+			subKey := structField.Name
+			yamlTag := structField.Tag.Get("yaml")
+			if yamlTag == "-" {
+				continue
+			}
+
+			if yamlTag != "" {
+				subKey = yamlTag
+			}
+
+			fullKey := fmt.Sprintf("%s.%s", key, subKey)
+			if key == "" {
+				fullKey = subKey
+			}
+
+			setConfigDefault(fullKey, fieldValue.Interface())
 		}
 	} else {
 		viper.SetDefault(key, value)

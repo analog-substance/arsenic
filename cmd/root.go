@@ -4,17 +4,22 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"math/rand"
 	"os"
+	"os/exec"
+	"os/signal"
 	"path/filepath"
 	"reflect"
 	"strings"
+	"syscall"
+	"time"
 
 	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	"github.com/analog-substance/arsenic/lib/config"
 	"github.com/analog-substance/arsenic/lib/engine"
-	"github.com/analog-substance/arsenic/lib/util"
 )
 
 var cfgFile string
@@ -29,6 +34,9 @@ var rootCmd = &cobra.Command{
 
 `,
 	Args: cobra.ArbitraryArgs,
+	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		return setOrRefreshConfig()
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) == 0 {
 			cmd.Help()
@@ -75,150 +83,7 @@ func initConfig() {
 		log.Println(err)
 	}
 
-	defaultDiscoverScripts := make(map[string]util.ScriptConfig)
-	defaultReconScripts := make(map[string]util.ScriptConfig)
-	defaultHuntScripts := make(map[string]util.ScriptConfig)
-	defaultInitScripts := make(map[string]util.ScriptConfig)
-
-	defaultInitScripts["as-init-op"] = util.NewScriptConfig("as-init-op", 0, 1, true)
-	defaultInitScripts["as-setup-hugo"] = util.NewScriptConfig("as-setup-hugo", 100, 1, true)
-	defaultInitScripts["as-init-hooks"] = util.NewScriptConfig("as-init-hooks", 200, 1, true)
-	defaultInitScripts["as-init-cleanup"] = util.NewScriptConfig("as-init-cleanup", 300, 1, true)
-
-	defaultDiscoverScripts["as-root-domain-recon"] = util.NewScriptConfig("as-root-domain-recon", 0, 1, true)
-	defaultDiscoverScripts["as-subdomain-discovery"] = util.NewScriptConfig("as-subdomain-discovery", 50, 1, true)
-	defaultDiscoverScripts["as-subdomain-enumeration"] = util.NewScriptConfig("as-subdomain-enumeration", 100, 1, true)
-	defaultDiscoverScripts["as-combine-subdomains"] = util.NewScriptConfig("as-combine-subdomains", 250, 2, true)
-	defaultDiscoverScripts["as-dns-resolution"] = util.NewScriptConfig("as-dns-resolution", 300, 2, true)
-	defaultDiscoverScripts["as-domains-from-domain-ssl-certs"] = util.NewScriptConfig("as-domains-from-domain-ssl-certs", 275, 1, true)
-	defaultDiscoverScripts["as-ip-recon"] = util.NewScriptConfig("as-ip-recon", 400, 2, true)
-	defaultDiscoverScripts["as-domains-from-ip-ssl-certs"] = util.NewScriptConfig("as-domains-from-ip-ssl-certs", 500, 2, true)
-	defaultDiscoverScripts["as-ip-resolution"] = util.NewScriptConfig("as-ip-resolution", 600, 2, true)
-
-	defaultDiscoverScripts["as-http-screenshot-domains"] = util.NewScriptConfig("as-http-screenshot-domains", 700, 1, true)
-
-	defaultReconScripts["as-port-scan-tcp"] = util.NewScriptConfig("as-port-scan-tcp", 0, 1, true)
-	defaultReconScripts["as-content-discovery"] = util.NewScriptConfig("as-content-discovery", 100, 1, true)
-	defaultReconScripts["as-http-screenshot-hosts"] = util.NewScriptConfig("as-http-screenshot-hosts", 200, 1, true)
-	defaultReconScripts["as-port-scan-udp"] = util.NewScriptConfig("as-port-scan-udp", 300, 1, true)
-
-	defaultHuntScripts["as-takeover-aquatone"] = util.NewScriptConfig("as-takeover-aquatone", 0, 1, true)
-	defaultHuntScripts["as-searchsploit"] = util.NewScriptConfig("as-searchsploit", 100, 1, true)
-	defaultHuntScripts["as-nuclei-technologies"] = util.NewScriptConfig("as-nuclei-technologies", 200, 1, true)
-	defaultHuntScripts["as-nuclei-cves"] = util.NewScriptConfig("as-nuclei-cves", 300, 1, true)
-
-	defaultScripts := make(map[string]map[string]util.ScriptConfig)
-	defaultScripts["init"] = defaultInitScripts
-	defaultScripts["discover"] = defaultDiscoverScripts
-	defaultScripts["recon"] = defaultReconScripts
-	defaultScripts["hunt"] = defaultHuntScripts
-
-	wordlists := make(map[string][]string)
-	wordlists["web-content"] = []string{
-		"Discovery/Web-Content/AdobeCQ-AEM.txt",
-		"Discovery/Web-Content/apache.txt",
-		"Discovery/Web-Content/Common-DB-Backups.txt",
-		"Discovery/Web-Content/Common-PHP-Filenames.txt",
-		"Discovery/Web-Content/common.txt",
-		"Discovery/Web-Content/confluence-administration.txt",
-		"Discovery/Web-Content/default-web-root-directory-linux.txt",
-		"Discovery/Web-Content/default-web-root-directory-windows.txt",
-		"Discovery/Web-Content/frontpage.txt",
-		"Discovery/Web-Content/graphql.txt",
-		"Discovery/Web-Content/jboss.txt",
-		"Discovery/Web-Content/Jenkins-Hudson.txt",
-		"Discovery/Web-Content/nginx.txt",
-		"Discovery/Web-Content/oracle.txt",
-		"Discovery/Web-Content/quickhits.txt",
-		"Discovery/Web-Content/raft-large-directories.txt",
-		"Discovery/Web-Content/raft-medium-words.txt",
-		"Discovery/Web-Content/reverse-proxy-inconsistencies.txt",
-		"Discovery/Web-Content/RobotsDisallowed-Top1000.txt",
-		"Discovery/Web-Content/websphere.txt",
-	}
-
-	wordlists["sqli"] = []string{
-		"Fuzzing/Databases/sqli.auth.bypass.txt",
-		"Fuzzing/Databases/MSSQL.fuzzdb.txt",
-		"Fuzzing/Databases/MSSQL-Enumeration.fuzzdb.txt",
-		"Fuzzing/Databases/MySQL.fuzzdb.txt",
-		"Fuzzing/Databases/NoSQL.txt",
-		"Fuzzing/Databases/db2enumeration.fuzzdb.txt",
-		"Fuzzing/Databases/Oracle.fuzzdb.txt",
-		"Fuzzing/Databases/MySQL-Read-Local-Files.fuzzdb.txt",
-		"Fuzzing/Databases/Postgres-Enumeration.fuzzdb.txt",
-		"Fuzzing/Databases/MySQL-SQLi-Login-Bypass.fuzzdb.txt",
-		"Fuzzing/SQLi/Generic-BlindSQLi.fuzzdb.txt",
-		"Fuzzing/SQLi/Generic-SQLi.txt",
-		"Fuzzing/SQLi/quick-SQLi.txt",
-	}
-
-	wordlists["xss"] = []string{
-		"Fuzzing/XSS/XSS-Somdev.txt",
-		"Fuzzing/XSS/XSS-Bypass-Strings-BruteLogic.txt",
-		"Fuzzing/XSS/XSS-Jhaddix.txt",
-		"Fuzzing/XSS/xss-without-parentheses-semi-colons-portswigger.txt",
-		"Fuzzing/XSS/XSS-RSNAKE.txt",
-		"Fuzzing/XSS/XSS-Cheat-Sheet-PortSwigger.txt",
-		"Fuzzing/XSS/XSS-BruteLogic.txt",
-		"Fuzzing/XSS-Fuzzing",
-	}
-
-	blacklistedRootDomains := []string{
-		"1e100.net",
-		"akamaitechnologies.com",
-		"amazonaws.com",
-		"azure.com",
-		"azurewebsites.net",
-		"azurewebsites.windows.net",
-		"c7dc.com",
-		"cas.ms",
-		"cloudapp.net",
-		"cloudfront.net",
-		"googlehosted.com",
-		"googleusercontent.com",
-		"hscoscdn10.net",
-		"my.jobs",
-		"readthedocs.io",
-		"readthedocs.org",
-		"sites.hubspot.net",
-		"tds.net",
-		"wixsite.com",
-	}
-
-	ignoreServices := []util.IgnoreService{
-		{
-			Name:  "msrpc",
-			Ports: "40000-65535",
-			Flag:  "ignored::ephemeral-msrpc",
-		},
-		{
-			Name:  "tcpwrapped",
-			Ports: "all",
-		},
-		{
-			Name:  "unknown",
-			Ports: "all",
-		},
-	}
-
-	setConfigDefault("ignore-services", ignoreServices)
-	setConfigDefault("blacklist.root-domains", blacklistedRootDomains)
-	setConfigDefault("blacklist.domains", []string{})
-	setConfigDefault("blacklist.ips", []string{})
-	setConfigDefault("scripts-directory", filepath.Join(home, ".config", "arsenic"))
-	setConfigDefault("scripts", defaultScripts)
-	setConfigDefault("wordlists", wordlists)
-	setConfigDefault("discover.top-tcp-count", 30)
-	setConfigDefault("discover.top-udp-count", 30)
-	setConfigDefault("discover.timing-profile", 4)
-	setConfigDefault("analyze.require-open-ports", true)
-	setConfigDefault("hosts.nmap-xml-glob", "nmap-*-??p.xml")
-	setConfigDefault("dns.resolvconf", "")
-	setConfigDefault("wordlist-paths", []string{
-		"/opt/SecLists",
-		"/usr/share/seclists",
-	})
+	setConfigDefault("", config.Default(home))
 
 	if cfgFile != "" {
 		// Use config file from the flag.
@@ -261,9 +126,119 @@ func setConfigDefault(key string, value interface{}) {
 				continue
 			}
 
-			setConfigDefault(fmt.Sprintf("%s.%s", key, structField.Name), fieldValue.Interface())
+			subKey := structField.Name
+			yamlTag := structField.Tag.Get("yaml")
+			if yamlTag == "-" {
+				continue
+			}
+
+			if yamlTag != "" {
+				subKey = yamlTag
+			}
+
+			fullKey := fmt.Sprintf("%s.%s", key, subKey)
+			if key == "" {
+				fullKey = subKey
+			}
+
+			setConfigDefault(fullKey, fieldValue.Interface())
 		}
 	} else {
 		viper.SetDefault(key, value)
 	}
+}
+
+func executePhaseScripts(phase string, args []string, dryRun bool) (bool, string) {
+	done := make(chan int)
+	defer close(done)
+
+	scriptChan := config.IteratePhaseScripts(phase, done)
+	for script := range scriptChan {
+		fmt.Printf("Running %s %d\n", script.Script, script.TotalRuns)
+		if dryRun {
+			continue
+		}
+
+		if ExecScript(script.Script, args) != nil {
+			done <- 1
+			return false, script.Script
+		}
+	}
+
+	return true, ""
+}
+
+func ExecutePhaseScripts(phase string, args []string, dryRun bool) {
+	minWait := 10
+	maxWait := 60
+
+	for {
+		status, script := executePhaseScripts(phase, args, dryRun)
+		if status {
+			return
+		}
+
+		fmt.Printf("Script failed, gonna retry: %s\n", script)
+
+		timeToSleep := rand.Intn(maxWait-minWait) + minWait
+		time.Sleep(time.Duration(timeToSleep) * time.Second)
+	}
+}
+
+func ExecScript(scriptPath string, args []string) error {
+	if filepath.Ext(scriptPath) == ".tengo" {
+		script, err := engine.NewScript(scriptPath)
+		if err != nil {
+			return err
+		}
+
+		return script.Run(args)
+	}
+	cmdCtx, cancel := context.WithCancel(context.Background())
+	cmd := exec.CommandContext(cmdCtx, scriptPath, args...)
+
+	cmd.Stderr = os.Stderr
+	cmd.Stdout = os.Stdout
+
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, os.Interrupt, syscall.SIGTERM)
+
+	// relay trapped signals to the spawned process
+	terminate := false
+	go func() {
+		for sig := range sigs {
+			terminate = true
+			cmd.Process.Signal(sig)
+			cancel()
+		}
+	}()
+
+	defer func() {
+		signal.Stop(sigs)
+		close(sigs)
+	}()
+
+	if err := cmd.Start(); err != nil {
+		log.Fatalf("cmd.Start: %v", err)
+	}
+
+	var err error
+	exitStatus := 0
+	if err = cmd.Wait(); err != nil {
+		if exiterr, ok := err.(*exec.ExitError); ok {
+			if status, ok := exiterr.Sys().(syscall.WaitStatus); ok {
+				if status.Signaled() {
+					terminate = true
+				}
+				exitStatus = status.ExitStatus()
+			}
+		} else {
+			log.Fatalf("cmd.Wait: %v", err)
+		}
+	}
+
+	if terminate {
+		os.Exit(exitStatus)
+	}
+	return err
 }

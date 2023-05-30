@@ -17,11 +17,11 @@ import (
 	"github.com/analog-substance/arsenic/lib/set"
 	"github.com/analog-substance/fileutil"
 	"github.com/bmatcuk/doublestar/v4"
-	"github.com/spf13/viper"
 
 	"github.com/analog-substance/nmap/v3"
 
 	"github.com/ahmetb/go-linq/v3"
+	"github.com/analog-substance/arsenic/lib/config"
 	"github.com/analog-substance/arsenic/lib/util"
 )
 
@@ -658,11 +658,11 @@ func (host Host) flags() []string {
 }
 
 func (host Host) ports() []Port {
-	var ignoreServices []util.IgnoreService
-	viper.UnmarshalKey("ignore-services", &ignoreServices)
+	hostsConfig := config.Get().Hosts
+	ignoreServices := hostsConfig.IgnoreServices
 
 	portMap := make(map[string]Port)
-	globbed, _ := filepath.Glob(fmt.Sprintf("%s/recon/%s", host.Dir, viper.GetString("hosts.nmap-xml-glob")))
+	globbed, _ := filepath.Glob(filepath.Join(host.Dir, "recon", hostsConfig.NmapXMLGlob))
 	quick := []string{}
 
 	tcpPorts := false

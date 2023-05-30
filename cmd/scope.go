@@ -2,7 +2,8 @@ package cmd
 
 import (
 	"fmt"
-	scope2 "github.com/analog-substance/arsenic/lib/scope"
+
+	"github.com/analog-substance/arsenic/lib/scope"
 
 	"github.com/spf13/cobra"
 )
@@ -13,11 +14,11 @@ var scopeCmd = &cobra.Command{
 	Short: "Print all scope",
 	Long:  `Print all scope`,
 	Run: func(cmd *cobra.Command, args []string) {
-		domains, _ := scope2.GetScope("domains")
-		ips, _ := scope2.GetScope("ips")
+		domains, _ := scope.GetScope("domains")
+		ips, _ := scope.GetScope("ips")
 
-		scope := append(domains, ips...)
-		for _, scopeItem := range scope {
+		allScope := append(domains, ips...)
+		for _, scopeItem := range allScope {
 			fmt.Println(scopeItem)
 		}
 	},
