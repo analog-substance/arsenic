@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"path/filepath"
 	"sort"
@@ -13,6 +14,15 @@ import (
 	"github.com/analog-substance/fileutil"
 	"github.com/spf13/cobra"
 )
+
+type naabuResult struct {
+	IP   string `json:"ip"`
+	Port struct {
+		Port     int  `json:"Port"`
+		Protocol int  `json:"Protocol"`
+		TLS      bool `json:"TLS"`
+	} `json:"Port"`
+}
 
 // ingestNaabuCmd represents the naabu command
 var ingestNaabuCmd = &cobra.Command{
@@ -27,13 +37,26 @@ var ingestNaabuCmd = &cobra.Command{
 				return err
 			}
 
-			for line := range lines {
-				parts := strings.Split(line, ":")
-				host := parts[0]
-				port := parts[1]
+			if filepath.Ext(file) == ".json" {
+				for line := range lines {
+					var result naabuResult
+					err = json.Unmarshal([]byte(line), &result)
+					if err != nil {
+						return err
+					}
 
-				hostMap[host] = append(hostMap[host], port)
+					hostMap[result.IP] = append(hostMap[result.IP], fmt.Sprintf("%d", result.Port.Port))
+				}
+			} else {
+				for line := range lines {
+					parts := strings.Split(line, ":")
+					host := parts[0]
+					port := parts[1]
+
+					hostMap[host] = append(hostMap[host], port)
+				}
 			}
+
 		}
 
 		var err error
