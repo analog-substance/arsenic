@@ -14,6 +14,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/google/shlex"
 	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -152,14 +153,14 @@ func executePhaseScripts(phase string, args []string, dryRun bool) (bool, string
 	done := make(chan int)
 	defer close(done)
 
-	scriptChan := config.IteratePhaseScripts(phase, done)
-	for script := range scriptChan {
+	scripts := config.Get().IterateScripts(phase, done)
+	for script := range scripts {
 		fmt.Printf("Running %s %d\n", script.Script, script.TotalRuns)
 		if dryRun {
 			continue
 		}
 
-		if ExecScript(script.Script, args) != nil {
+		if ExecScript(script, args) != nil {
 			done <- 1
 			return false, script.Script
 		}
@@ -185,15 +186,26 @@ func ExecutePhaseScripts(phase string, args []string, dryRun bool) {
 	}
 }
 
-func ExecScript(scriptPath string, args []string) error {
-	if filepath.Ext(scriptPath) == ".tengo" {
-		script, err := engine.NewScript(scriptPath)
+func ExecScript(script config.Script, args []string) error {
+	if script.Args != "" {
+		scriptArgs, err := shlex.Split(script.Args)
 		if err != nil {
 			return err
 		}
 
-		return script.Run(args)
+		args = append(scriptArgs, args...)
 	}
+
+	scriptPath := script.Script
+	if filepath.Ext(scriptPath) == ".tengo" {
+		s, err := engine.NewScript(scriptPath)
+		if err != nil {
+			return err
+		}
+
+		return s.Run(args)
+	}
+
 	cmdCtx, cancel := context.WithCancel(context.Background())
 	cmd := exec.CommandContext(cmdCtx, scriptPath, args...)
 

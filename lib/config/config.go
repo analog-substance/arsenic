@@ -20,8 +20,7 @@ func Set(c *Config) {
 }
 
 type Config struct {
-	Scripts Scripts `yaml:"scripts"`
-	// Scripts          map[string]map[string]Script `yaml:"scripts"`
+	Scripts          Scripts   `yaml:"scripts"`
 	Wordlists        Wordlists `yaml:"wordlists"`
 	Blacklist        Blacklist `yaml:"blacklist"`
 	ScriptsDirectory string    `yaml:"scripts-directory"`
@@ -189,7 +188,7 @@ func Default(home string) Config {
 	}
 
 	phases := map[string]Phase{
-		"init": Phase{
+		"init": {
 			Scripts: map[string]Script{
 				"as-init-op":      NewScript("as-init-op", 0, 1, true),
 				"as-setup-hugo":   NewScript("as-setup-hugo", 100, 1, true),
@@ -197,7 +196,7 @@ func Default(home string) Config {
 				"as-init-cleanup": NewScript("as-init-cleanup", 300, 1, true),
 			},
 		},
-		"discover": Phase{
+		"discover": {
 			Scripts: map[string]Script{
 				"as-root-domain-recon":             NewScript("as-root-domain-recon", 0, 1, true),
 				"as-subdomain-discovery":           NewScript("as-subdomain-discovery", 50, 1, true),
@@ -211,7 +210,7 @@ func Default(home string) Config {
 				"as-http-screenshot-domains":       NewScript("as-http-screenshot-domains", 700, 1, true),
 			},
 		},
-		"recon": Phase{
+		"recon": {
 			Scripts: map[string]Script{
 				"as-port-scan-tcp":         NewScript("as-port-scan-tcp", 0, 1, true),
 				"as-content-discovery":     NewScript("as-content-discovery", 100, 1, true),
@@ -219,7 +218,7 @@ func Default(home string) Config {
 				"as-port-scan-udp":         NewScript("as-port-scan-udp", 300, 1, true),
 			},
 		},
-		"hunt": Phase{
+		"hunt": {
 			Scripts: map[string]Script{
 				"as-takeover-aquatone":   NewScript("as-takeover-aquatone", 0, 1, true),
 				"as-searchsploit":        NewScript("as-searchsploit", 100, 1, true),

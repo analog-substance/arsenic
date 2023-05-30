@@ -4,12 +4,16 @@ import (
 	"testing"
 
 	"github.com/analog-substance/arsenic/lib/config"
-	"github.com/spf13/viper"
 )
 
-func setConfig() {
-	var c config.Config
-	viper.Unmarshal(&c)
+func setConfig(name string, phase config.Phase) {
+	c := config.Config{
+		Scripts: config.Scripts{
+			Phases: map[string]config.Phase{
+				name: phase,
+			},
+		},
+	}
 	config.Set(&c)
 }
 
@@ -29,15 +33,18 @@ func Test_executePhaseScripts(t *testing.T) {
 		{
 			name: "Normal",
 			setup: func() {
-				viper.Set("scripts.test", map[string]config.Script{
-					"script-1": {
-						Script:  "../tests/lib/util/normal.sh",
-						Enabled: true,
-						Order:   1,
-						Count:   1,
+				phase := config.Phase{
+					Scripts: map[string]config.Script{
+						"script-1": {
+							Script:  "../tests/lib/util/normal.sh",
+							Enabled: true,
+							Order:   1,
+							Count:   1,
+						},
 					},
-				})
-				setConfig()
+				}
+
+				setConfig("test", phase)
 			},
 			args: args{
 				phase: "test",
@@ -48,15 +55,18 @@ func Test_executePhaseScripts(t *testing.T) {
 		{
 			name: "Exited script",
 			setup: func() {
-				viper.Set("scripts.test", map[string]config.Script{
-					"script-1": {
-						Script:  "../tests/lib/util/exit-255.sh",
-						Enabled: true,
-						Order:   1,
-						Count:   1,
+				phase := config.Phase{
+					Scripts: map[string]config.Script{
+						"script-1": {
+							Script:  "../tests/lib/util/exit-255.sh",
+							Enabled: true,
+							Order:   1,
+							Count:   1,
+						},
 					},
-				})
-				setConfig()
+				}
+
+				setConfig("test", phase)
 			},
 			args: args{
 				phase: "test",
@@ -81,8 +91,8 @@ func Test_executePhaseScripts(t *testing.T) {
 
 func TestExecScript(t *testing.T) {
 	type args struct {
-		scriptPath string
-		args       []string
+		script config.Script
+		args   []string
 	}
 	tests := []struct {
 		name    string
@@ -92,21 +102,25 @@ func TestExecScript(t *testing.T) {
 		{
 			name: "Exit 0",
 			args: args{
-				scriptPath: "../tests/lib/util/normal.sh",
+				script: config.Script{
+					Script: "../tests/lib/util/normal.sh",
+				},
 			},
 			wantErr: false,
 		},
 		{
 			name: "Exit 255",
 			args: args{
-				scriptPath: "../tests/lib/util/exit-255.sh",
+				script: config.Script{
+					Script: "../tests/lib/util/exit-255.sh",
+				},
 			},
 			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := ExecScript(tt.args.scriptPath, tt.args.args)
+			err := ExecScript(tt.args.script, tt.args.args)
 			gotErr := err != nil
 			if gotErr != tt.wantErr {
 				t.Errorf("ExecScript() = %v, want %v", gotErr, tt.wantErr)
