@@ -18,7 +18,7 @@ fi
 
 FR_THREADS=50
 FR_RESOLVCONF=""
-AS_DNS_RESOLVECONF=$(arsenic config dns.resolvconf)
+AS_DNS_RESOLVECONF=$(arsenic config discover.resolvconf)
 if [ ! -z "$AS_DNS_RESOLVECONF" ] ; then
   FR_RESOLVCONF="-r $AS_DNS_RESOLVECONF"
 fi
