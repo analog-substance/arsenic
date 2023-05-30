@@ -10,6 +10,7 @@ log := import("log")
 
 topPorts := 0
 explicitPorts := []
+explicitOutput := ""
 targets := []
 
 setupHost := func(target) {
@@ -48,6 +49,7 @@ rootCmd.enable_completion()
 rootCmd.persistent_flags.string_slicep("targets", "t", [], "The target to scan. Can be used multiple times to specify multiple targets")
 rootCmd.persistent_flags.string_slicep("ports", "p", [], "The specific ports to scan. Can be used multiple times to specify multiple targets")
 rootCmd.persistent_flags.stringp("target-file", "f", "", "The file containing the targets to scan.")
+rootCmd.persistent_flags.stringp("output", "o", "", "The name of the output file without the file extension")
 rootCmd.persistent_flags.int("top", 0, "Scan # most common ports")
 
 rootCmd.set_persistent_pre_run(func(cmd, args) {
@@ -73,6 +75,7 @@ rootCmd.set_persistent_pre_run(func(cmd, args) {
 
   topPorts = cmd.flags.get_int("top")
   explicitPorts = cmd.flags.get_string_slice("ports")
+  explicitOutput = cmd.flags.get_string("output")
 })
 
 // TCP Command
@@ -84,10 +87,15 @@ tcpCmd.set_run(func(cmd, args){
   topScan := func(target) {
     log.msg(format("Scanning %s: top %d TCP ports", target, topPorts))
 
+    output := format("nmap-top-%d-tcp", topPorts)
+    if explicitOutput != "" {
+      output = explicitOutput
+    }
+
     scanner := defaultScanner(target, args).
       sudo().
       privileged().
-      oA(filepath.from_slash(format("recon/nmap-top-%d-tcp", topPorts))).
+      oA(filepath.join("recon", output)).
       host_timeout("30m"). // Make an argument/configurable
       A().
       top_ports(topPorts)
@@ -97,11 +105,16 @@ tcpCmd.set_run(func(cmd, args){
   }
 
   quickScan := func(target) {
+    output := "nmap-punched-quick-tcp"
+    if explicitOutput != "" {
+      output = format("%s-quick", explicitOutput)
+    }
+
     scanner := defaultScanner(target, args).
       T3().
       host_timeout("30m"). // Make an argument/configurable
       ports("-").
-      oA(filepath.from_slash("recon/nmap-punched-quick-tcp"))
+      oA(filepath.join("recon", output))
 
     run := scanner.run()
     if is_error(run) {
@@ -115,10 +128,15 @@ tcpCmd.set_run(func(cmd, args){
   serviceScan := func(target, ports) {
     log.msg(format("Version scanning %v", ports))
 
+    output := "nmap-punched-tcp"
+    if explicitOutput != "" {
+      output = explicitOutput
+    }
+
     scanner := defaultScanner(target, args).
       sudo().
       privileged().
-      oA(filepath.from_slash("recon/nmap-punched-tcp")).
+      oA(filepath.join("recon", output)).
       host_timeout("30m"). // Make an argument/configurable
       A().
       ports(ports...)
@@ -175,18 +193,29 @@ udpCmd.set_run(func(cmd, args){
 
   topScan := func(target) {
     log.msg(format("Scanning %s: top %d UDP ports", target, topPorts))
+
+    output := format("nmap-top-%d-udp", topPorts)
+    if explicitOutput != "" {
+      output = explicitOutput
+    }
+
     scanner := udpScanner(target).
       top_ports(topPorts).
-      oA(filepath.from_slash(format("recon/nmap-top-%d-udp", topPorts)))
+      oA(filepath.join("recon", output))
     
     run := scanner.run()
     check_err(run)
   }
 
   serviceScan := func(target, ports) {
+    output := "nmap-punched-udp"
+    if explicitOutput != "" {
+      output = explicitOutput
+    }
+
     scanner := udpScanner(target).
       ports(ports...).
-      oA(filepath.from_slash("recon/nmap-punched-udp"))
+      oA(filepath.join("recon", output))
     
     run := scanner.run()
     check_err(run)
