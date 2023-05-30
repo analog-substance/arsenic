@@ -405,8 +405,8 @@ github.com/analog-substance/nmap/v3 v3.0.2 h1:wUiNkE/JiYTJmMEImPKptk7kXVJ+wwFu7T
 github.com/analog-substance/nmap/v3 v3.0.2/go.mod h1:PE2PY7j0w37MJdsa0kZDzCDc7L3ftVvBPU+P9mSUHgA=
 github.com/analog-substance/tengo/v2 v2.13.1 h1:ktvvPQ2rVGcldSh+vWjD8TgfzZBI+NFQsjzl9GnNHuI=
 github.com/analog-substance/tengo/v2 v2.13.1/go.mod h1:C/tj9BF8bQ4j8IRKzEfHXSktCUvbSyYuP9xjDYMjkdQ=
-github.com/analog-substance/tengomod v0.4.3 h1:/O4Oqy3FfNCMGB7t8kZhFkXw4kH96gpz5XTkmJ5t2LM=
-github.com/analog-substance/tengomod v0.4.3/go.mod h1:HdgTw9jsLoxL0YH9ERdgnFgAPykWIPWa0wdjrLbALBw=
+github.com/analog-substance/tengomod v0.4.4 h1:lTxcb0GsGbr6ouF5OT404DVcM9uy3KTHQmVkr76Gm7Y=
+github.com/analog-substance/tengomod v0.4.4/go.mod h1:HdgTw9jsLoxL0YH9ERdgnFgAPykWIPWa0wdjrLbALBw=
 github.com/antihax/optional v1.0.0/go.mod h1:uupD/76wgC+ih3iEmQUL+0Ugr19nfwCT1kdvxnR2qWY=
 github.com/armon/circbuf v0.0.0-20150827004946-bbbad097214e/go.mod h1:3U/XgcO3hCbHZ8TKRvWD2dDTCfh9M9ya+I9JpbB7O8o=
 github.com/armon/go-metrics v0.0.0-20180917152333-f0300d1749da/go.mod h1:Q73ZrmVTwzkszR9V5SSuryQ31EELlFMUz1kKyl939pY=

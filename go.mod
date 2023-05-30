@@ -8,7 +8,7 @@ require (
 	github.com/analog-substance/fileutil v0.0.3
 	github.com/analog-substance/nmap/v3 v3.0.2
 	github.com/analog-substance/tengo/v2 v2.13.1
-	github.com/analog-substance/tengomod v0.4.3
+	github.com/analog-substance/tengomod v0.4.4
 	github.com/bmatcuk/doublestar/v4 v4.6.0
 	github.com/bytedance/sonic v1.8.7 // indirect
 	github.com/gin-contrib/cors v1.4.0
