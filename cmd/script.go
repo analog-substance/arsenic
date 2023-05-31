@@ -32,7 +32,7 @@ var scriptCmd = &cobra.Command{
 			}
 		}
 
-		path := filepath.Join(config.Get().ScriptsDirectory, name)
+		path := filepath.Join(config.Get().Scripts.Directory, name)
 		if filepath.Ext(path) != ".tengo" {
 			path = path + ".tengo"
 		}
@@ -51,7 +51,7 @@ func init() {
 	rootCmd.AddCommand(scriptCmd)
 	scriptCmd.Flags().StringP("name", "n", "", "Name of the script to run")
 	scriptCmd.RegisterFlagCompletionFunc("name", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-		scriptsDir := config.Get().ScriptsDirectory
+		scriptsDir := config.Get().Scripts.Directory
 		if !fileutil.DirExists(scriptsDir) {
 			return nil, cobra.ShellCompDirectiveError
 		}
