@@ -48,7 +48,7 @@ rootCmd.set_run(func(cmd, args) {
 			lines := os2.read_file_lines(match)
 			check_err(lines)
 
-			subdomainSet.add_range(lines)
+			subdomainSet.add_range(lines...)
 		}
 
 		inScope := scope.prune(subdomainSet.sorted_slice())
