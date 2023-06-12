@@ -155,7 +155,7 @@ scanCmd.set_run(func(cmd, args) {
       cmd := exec.cmd("aquatone", cmdArgs...)
       check_err(cmd)
 
-      err = cmd.set_file_stdin(contentDiscoverPath)
+      err = cmd.set_stdin(contentDiscoverPath)
       check_err(err)
 
       err = cmd.run()
