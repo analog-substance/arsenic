@@ -159,11 +159,18 @@ func FromNessusFinding(finding *NessusFinding) *Lead {
 
 	cweRefs := append([]string{}, finding.ReportItem.CWE...)
 
+	pluginInt, err := strconv.Atoi(finding.ReportItem.PluginID)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	ID := fmt.Sprintf("deadbeef-cafe-babe-f007-%012d", pluginInt)
+
 	return &Lead{
+		Dir:          filepath.Join(reconLeadsDir, util.Sanitize(ID)),
 		Title:        finding.ReportItem.PluginName,
 		Description:  finding.ReportItem.Synopsis,
 		CweRefs:      cweRefs,
-		ExternalUUID: "",
+		ExternalUUID: ID,
 		Cvss: CVSS{
 			finding.ReportItem.RiskFactor,
 			finding.ReportItem.Cvss3BaseScore,
@@ -205,7 +212,6 @@ type Lead struct {
 func (l *Lead) Save() error {
 	isNessus := l.ExternalData.Nessus.ReportItem.PluginID != ""
 
-	var ID string
 	var summary string
 	var recommendations string
 	stepsToReproduce := []string{""}
@@ -213,12 +219,6 @@ func (l *Lead) Save() error {
 	affectedAssets := []string{""}
 
 	if isNessus {
-		pluginInt, err := strconv.Atoi(l.ExternalData.Nessus.ReportItem.PluginID)
-		if err != nil {
-			log.Fatalln(err)
-		}
-		ID = fmt.Sprintf("deadbeef-cafe-babe-f007-%012d", pluginInt)
-		l.ExternalUUID = ID
 		summary = l.ExternalData.Nessus.ReportItem.Description
 		recommendations = l.ExternalData.Nessus.ReportItem.Solution
 
