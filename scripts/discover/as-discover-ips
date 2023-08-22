@@ -1,16 +1,29 @@
 #! /bin/bash
 
+SCOPE_FILE="$SCOPE_FILE"
+
+if [ ! -z "$1" ] ; then
+	SCOPE_FILE="$1"
+fi
+
+if [ ! -f "$SCOPE_FILE" ]; then
+	echo "you haz no scope file"
+	exit 1
+fi
+
+OUTPUT_FILE_PREFIX=$(echo "$SCOPE_FILE" | sed 's/\.[a-z]\+$//')
+
 # expand all IPv4 CIDRs
-nmap -iL scope-ips.txt -sL -n \
+nmap -iL $SCOPE_FILE -sL -n \
   | grep "report for" \
-  | awk '{print $NF}' \
-  > scope-ips-expanded-ipv4.txt
+  | awk '{print $5}' \
+  > $OUTPUT_FILE_PREFIX-expanded-ipv4.txt
 
 # expand all IPv6 CIDRs
-nmap -iL scope-ips.txt -sL -n -6 \
+nmap -iL $SCOPE_FILE -sL -n -6 \
   | grep "report for" \
-  | awk '{print $NF}' \
-  > scope-ips-expanded-ipv6.txt
+  | awk '{print $5}' \
+  > $OUTPUT_FILE_PREFIX-expanded-ipv6.txt
 
 TCP_PORTS=$(echo $(sort -r -k3 /usr/share/nmap/nmap-services | grep "/tcp" | awk '{print $2}' | cut -d/ -f1 | head -n $(arsenic config discover.top-tcp-count)) | sed 's/ /,/g')
 UDP_PORTS=$(echo $(sort -r -k3 /usr/share/nmap/nmap-services | grep "/udp" | awk '{print $2}' | cut -d/ -f1 | head -n $(arsenic config discover.top-udp-count)) | sed 's/ /,/g')
@@ -23,10 +36,10 @@ sudo nmap -sn \
   --randomize-hosts \
   --scan-delay 50ms \
   -T$TIMING_PROFILE \
-  -iL scope-ips-expanded-ipv4.txt \
-  -oA recon/nmap-discovery-ipv4
+  -iL $OUTPUT_FILE_PREFIX-expanded-ipv4.txt \
+  -oA recon/nmap-discovery-$OUTPUT_FILE_PREFIX-ipv4
 
-cat recon/nmap-discovery-ipv4.gnmap | grep Up | awk '{print $2}' > scope-ips-active-ipv4.txt
+cat recon/nmap-discovery-$OUTPUT_FILE_PREFIX-ipv4.gnmap | grep Up | awk '{print $2}' > $OUTPUT_FILE_PREFIX-active-ipv4.txt
 
 sudo nmap -6 -sn \
   -PA$TCP_PORTS \
@@ -35,7 +48,7 @@ sudo nmap -6 -sn \
   --randomize-hosts \
   --scan-delay 50ms \
   -T$TIMING_PROFILE \
-  -iL scope-ips-expanded-ipv6.txt \
-  -oA recon/nmap-discovery-ipv6
+  -iL $OUTPUT_FILE_PREFIX-expanded-ipv6.txt \
+  -oA recon/nmap-discovery-$OUTPUT_FILE_PREFIX-ipv6
 
-cat recon/nmap-discovery-ipv4.gnmap | grep Up | awk '{print $2}' > scope-ips-active-ipv6.txt
+cat recon/nmap-discovery-$OUTPUT_FILE_PREFIX-ipv6.gnmap | grep Up | awk '{print $2}' > $OUTPUT_FILE_PREFIX-active-ipv6.txt
