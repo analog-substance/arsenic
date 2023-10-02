@@ -38,11 +38,27 @@ function root_domain_recon {
       | arsenic scope prune \
       | uniq > "recon/domains/$domain/subdomains-crtsh.txt"
 
+    RECON_FILE="recon/domains/$domain/amass-enum.txt"
+    if [ ! -f "$RECON_FILE" ] ; then
+      _ "amass enum $domain"
+
+      amass enum -d "$domain" \
+      | tee "$RECON_FILE"
+    fi
+
     RECON_FILE="recon/domains/$domain/amass-enum-active.txt"
     if [ ! -f "$RECON_FILE" ] ; then
       _ "amass enum active $domain"
 
-      amass enum -src -active -d "$domain" \
+      amass enum -active -d "$domain" \
+      | tee "$RECON_FILE"
+    fi
+
+    RECON_FILE="recon/domains/$domain/amass-enum-brute.txt"
+    if [ ! -f "$RECON_FILE" ] ; then
+      _ "amass enum brute $domain"
+
+      amass enum -brute -min-for-recursive 2 -d "$domain" \
       | tee "$RECON_FILE"
     fi
 
@@ -54,15 +70,22 @@ function root_domain_recon {
     fi
 
     {
+      if [ -f "recon/domains/$domain/amass-enum.txt" ]; then
+        cat "recon/domains/$domain/amass-enum.txt" | grep -oiP "([0-9a-z\-\.]+) \(FQDN\)" | sed 's/ (FQDN)//g' | tr 'A-Z' 'a-z' | sort -u | arsenic scope prune
+      fi
+
       if [ -f "recon/domains/$domain/amass-enum-active.txt" ]; then
-        cat "recon/domains/$domain/amass-enum-active.txt" 2>/dev/null | awk '{print $2}'
+        cat "recon/domains/$domain/amass-enum-active.txt" | grep -oiP "([0-9a-z\-\.]+) \(FQDN\)" | sed 's/ (FQDN)//g' | tr 'A-Z' 'a-z' | sort -u | arsenic scope prune
+      fi
+
+      if [ -f "recon/domains/$domain/amass-enum-brute.txt" ]; then
+        cat "recon/domains/$domain/amass-enum-brute.txt" | grep -oiP "([0-9a-z\-\.]+) \(FQDN\)" | sed 's/ (FQDN)//g' | tr 'A-Z' 'a-z' | sort -u | arsenic scope prune
       fi
 
       if [ -f "recon/domains/$domain/amass-intel.txt" ]; then
         cat "recon/domains/$domain/amass-intel.txt"
       fi
     } \
-    | grep -P "$(echo "$domain" | sed 's/\./\\./g')\$" \
     | sort -d \
     | arsenic scope prune \
     | uniq > "recon/domains/$domain/subdomains-amass.txt"
