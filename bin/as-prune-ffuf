@@ -1,0 +1,40 @@
+#! /bin/bash
+
+FFUF_FILE=$1
+STATUS_TO_PRUNE=$2
+
+if [ -z "$FFUF_FILE" ]; then 
+  echo as-prune-ffuf path-to-file status-code
+  exit 2
+fi
+
+if [ "$FFUF_FILE" == "-l" ]; then
+  ls -lahSr hosts/*/recon/ffuf* | awk '{print $5, $9}' | column -t
+  exit
+fi
+
+if [ "$FFUF_FILE" == "-x" ]; then
+  FFUF_FILE=$2
+
+  if [ ! -f $FFUF_FILE ]; then
+    echo as-prune-ffuf -x file
+    exit 1
+  fi
+  cat $FFUF_FILE | jq '.results[].status'|sort | uniq -c | sort -n 
+  exit
+fi
+if [ ! -f $FFUF_FILE ]; then
+  echo file not found
+  exit 1
+fi
+
+if [ -z "$STATUS_TO_PRUNE" ]; then 
+  echo as-prune-ffuf path-to-file status-code
+  exit 3
+fi
+
+set -e
+
+cat "$FFUF_FILE" | jq "del(.results[]| select(.status == $STATUS_TO_PRUNE))" | tee $FFUF_FILE.1
+mv $FFUF_FILE.1 $FFUF_FILE
+ls -lah $FFUF_FILE | awk '{print $5, $9}' | column -t
