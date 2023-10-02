@@ -131,11 +131,11 @@ function scanHost {
   fi
 }
 
-if [ ! -f "recon/wordlist-content-discover.txt" ]; then
-  arsenic wordlist web-content > "recon/wordlist-content-discover.txt"
+if [ ! -f "recon/wordlist-web-content.txt" ]; then
+  arsenic wordlist web-content > "recon/wordlist-web-content.txt"
 fi
 
-wordlist_file=$(realpath "recon/wordlist-content-discover.txt")
+wordlist_file=$(realpath "recon/wordlist-web-content.txt")
 wordlist_name=`basename $wordlist_file`
 wordlist_name="${wordlist_name%.*}"
 
