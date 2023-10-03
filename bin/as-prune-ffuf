@@ -23,6 +23,25 @@ if [ "$FFUF_FILE" == "-x" ]; then
   cat $FFUF_FILE | jq '.results[].status'|sort | uniq -c | sort -n 
   exit
 fi
+
+
+if [ "$FFUF_FILE" == "-a" ]; then
+  f=$(as-prune-ffuf -l | tail -n 1 | awk '{print $2}')
+  fs=$(as-prune-ffuf -x $f | tail -n 1)
+  c=$(($(echo $fs | awk '{print $1}')))
+  s=$(echo $fs | awk '{print $2}')
+  
+  if [ $c -gt 18000 ] ; then
+    echo "trim $s $c $f"
+    as-prune-ffuf $f $s
+  else
+    echo nothing to auto prune
+  fi
+  exit
+fi
+
+
+
 if [ ! -f $FFUF_FILE ]; then
   echo file not found
   exit 1
