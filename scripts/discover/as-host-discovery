@@ -13,8 +13,8 @@ fi
 SCOPE_NAME=$(echo $SCOPE_FILE | cut -d. -f1)
 
 
-nmap -sL -iL $SCOPE_FILE | tee recon/host-discovery-nmap-sl-ipv4.txt  | grep "report for" | awk '{print $NF}' | sed 's/^(//g;s/)$//g' | sort -n | uniq > "$SCOPE_NAME-generated-uniq-ipv4.txt"
-nmap -6 -sL -iL $SCOPE_FILE | tee recon/host-discovery-nmap-sl-ipv6.txt  | grep "report for" | awk '{print $NF}' | sed 's/^(//g;s/)$//g' | sort -n | uniq > "$SCOPE_NAME-generated-uniq-ipv6.txt"
+nmap -sL -iL $SCOPE_FILE | tee recon/host-discovery-nmap-sl-ipv4.txt  | grep "report for" | awk '{print $5}' | sort -n | uniq > "$SCOPE_NAME-generated-uniq-ipv4.txt"
+nmap -6 -sL -iL $SCOPE_FILE | tee recon/host-discovery-nmap-sl-ipv6.txt  | grep "report for" | awk '{print $5}' | sort -n | uniq > "$SCOPE_NAME-generated-uniq-ipv6.txt"
 
 IP_V4_OUT="recon/nmap-host-discovery-ipv4-$SCOPE_NAME"
 IP_V6_OUT="recon/nmap-host-discovery-ipv6-$SCOPE_NAME"
@@ -29,6 +29,7 @@ sudo nmap -sn \
   -PU$UDP_PORTS \
   --randomize-hosts \
   --scan-delay 50ms \
+  --resolve-all \
   -T$TIMING_PROFILE \
   -iL "$SCOPE_NAME-generated-uniq-ipv4.txt" \
   -oA "$IP_V4_OUT"
@@ -41,6 +42,7 @@ sudo nmap -6 -sn \
   -PU$UDP_PORTS \
   --randomize-hosts \
   --scan-delay 50ms \
+  --resolve-all \
   -T$TIMING_PROFILE \
   -iL "$SCOPE_NAME-generated-uniq-ipv6.txt" \
   -oA "$IP_V6_OUT"

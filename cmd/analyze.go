@@ -205,26 +205,30 @@ This will create a single host for hostnames that resolve to the same IPs`,
 		// scriptArgs := []string{mode}
 		// util.ExecScript("as-analyze-hosts", scriptArgs)
 
-		os.RemoveAll(analyzeDir)
-		fileutil.MkdirAll(filepath.Join(analyzeDir, "services"), "hosts")
-
-		resolvResults, err := getResolvResults()
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-
-		reviewDomains(resolvResults)
-		fmt.Println("\n[+] Domain review complete")
-
-		reviewIps(keepPrivateIPs)
-		fmt.Println("\n[+] IP review complete")
-
 		if nmapFlag {
 			fmt.Println("[+] Process recon/nmap-*.xml files")
 			getDiscoverNmaps()
-		}
+		} else {
+			os.RemoveAll(analyzeDir)
+			fileutil.MkdirAll(filepath.Join(analyzeDir, "services"), "hosts")
 
+			resolvResults, err := getResolvResults()
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+
+			reviewDomains(resolvResults)
+			fmt.Println("\n[+] Domain review complete")
+
+			reviewIps(keepPrivateIPs)
+			fmt.Println("\n[+] IP review complete")
+
+			if nmapFlag {
+				fmt.Println("[+] Process recon/nmap-*.xml files")
+				getDiscoverNmaps()
+			}
+		}
 		domains := serviceByDomain.keys()
 		for _, domain := range domains {
 			if !ignoreScope && !scope.IsInScope(domain, false) {
@@ -369,6 +373,31 @@ func getDiscoverNmaps() {
 
 	for _, file := range files {
 
+		fmt.Printf("[+] Pre Proccessing Processing %s\n", file)
+		nmapRun := &nmap.Run{}
+		err := nmapRun.FromFile(file)
+		if err != nil {
+			fmt.Printf("[!] Failed to open or parse file: %s\n", file)
+			continue
+		}
+
+		for _, nmapHost := range nmapRun.Hosts {
+			for _, ip := range nmapHost.Addresses {
+
+				if ip.AddrType != "mac" {
+					for _, hostname := range nmapHost.Hostnames {
+						if scope.IsInScope(hostname.Name, true) {
+							domainsByIp.addToSet(ip.Addr, hostname.Name)
+							ipsByDomain.addToSet(hostname.Name, ip.Addr)
+						}
+					}
+				}
+			}
+		}
+	}
+
+	for _, file := range files {
+
 		fmt.Printf("[+] Processing %s\n", file)
 		nmapRun := &nmap.Run{}
 		err := nmapRun.FromFile(file)
@@ -380,7 +409,9 @@ func getDiscoverNmaps() {
 		for _, nmapHost := range nmapRun.Hosts {
 			svc := serviceByDomain.getOrInitByNmapHost(nmapHost)
 			for _, s := range nmapHost.Hostnames {
-				svc.hostnames.Add(s.Name)
+				if scope.IsInScope(s.Name, true) {
+					svc.hostnames.Add(s.Name)
+				}
 
 				if ips, ok := ipsByDomain[s.Name]; ok {
 					svc.ipAddresses.AddRange(ips.StringSlice())
