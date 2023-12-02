@@ -13,6 +13,8 @@ git := import("git")
 set := import("set")
 cobra := import("cobra")
 wordlist := import("wordlist")
+os2 := import("os2")
+exec := import("exec")
 
 inScopeOnly := false
 wordlistTypes := wordlist.types()
@@ -92,8 +94,9 @@ rootCmd.set_persistent_pre_run(func(cmd, args) {
   wordlistName = filepath.base(wordlistFile)
   wordlistName = text.trim_suffix(wordlistName, filepath.ext(wordlistName))
 
-  err := git.pull()
-  check_err(err)
+  // I think we have the appropriate checks in the other commands
+  // err := git.pull()
+  // check_err(err)
 })
 
 listCmd := cobra.cmd("list", "Lists the hosts that need content enumeration")
@@ -204,6 +207,39 @@ scanCmd.set_run(func(cmd, args) {
 
     autoSelect()
   }
+})
+
+ignoreCmd := cobra.cmd("ignore", "Ignore host that need content enumeration")
+ignoreCmd.flags.stringp("host", "H", "", "Host to scan. Must be used with --url.")
+ignoreCmd.flags.stringp("url", "u", "", "URL to scan. Must be used with --host.")
+rootCmd.add_command(ignoreCmd)
+rootCmd.set_run(ignoreCmd)
+
+ignoreCmd.set_run(func(cmd, args) {
+  targetHost := cmd.flags.get_string("host")
+  targetURL := cmd.flags.get_string("url")
+
+  cmd := os.exec("whoami")
+  check_err(cmd)
+  whoami := cmd.output()
+
+  if (targetHost != "" && targetURL == "") || (targetHost == "" && targetURL != "") {
+    script.stop("[!] Host and URL must not be empty.")
+  }
+
+  ignoreHost := func(host, rawURL) {
+    log.info(format("Content Discovery / %s / %s / ignoring", host, rawURL))
+    outputFile := genOutputFileName(rawURL, wordlistName)
+    outputPath := filepath.join("hosts", host, "recon", outputFile)
+
+    if !filepath.file_exists(outputPath) {
+      log.msg(format("Ignoring %s", outputPath))
+      err := os2.write_file(outputPath, format("ignore::%s", whoami))
+      check_err(err)
+    }
+  }
+
+  ignoreHost(targetHost, targetURL)
 })
 
 err := rootCmd()
