@@ -1,0 +1,27 @@
+#! /bin/bash
+
+SCOPE_FILE=scope-all.txt
+
+if [ -n "$1" ]; then
+  SCOPE_FILE="$1"
+fi
+
+if [ ! -f "$SCOPE_FILE" ]; then
+  echo "scope file doesn't exist"
+  exit 1
+fi
+
+SCOPE_NAME=$(echo $SCOPE_FILE | cut -d. -f1)
+
+sudo nmap -Pn -sS -p- -sV \
+    --min-hostgroup 255 \
+    --min-rtt-timeout 25ms \
+    --max-rtt-timeout 100ms \
+    --max-retries 1 \
+    --max-scan-delay 0 \
+    --min-rate 1000 -vvv \
+    --open \
+    --stylesheet /static/nmap.xsl \
+    -iL $SCOPE_FILE \
+    -oA recon/nmap-tcp-$SCOPE_NAME
+    
