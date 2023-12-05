@@ -156,7 +156,6 @@ incrementalCmd.flags.stringp("scope-file", "s", "scope-ips.txt", "scope file to 
 incrementalCmd.flags.intp("port-count", "p", 5000, "number of ports to scan")
 incrementalCmd.flags.intp("batch", "b", 1, "what batch to scan (1 = ports 1-[port-count], 2 = [port-count + 1] - [port-count * batch])")
 rootCmd.add_command(incrementalCmd)
-rootCmd.set_run(incrementalCmd)
 
 /*
 

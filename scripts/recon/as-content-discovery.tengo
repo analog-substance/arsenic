@@ -213,7 +213,6 @@ ignoreCmd := cobra.cmd("ignore", "Ignore host that need content enumeration")
 ignoreCmd.flags.stringp("host", "H", "", "Host to scan. Must be used with --url.")
 ignoreCmd.flags.stringp("url", "u", "", "URL to scan. Must be used with --host.")
 rootCmd.add_command(ignoreCmd)
-rootCmd.set_run(ignoreCmd)
 
 ignoreCmd.set_run(func(cmd, args) {
   targetHost := cmd.flags.get_string("host")
