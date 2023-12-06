@@ -198,7 +198,6 @@ incrementalCmd.set_run(func(cmd, args) {
 
 
   for batch := startBatch; batch <= totalBatches; batch++ {
-    log.msg(format("Starting batch: %d", batch))
 
     portArg := ""
     excludePortArg := ""
@@ -280,6 +279,9 @@ incrementalCmd.set_run(func(cmd, args) {
     }
 
     log.msg(text.join(nmapCmd, " "))
+
+    progress := int((math.abs(batch) /  math.abs(totalBatches)) * 100)
+    log.msg(format("Starting batch: %d of %d (%d%%)", batch, totalBatches, progress))
 
     ncmd := os.exec(nmapCmd...)
 

@@ -80,6 +80,14 @@ To use arsenic, the following are required:
 - nuclei
 - fast-resolv (https://github.com/defektive/fast-resolv)
 
+#### note on nmap
+
+most scans will require nmap to be run as root or have the appropriate capabilities set on the nmap binary.
+
+```bash
+sudo setcap cap_net_raw,cap_net_admin,cap_net_bind_service+eip /usr/bin/nmap
+```
+
 #### Optional Prerequisites
 
 To get the best out of arsenic, the following are recommended to be installed:
