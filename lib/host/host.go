@@ -479,8 +479,7 @@ func (host Host) Files(globs ...string) ([]string, error) {
 
 func All() []*Host {
 	allHosts := []*Host{}
-	for _, hostDir := range getHostDirs() {
-		host := InitHost(hostDir)
+	for _, host := range getHosts() {
 		allHosts = append(allHosts, host)
 	}
 	return allHosts
@@ -488,8 +487,7 @@ func All() []*Host {
 
 func AllDirNames() []string {
 	var hosts []string
-	for _, hostDir := range getHostDirs() {
-		host := InitHost(hostDir)
+	for _, host := range getHosts() {
 		hostnames := host.Metadata.Hostnames
 		hostnames = append(hostnames, host.Metadata.Name)
 		hosts = append(hosts, hostnames...)
@@ -499,8 +497,7 @@ func AllDirNames() []string {
 
 func Get(hostDirsOrHostnames ...string) []*Host {
 	hosts := []*Host{}
-	for _, hostDir := range getHostDirs() {
-		host := InitHost(hostDir)
+	for _, host := range getHosts() {
 		hostnames := host.Metadata.Hostnames
 		hostnames = append(hostnames, host.Metadata.Name)
 		hostnames = append(hostnames, host.Metadata.IPAddresses...)
@@ -518,8 +515,7 @@ func Get(hostDirsOrHostnames ...string) []*Host {
 
 func GetFirst(hostDirsOrHostnames ...string) *Host {
 	var foundHost *Host
-	for _, hostDir := range getHostDirs() {
-		host := InitHost(hostDir)
+	for _, host := range getHosts() {
 		hostnames := host.Metadata.Hostnames
 		hostnames = append(hostnames, host.Metadata.Name)
 		hostnames = append(hostnames, host.Metadata.IPAddresses...)
@@ -538,8 +534,7 @@ func GetFirst(hostDirsOrHostnames ...string) *Host {
 
 func GetByIp(ips ...string) []*Host {
 	hosts := []*Host{}
-	for _, hostDir := range getHostDirs() {
-		host := InitHost(hostDir)
+	for _, host := range getHosts() {
 		hostIps := host.Metadata.IPAddresses
 
 		if linq.From(ips).AnyWith(func(ip interface{}) bool {
@@ -553,8 +548,15 @@ func GetByIp(ips ...string) []*Host {
 	return hosts
 }
 
+var hostDirs []string
+
 func getHostDirs() []string {
-	filePaths := []string{}
+	if hostDirs != nil {
+		return hostDirs
+	}
+
+	hostDirs = []string{}
+	hostMap = make(map[string]*Host)
 	if _, err := os.Stat("hosts"); !os.IsNotExist(err) {
 		files, err := os.ReadDir("hosts")
 		if err != nil {
@@ -562,12 +564,26 @@ func getHostDirs() []string {
 		}
 
 		for _, file := range files {
-			filePaths = append(filePaths, filepath.Join("hosts", file.Name()))
+			hostDir := filepath.Join("hosts", file.Name())
+			hostDirs = append(hostDirs, hostDir)
 		}
 	}
 
-	sort.Strings(filePaths)
-	return filePaths
+	sort.Strings(hostDirs)
+	return hostDirs
+}
+
+var hostMap map[string]*Host
+
+func getHosts() map[string]*Host {
+	if hostMap != nil {
+		return hostMap
+	}
+
+	for _, hostDir := range getHostDirs() {
+		hostMap[hostDir] = InitHost(hostDir)
+	}
+	return hostMap
 }
 
 func (host Host) metadataFile() string {
