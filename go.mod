@@ -17,7 +17,6 @@ require (
 	github.com/gin-gonic/gin v1.9.1
 	github.com/go-playground/validator/v10 v10.16.0 // indirect
 	github.com/gocarina/gocsv v0.0.0-20231116093920-b87c2d0e983a // indirect
-	github.com/goccy/go-json v0.10.2 // indirect
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/iancoleman/orderedmap v0.3.0 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.6 // indirect
@@ -26,14 +25,11 @@ require (
 	github.com/otiai10/copy v1.14.0 // indirect
 	github.com/pelletier/go-toml v1.9.5 // indirect
 	github.com/reapertechlabs/go_nessus v0.1.2
-	github.com/rwtodd/Go.Sed v0.0.0-20210816025313-55464686f9ef // indirect
 	github.com/ryanuber/columnize v2.1.2+incompatible
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.18.0
-	github.com/ugorji/go v1.2.7 // indirect
 	github.com/ugorji/go/codec v1.2.12 // indirect
-	go.uber.org/atomic v1.11.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/arch v0.6.0 // indirect
 	golang.org/x/exp v0.0.0-20231206192017-f3f8817b8deb // indirect
