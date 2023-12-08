@@ -3,7 +3,6 @@ package host
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"os"
 	"path/filepath"
@@ -818,7 +817,7 @@ func (host Host) ports() []Port {
 	re := regexp.MustCompile(`(?m)^([0-9]+)\s*?(.*)$`)
 	globbed, _ = filepath.Glob(fmt.Sprintf("%s/recon/%s", host.Dir, "*??p-ports.txt"))
 	for _, file := range globbed {
-		data, err := ioutil.ReadFile(file)
+		data, err := os.ReadFile(file)
 		if err != nil {
 			continue
 		}
