@@ -25,8 +25,8 @@ nmap -iL $SCOPE_FILE -sL -n -6 \
   | awk '{print $5}' \
   > $OUTPUT_FILE_PREFIX-expanded-ipv6.txt
 
-TCP_PORTS=$(echo $(sort -r -k3 /usr/share/nmap/nmap-services | grep "/tcp" | awk '{print $2}' | cut -d/ -f1 | head -n $(arsenic config discover.top-tcp-count)) | sed 's/ /,/g')
-UDP_PORTS=$(echo $(sort -r -k3 /usr/share/nmap/nmap-services | grep "/udp" | awk '{print $2}' | cut -d/ -f1 | head -n $(arsenic config discover.top-udp-count)) | sed 's/ /,/g')
+TCP_PORTS=$(echo $(sort -r -k3 /usr/share/nmap/nmap-services | awk '{print $2}' | grep "/tcp" | cut -d/ -f1 | head -n $(arsenic config discover.top-tcp-count)) | sed 's/ /,/g')
+UDP_PORTS=$(echo $(sort -r -k3 /usr/share/nmap/nmap-services | awk '{print $2}' | grep "/udp" | cut -d/ -f1 | head -n $(arsenic config discover.top-udp-count)) | sed 's/ /,/g')
 TIMING_PROFILE=$(arsenic config discover.timing-profile)
 
 sudo nmap -sn \
