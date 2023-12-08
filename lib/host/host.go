@@ -11,6 +11,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/NoF0rte/gocdp"
 	"github.com/analog-substance/arsenic/lib/scope"
@@ -292,6 +293,7 @@ func (h *Host) SyncMetadata(options SyncOptions) error {
 	metadata.Hostnames = hostnames
 	metadata.RootDomains = scope.GetRootDomains(hostnames, true)
 	metadata.IPAddresses = ipAddresses
+
 	metadata.Ports = ports
 	metadata.TCPPorts = tcpPorts
 	metadata.UDPPorts = udpPorts
@@ -300,6 +302,7 @@ func (h *Host) SyncMetadata(options SyncOptions) error {
 }
 
 func InitHost(dir string) *Host {
+	//profiler.Timer("InitHost")
 	host := &Host{Dir: dir}
 	err := host.SyncMetadata(SyncOptions{
 		IPAddresses: true,
@@ -551,6 +554,7 @@ func GetByIp(ips ...string) []*Host {
 var hostDirs []string
 
 func getHostDirs() []string {
+	//defer profiler.Timer("getHostDirs")()
 	if hostDirs != nil {
 		return hostDirs
 	}
@@ -575,14 +579,44 @@ func getHostDirs() []string {
 
 var hostMap map[string]*Host
 
+func intiHostWorker(hosts chan string, res chan *Host) {
+	for hostDir := range hosts {
+		res <- InitHost(hostDir)
+	}
+}
+
+var hostMapMutex sync.Mutex
+
 func getHosts() map[string]*Host {
+	//defer profiler.Timer("getHosts")()
 	if hostMap != nil {
 		return hostMap
 	}
 
-	for _, hostDir := range getHostDirs() {
-		hostMap[hostDir] = InitHost(hostDir)
+	workers := make(chan string, 20)
+	c := make(chan *Host)
+	for i := 0; i < cap(workers); i++ {
+		go intiHostWorker(workers, c)
 	}
+
+	hostDirs := getHostDirs()
+	go func() {
+		for _, host := range hostDirs {
+			workers <- host
+		}
+	}()
+
+	for i := 0; i < len(hostDirs); i++ {
+		host := <-c
+
+		hostMapMutex.Lock()
+		hostMap[host.Dir] = host
+		hostMapMutex.Unlock()
+	}
+
+	close(workers)
+	close(c)
+
 	return hostMap
 }
 
