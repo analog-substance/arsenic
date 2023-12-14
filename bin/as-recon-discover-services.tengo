@@ -105,7 +105,7 @@ tcpCmd.set_run(func(cmd, args){
   }
 
   quickScan := func(target) {
-    output := "nmap-punched-quick-tcp"
+    output := "nmap-quick-tcp"
     if explicitOutput != "" {
       output = format("%s-quick", explicitOutput)
     }

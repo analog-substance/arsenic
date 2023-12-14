@@ -72,7 +72,7 @@ scanCmd.set_run(func(cmd, args) {
   autoSelect := func() {
     targetHost = slice.rand_item(getHosts(flags))
     if !targetHost {
-      files := arsenic.locked_files("hosts/*/recon/nmap-punched-quick-tcp.nmap")
+      files := arsenic.locked_files("hosts/*/recon/nmap-quick-tcp.nmap")
       check_err(files)
 
       if len(files) > 0 {
@@ -106,7 +106,7 @@ scanCmd.set_run(func(cmd, args) {
 
     os.mkdir_all(reconPath, 0755)
 
-    err := git.lock(filepath.join(reconPath, "nmap-punched-quick-tcp.nmap"), format("TCP port scan lock: %s", host.name))
+    err := git.lock(filepath.join(reconPath, "nmap-quick-tcp.nmap"), format("TCP port scan lock: %s", host.name))
     check_err(err)
 
     previousDir := os.getwd()
