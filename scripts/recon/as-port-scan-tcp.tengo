@@ -24,7 +24,7 @@ getHosts := func(flags) {
   check_err(allHosts)
 
   for host in allHosts {
-    files := host.files(filepath.from_slash("recon/nmap-punched*tcp*"))
+    files := host.files(filepath.from_slash("recon/nmap-*tcp*"))
     if len(files) > 0 {
       continue
     }
@@ -95,7 +95,7 @@ scanCmd.set_run(func(cmd, args) {
 
     reconPath := filepath.join(host.dir, "recon")
 
-    files := host.files(filepath.join(reconPath, "nmap-punched*tcp*"))
+    files := host.files(filepath.join(reconPath, "nmap-*tcp*"))
     check_err(files)
 
     if len(files) != 0 {

@@ -128,7 +128,7 @@ tcpCmd.set_run(func(cmd, args){
   serviceScan := func(target, ports) {
     log.msg(format("Version scanning %v", ports))
 
-    output := "nmap-punched-tcp"
+    output := "nmap-tcp"
     if explicitOutput != "" {
       output = explicitOutput
     }
@@ -208,7 +208,7 @@ udpCmd.set_run(func(cmd, args){
   }
 
   serviceScan := func(target, ports) {
-    output := "nmap-punched-udp"
+    output := "nmap-udp"
     if explicitOutput != "" {
       output = explicitOutput
     }

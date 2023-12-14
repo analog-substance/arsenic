@@ -18,7 +18,7 @@ fi
 
 # Don't run any quick nmap scans through searchsploit
 export COLUMNS=140
-find . -name 'nmap-punched*.xml' -and -not -name '*quick*' | while read file; do
+find . -name 'nmap-*.xml' -and -not -name '*quick*' | while read file; do
   echo '[!] checking '"$file"
   searchsploit --colour --nmap "$file" 2>/dev/null \
   | tee "$file.searchsploit.txt"

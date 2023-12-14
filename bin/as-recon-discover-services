@@ -14,7 +14,7 @@ accurate_punch(){
 
   echo "[+] Version scanning $ports"
 
-  sudo nmap --stylesheet /static/nmap.xsl -Pn -oA recon/nmap-punched-tcp --host-timeout 30m -n --system-dns -A -p$ports $1
+  sudo nmap --stylesheet /static/nmap.xsl -Pn -oA recon/nmap-tcp --host-timeout 30m -n --system-dns -A -p$ports $1
   sudo chown -R $USER:$USER recon
 }
 

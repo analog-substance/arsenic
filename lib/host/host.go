@@ -639,7 +639,7 @@ func (host Host) flags() []string {
 		return len(globbed) > 0
 	}
 
-	if checkGlob("nmap-punched-tcp.*") {
+	if checkGlob("nmap-tcp.*") {
 		flags = append(flags, "nmap-tcp-svc")
 	}
 
@@ -647,7 +647,7 @@ func (host Host) flags() []string {
 		flags = append(flags, "nmap-tcp")
 	}
 
-	if checkGlob("nmap-punched-udp.*") {
+	if checkGlob("nmap-udp.*") {
 		flags = append(flags, "nmap-udp")
 	}
 

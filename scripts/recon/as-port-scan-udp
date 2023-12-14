@@ -37,7 +37,7 @@ function getHosts {
   gitPull
 
   {
-    find hosts -name 'nmap-punched-udp*'  | cut -d/ -f2
+    find hosts -name 'nmap-udp*'  | cut -d/ -f2
     ls -d hosts/* | cut -d/ -f2
   } | sort -d | uniq -c | grep -P "^\s+1 " | awk '{print $2}' | sort -R
 }
@@ -49,14 +49,14 @@ function scanHost {
   fi
 
   _ "Port Scan / UDP / $host / checking"
-  if ! compgen -G "hosts/$host/recon/nmap-punched-udp*" > /dev/null 2>&1; then
+  if ! compgen -G "hosts/$host/recon/nmap-udp*" > /dev/null 2>&1; then
     _info "Port Scan / UDP / $host / preparing"
     mkdir -p "hosts/$host/recon"
-    gitLock "hosts/$host/recon/nmap-punched-udp.nmap" "UDP port scan lock: $host"
+    gitLock "hosts/$host/recon/nmap-udp.nmap" "UDP port scan lock: $host"
 
     cd "hosts/$host"
     _info "Port Scan / UDP / $host / running"
-    sudo nmap --stylesheet /static/nmap.xsl -oA recon/nmap-punched-udp -sUV -p- -Pn --max-rtt-timeout 100ms --min-rate 1000 --version-intensity 0 "$host"
+    sudo nmap --stylesheet /static/nmap.xsl -oA recon/nmap-udp -sUV -p- -Pn --max-rtt-timeout 100ms --min-rate 1000 --version-intensity 0 "$host"
     sudo chown -R $USER:$USER recon
     gitCommit "." "UDP port scan complete: $host"
     cd -
@@ -71,7 +71,7 @@ function scanHost {
 
 
   set +e
-  if grep lock hosts/*/recon/nmap-punched-udp.nmap | grep :lock > /dev/null; then
+  if grep lock hosts/*/recon/nmap-udp.nmap | grep :lock > /dev/null; then
     _warn "other UDP port scans are still running... lets wait before continuing"
     exit 1
   fi
