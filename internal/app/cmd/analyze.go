@@ -206,7 +206,7 @@ This will create a single host for hostnames that resolve to the same IPs`,
 		// util.ExecScript("as-analyze-hosts", scriptArgs)
 
 		if nmapFlag {
-			fmt.Println("[+] Process recon/nmap-*.xml files")
+			fmt.Println("[+] Process recon/nmap/*.xml files")
 			getDiscoverNmaps()
 		} else {
 			os.RemoveAll(analyzeDir)
@@ -223,11 +223,6 @@ This will create a single host for hostnames that resolve to the same IPs`,
 
 			reviewIps(keepPrivateIPs)
 			fmt.Println("\n[+] IP review complete")
-
-			if nmapFlag {
-				fmt.Println("[+] Process recon/nmap-*.xml files")
-				getDiscoverNmaps()
-			}
 		}
 		domains := serviceByDomain.keys()
 		for _, domain := range domains {
@@ -367,7 +362,7 @@ func getResolvResults() ([]string, error) {
 }
 
 func getDiscoverNmaps() {
-	files, _ := filepath.Glob("recon/nmap-*.xml")
+	files, _ := filepath.Glob("recon/nmap/*.xml")
 	nmapServiceMap := make(serviceMap)
 
 	for _, file := range files {
@@ -658,5 +653,5 @@ func init() {
 	analyzeCmd.Flags().BoolP("update", "u", false, "only update existing hosts, dont create new ones")
 	analyzeCmd.Flags().BoolVarP(&ignoreScope, "ignore-scope", "i", false, "ignore scope")
 	analyzeCmd.Flags().Bool("private-ips", false, "keep private IPs")
-	analyzeCmd.Flags().Bool("nmap", false, "import hosts from recon/nmap-*.xml files")
+	analyzeCmd.Flags().Bool("nmap", false, "import hosts from recon/nmap/*.xml files")
 }

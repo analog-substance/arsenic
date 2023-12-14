@@ -12,12 +12,13 @@ fi
 
 SCOPE_NAME=$(echo $SCOPE_FILE | cut -d. -f1)
 
+mkdir -p recon/nmap/
 
 nmap -sL -iL $SCOPE_FILE | tee recon/host-discovery-nmap-sl-ipv4.txt  | grep "report for" | awk '{print $5}' | sort -n | uniq > "$SCOPE_NAME-generated-uniq-ipv4.txt"
 nmap -6 -sL -iL $SCOPE_FILE | tee recon/host-discovery-nmap-sl-ipv6.txt  | grep "report for" | awk '{print $5}' | sort -n | uniq > "$SCOPE_NAME-generated-uniq-ipv6.txt"
 
-IP_V4_OUT="recon/nmap-host-discovery-ipv4-$SCOPE_NAME"
-IP_V6_OUT="recon/nmap-host-discovery-ipv6-$SCOPE_NAME"
+IP_V4_OUT="recon/nmap/host-discovery-ipv4-$SCOPE_NAME"
+IP_V6_OUT="recon/nmap/host-discovery-ipv6-$SCOPE_NAME"
 
 TCP_PORTS=$(echo $(sort -r -k3 /usr/share/nmap/nmap-services | awk '{print $2}' | grep "/tcp" | cut -d/ -f1 | head -n $(arsenic config discover.top-tcp-count)) | sed 's/ /,/g')
 UDP_PORTS=$(echo $(sort -r -k3 /usr/share/nmap/nmap-services | awk '{print $2}' | grep "/udp" | cut -d/ -f1 | head -n $(arsenic config discover.top-udp-count)) | sed 's/ /,/g')
