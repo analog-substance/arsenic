@@ -26,6 +26,10 @@ import (
 var cfgFile string
 var configInitialized bool = false
 
+func SetVersionInfo(versionStr, commitStr string) {
+	rootCmd.Version = fmt.Sprintf("%s-%s", versionStr, commitStr)
+}
+
 var rootCmd = &cobra.Command{
 	Use:     "arsenic",
 	Version: "v0.2.0",
