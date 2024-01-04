@@ -10,8 +10,8 @@ import (
 	"strings"
 
 	"github.com/analog-substance/nmap/v3"
-	"github.com/spf13/viper"
 
+	"github.com/analog-substance/arsenic/lib/config"
 	"github.com/analog-substance/arsenic/lib/scope"
 	"github.com/analog-substance/fileutil"
 	"github.com/analog-substance/fileutil/grep"
@@ -368,7 +368,6 @@ func getResolvResults() ([]string, error) {
 
 func getDiscoverNmaps() {
 	files, _ := filepath.Glob("recon/nmap-*.xml")
-	requireOpenPorts := viper.GetBool("analyze.require-open-ports")
 	nmapServiceMap := make(serviceMap)
 
 	for _, file := range files {
@@ -463,7 +462,7 @@ func getDiscoverNmaps() {
 			}
 		}
 
-		if !requireOpenPorts || nmapService.ports.Length() > 0 {
+		if !config.Get().Analyze.RequireOpenPorts || nmapService.ports.Length() > 0 {
 			validNmapServiceMap.add(nmapService)
 		}
 	}

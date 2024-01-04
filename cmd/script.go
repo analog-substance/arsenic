@@ -7,11 +7,11 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/analog-substance/arsenic/lib/config"
 	"github.com/analog-substance/arsenic/lib/engine"
 	"github.com/analog-substance/fileutil"
 	"github.com/google/shlex"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 // scriptCmd represents the serve command
@@ -32,7 +32,7 @@ var scriptCmd = &cobra.Command{
 			}
 		}
 
-		path := filepath.Join(viper.GetString("scripts-directory"), name)
+		path := filepath.Join(config.Get().Scripts.Directory, name)
 		if filepath.Ext(path) != ".tengo" {
 			path = path + ".tengo"
 		}
@@ -51,7 +51,7 @@ func init() {
 	rootCmd.AddCommand(scriptCmd)
 	scriptCmd.Flags().StringP("name", "n", "", "Name of the script to run")
 	scriptCmd.RegisterFlagCompletionFunc("name", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-		scriptsDir := viper.GetString("scripts-directory")
+		scriptsDir := config.Get().Scripts.Directory
 		if !fileutil.DirExists(scriptsDir) {
 			return nil, cobra.ShellCompDirectiveError
 		}

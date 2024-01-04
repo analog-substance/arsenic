@@ -8,8 +8,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// domainsCmd represents the domains command
-var domainsCmd = &cobra.Command{
+// scopeDomainsCmd represents the domains command
+var scopeDomainsCmd = &cobra.Command{
 	Use:   "domains",
 	Short: "Print domains in scope",
 	Long: `Print domains in scope
@@ -32,8 +32,8 @@ This will prune blacklisted domains, and blacklisted root domains.
 }
 
 func init() {
-	scopeCmd.AddCommand(domainsCmd)
+	scopeCmd.AddCommand(scopeDomainsCmd)
 
-	domainsCmd.Flags().BoolP("root-domains", "r", false, "show only non-blacklisted root domains")
-	domainsCmd.Flags().Bool("all-root-domains", false, "show all root domains")
+	scopeDomainsCmd.Flags().BoolP("root-domains", "r", false, "show only non-blacklisted root domains")
+	scopeDomainsCmd.Flags().Bool("all-root-domains", false, "show all root domains")
 }

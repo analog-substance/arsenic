@@ -2,7 +2,6 @@ package lib
 
 import (
 	"bufio"
-	"fmt"
 	"io"
 	"log"
 	"os"
@@ -11,9 +10,9 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/analog-substance/arsenic/lib/config"
 	"github.com/analog-substance/arsenic/lib/set"
 	"github.com/analog-substance/fileutil"
-	"github.com/spf13/viper"
 )
 
 var validWordlistTypes []string
@@ -34,9 +33,10 @@ func GetWordlists(wordlistType string) []string {
 		log.Println(err)
 	}
 
-	dirs := append([]string{cwd}, viper.GetStringSlice("wordlist-paths")...)
+	c := config.Get()
+	dirs := append([]string{cwd}, c.Wordlists.Paths...)
 
-	wordlists := viper.GetStringSlice(fmt.Sprintf("wordlists.%s", wordlistType))
+	wordlists := c.Wordlists.Types[wordlistType]
 	for _, wordlist := range wordlists {
 		for _, dir := range dirs {
 			wordlistPath := path.Join(dir, wordlist)
@@ -98,8 +98,7 @@ func shouldIgnoreLine(wordlistType, line string) bool {
 
 func GetValidWordlistTypes() []string {
 	if len(validWordlistTypes) == 0 {
-		wordlistsMap := viper.GetStringMap("wordlists")
-		for wordlist := range wordlistsMap {
+		for wordlist := range config.Get().Wordlists.Types {
 			validWordlistTypes = append(validWordlistTypes, wordlist)
 		}
 		sort.Strings(validWordlistTypes)

@@ -194,7 +194,7 @@ func (c *CobraCmd) registerFlagCompletionFunc(args interop.ArgMap) (tengo.Object
 			return nil, cobra.ShellCompDirectiveError
 		}
 
-		slice, err := interop.TArrayToGoStrSlice(res, "")
+		slice, err := interop.TArrayToGoStrSlice(res, "", false)
 		if err != nil {
 			return nil, cobra.ShellCompDirectiveError
 		}

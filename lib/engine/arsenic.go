@@ -7,7 +7,7 @@ import (
 	"regexp"
 
 	"github.com/analog-substance/arsenic/lib/host"
-	"github.com/analog-substance/arsenic/lib/util"
+	"github.com/analog-substance/arsenic/lib/log"
 	"github.com/analog-substance/tengo/v2"
 	"github.com/analog-substance/tengomod/interop"
 )
@@ -83,7 +83,7 @@ func (s *Script) lockedFiles(args interop.ArgMap) (tengo.Object, error) {
 	for _, match := range matches {
 		data, err := os.ReadFile(match)
 		if err != nil {
-			util.LogWarn(err)
+			log.Warn(err)
 			continue
 		}
 

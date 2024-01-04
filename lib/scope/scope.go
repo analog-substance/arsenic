@@ -6,8 +6,8 @@ import (
 
 	"net"
 
+	"github.com/analog-substance/arsenic/lib/config"
 	"github.com/analog-substance/arsenic/lib/set"
-	"github.com/spf13/viper"
 	"golang.org/x/net/publicsuffix"
 )
 
@@ -35,8 +35,10 @@ func (s *scope) loadDomainInfo() {
 		return
 	}
 
+	blacklistConfig := config.Get().Blacklist
+
 	rootDomainSet := set.NewStringSet()
-	s.blacklistedRootDomains = viper.GetStringSlice("blacklist.root-domains")
+	s.blacklistedRootDomains = blacklistConfig.RootDomains
 
 	var err error
 	s.domainsExplicitlyInScope, err = GetConstScope("domains")
@@ -51,8 +53,7 @@ func (s *scope) loadDomainInfo() {
 
 	s.rootDomainsExplicitlyInScope = rootDomainSet.StringSlice()
 
-	blacklistDomains := viper.GetStringSlice("blacklist.domains")
-	for _, domain := range blacklistDomains {
+	for _, domain := range blacklistConfig.Domains {
 		s.blacklistedDomainRegexps = append(s.blacklistedDomainRegexps, regexp.MustCompile(regexp.QuoteMeta(domain)))
 	}
 

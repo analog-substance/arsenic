@@ -3,6 +3,7 @@
 fmt := import("fmt")
 text := import("text")
 os := import("os")
+os2 := import("os2")
 filepath := import("filepath")
 slice := import("slice")
 arsenic := import("arsenic")
@@ -124,7 +125,7 @@ scanCmd.set_run(func(cmd, args) {
   manual := targetHost != "" && targetURL != ""
 
   if (targetHost != "" && targetURL == "") || (targetHost == "" && targetURL != "") {
-    script.stop("[!] Host and URL must not be empty.")
+    script.fatal("[!] Host and URL must not be empty.")
   }
 
 	autoSelect := func() {
@@ -154,42 +155,36 @@ scanCmd.set_run(func(cmd, args) {
     // do the following only if the host isn't a draft
     log.info(format("Content Discovery / %s / %s / preparing", host, rawURL))
 
-    previousDir := os.getwd()
-    check_err(previousDir)
+    err := os2.temp_chdir(filepath.join("hosts", host), func() {
+      outputFile := genOutputFileName(rawURL, wordlistName)
 
-    err := os.chdir(filepath.join("hosts", host))
-    check_err(err)
-    
-    outputFile := genOutputFileName(rawURL, wordlistName)
+      git.pull()
 
-    git.pull()
+      outputPath := filepath.join("recon", outputFile)
+      if !filepath.file_exists(outputPath) {
+        log.msg(format("Scanning %s %s", host, rawURL))
 
-    outputPath := filepath.join("recon", outputFile)
-    if !filepath.file_exists(outputPath) {
-      log.msg(format("Scanning %s %s", host, rawURL))
+        // check if url is S3 bucket
 
-      // check if url is S3 bucket
+        err := git.lock(outputPath, format("ffuf lock: %s", rawURL))
+        check_err(err)
 
-      err = git.lock(outputPath, format("ffuf lock: %s", rawURL))
-      check_err(err)
+        log.info(format("Content Discovery / %s / %s / running", host, rawURL))
 
-      log.info(format("Content Discovery / %s / %s / running", host, rawURL))
+        args := [ "-a", "Firefox", "-u", rawURL, "-w", wordlistFile, "-o", outputFile ]
+        if proxy != "" {
+          args = append(args, "-x", proxy)
+        }
 
-      args := [ "-a", "Firefox", "-u", rawURL, "-w", wordlistFile, "-o", outputFile ]
-      if proxy != "" {
-        args = append(args, "-x", proxy)
+        err = script.run_script("as-ffuf.tengo", args...)
+        check_err(err)
+
+        log.info(format("Content Discovery / %s / %s / complete", host, rawURL))
       }
 
-      err = script.run_script("as-ffuf.tengo", args...)
+      err := git.commit(".", format("ffuf complete: %s", rawURL))
       check_err(err)
-
-      log.info(format("Content Discovery / %s / %s / complete", host, rawURL))
-    }
-
-    err = git.commit(".", format("ffuf complete: %s", rawURL))
-    check_err(err)
-
-    err = os.chdir(previousDir)
+    })
     check_err(err)
   }
 

@@ -3,6 +3,7 @@ package engine
 import (
 	"context"
 	"os"
+	"os/exec"
 	"path/filepath"
 
 	"github.com/analog-substance/fileutil"
@@ -29,6 +30,15 @@ type Script struct {
 }
 
 func NewScript(path string) (*Script, error) {
+	if !fileutil.FileExists(path) {
+		fullPath, err := exec.LookPath(path)
+		if err != nil {
+			return nil, err
+		}
+
+		path = fullPath
+	}
+
 	ctx, cancel := context.WithCancel(context.Background())
 	script := &Script{
 		path:   path,
@@ -87,6 +97,12 @@ func (s *Script) Run(args []string) error {
 	if err != nil {
 		if compilerErr, ok := err.(*tengo.CompilerError); ok {
 			s.updateFileSet(compilerErr.FileSet)
+		} else if errList, ok := err.(parser.ErrorList); ok {
+			for _, e := range errList {
+				if e.Pos.Filename == "(main)" {
+					e.Pos.Filename = s.path
+				}
+			}
 		}
 		return err
 	}
@@ -103,6 +119,10 @@ func (s *Script) Run(args []string) error {
 	return s.err
 }
 
+func (s *Script) Error() error {
+	return s.err
+}
+
 func (s *Script) updateFileSet(fileSet *parser.SourceFileSet) {
 	for _, file := range fileSet.Files {
 		if file.Name == "(main)" {
@@ -114,7 +134,7 @@ func (s *Script) updateFileSet(fileSet *parser.SourceFileSet) {
 
 func (s *Script) Signal() {
 	s.signaled = true
-	s.stop(modexec.ErrSignaled.Error())
+	s.fatal(modexec.ErrSignaled.Error())
 }
 
 func (s *Script) checkErr(args ...tengo.Object) (tengo.Object, error) {
@@ -124,7 +144,7 @@ func (s *Script) checkErr(args ...tengo.Object) (tengo.Object, error) {
 			argMap := interop.ArgMap{
 				"message": errObj,
 			}
-			s.tengoStop(argMap)
+			s.tengoFatal(argMap)
 			break
 		}
 	}
