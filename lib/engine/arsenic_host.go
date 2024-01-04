@@ -139,6 +139,17 @@ func (h *ArsenicHost) udpPorts() tengo.Object {
 	}
 }
 
+func (h *ArsenicHost) ports() tengo.Object {
+	var ports []tengo.Object
+	for _, port := range h.Value.Metadata.Ports {
+		ports = append(ports, makeArsenicPort(port))
+	}
+
+	return &tengo.ImmutableArray{
+		Value: ports,
+	}
+}
+
 func makeArsenicHost(h *host.Host) *ArsenicHost {
 	arsenicHost := &ArsenicHost{
 		Value: h,
@@ -204,6 +215,9 @@ func makeArsenicHost(h *host.Host) *ArsenicHost {
 			Get: func() tengo.Object {
 				return interop.GoStrSliceToTArray(h.Metadata.Hostnames)
 			},
+		},
+		"ports": {
+			Get: arsenicHost.ports,
 		},
 		"tcp_ports": {
 			Get: arsenicHost.tcpPorts,
