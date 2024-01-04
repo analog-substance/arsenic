@@ -97,6 +97,12 @@ func (s *Script) Run(args []string) error {
 	if err != nil {
 		if compilerErr, ok := err.(*tengo.CompilerError); ok {
 			s.updateFileSet(compilerErr.FileSet)
+		} else if errList, ok := err.(parser.ErrorList); ok {
+			for _, e := range errList {
+				if e.Pos.Filename == "(main)" {
+					e.Pos.Filename = s.path
+				}
+			}
 		}
 		return err
 	}
