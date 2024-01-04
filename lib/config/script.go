@@ -34,11 +34,16 @@ func NewScript(script string, order int, count int, enabled bool) Script {
 	}
 }
 
-func GetScripts(phase string) []Script {
+func (c *Config) GetScripts(phase string) []Script {
 	var scripts []Script
-	p := Get().Scripts.Phases[phase]
+	p := c.Scripts.Phases[phase]
 	for _, script := range p.Scripts {
-		script.Args = fmt.Sprintf("%s %s", p.Args, script.Args)
+		if p.Args != "" && script.Args != "" {
+			script.Args = fmt.Sprintf("%s %s", p.Args, script.Args)
+		} else if p.Args != "" {
+			script.Args = p.Args
+		}
+
 		scripts = append(scripts, script)
 	}
 
@@ -48,7 +53,7 @@ func GetScripts(phase string) []Script {
 	return scripts
 }
 
-func IteratePhaseScripts(phase string, done chan int) chan Script {
+func (c *Config) IterateScripts(phase string, done chan int) chan Script {
 	scriptChan := make(chan Script)
 	go func() {
 		defer func() {
@@ -56,7 +61,7 @@ func IteratePhaseScripts(phase string, done chan int) chan Script {
 			<-done // Ensure we don't hang if done is sent something after very last script
 		}()
 
-		scripts := GetScripts(phase)
+		scripts := c.GetScripts(phase)
 		if len(scripts) == 0 {
 			return
 		}
