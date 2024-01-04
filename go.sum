@@ -10,8 +10,8 @@ github.com/analog-substance/nmap/v3 v3.0.2 h1:wUiNkE/JiYTJmMEImPKptk7kXVJ+wwFu7T
 github.com/analog-substance/nmap/v3 v3.0.2/go.mod h1:PE2PY7j0w37MJdsa0kZDzCDc7L3ftVvBPU+P9mSUHgA=
 github.com/analog-substance/tengo/v2 v2.13.2 h1:9fEMlGn55P4wEZOReHLICDJchcauDYXyrAkFT974wwI=
 github.com/analog-substance/tengo/v2 v2.13.2/go.mod h1:C/tj9BF8bQ4j8IRKzEfHXSktCUvbSyYuP9xjDYMjkdQ=
-github.com/analog-substance/tengomod v0.5.0 h1:L+jLwQyISQtJfrQw+a+gHcrs21wgAtf5U/jXG7iyduM=
-github.com/analog-substance/tengomod v0.5.0/go.mod h1:HdgTw9jsLoxL0YH9ERdgnFgAPykWIPWa0wdjrLbALBw=
+github.com/analog-substance/tengomod v0.6.0 h1:ZGarFbs5vlkJGQ47Gy57kctqzNhngZ+tiFmE1g/2hk0=
+github.com/analog-substance/tengomod v0.6.0/go.mod h1:HdgTw9jsLoxL0YH9ERdgnFgAPykWIPWa0wdjrLbALBw=
 github.com/bmatcuk/doublestar/v4 v4.6.1 h1:FH9SifrbvJhnlQpztAx++wlkk70QBf0iBWDwNy7PA4I=
 github.com/bmatcuk/doublestar/v4 v4.6.1/go.mod h1:xBQ8jztBU6kakFMg+8WGxn0c6z1fTSPVIjEY1Wr7jzc=
 github.com/bytedance/sonic v1.5.0/go.mod h1:ED5hyg4y6t3/9Ku1R6dU/4KyJ48DZ4jPhfY1O2AihPM=

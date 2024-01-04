@@ -19,9 +19,11 @@ fi
 ARSENIC_OPT_PATH=$(dirname $ARSENIC_PATH)
 OP_NAME=$(basename $(pwd))
 
-ls -d $ARSENIC_OPT_PATH/*/scripts/as-init-op.sh 2>/dev/null | while read hook; do
-  _ "running $hook"
-  bash "$hook"
+for hook in $ARSENIC_OPT_PATH/*/scripts/as-init-op.sh; do
+  if [[ -e $hook ]]; then
+    _ "running $hook"
+    bash "$hook"
+  fi
 done
 
 _ "Hooks completed"

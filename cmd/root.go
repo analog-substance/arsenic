@@ -215,6 +215,7 @@ func ExecScript(script config.Script, args []string) error {
 	cmdCtx, cancel := context.WithCancel(context.Background())
 	cmd := exec.CommandContext(cmdCtx, scriptPath, args...)
 
+	cmd.Stdin = os.Stdin
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
 
