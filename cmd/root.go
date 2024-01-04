@@ -49,7 +49,8 @@ var rootCmd = &cobra.Command{
 
 		err = script.Run(args[1:])
 		if err != nil && err != context.Canceled {
-			panic(err)
+			fmt.Println(err)
+			os.Exit(255)
 		}
 	},
 }
