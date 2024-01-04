@@ -6,23 +6,23 @@ import (
 )
 
 type Scripts struct {
-	Directory string           `yaml:"directory"`
-	Phases    map[string]Phase `yaml:"phases"`
+	Directory string           `yaml:"directory" mapstructure:"directory"`
+	Phases    map[string]Phase `yaml:"phases" mapstructure:"phases"`
 }
 
 type Phase struct {
-	Args    string            `yaml:"args"`
-	Scripts map[string]Script `yaml:"scripts"`
+	Args    string            `yaml:"args" mapstructure:"args"`
+	Scripts map[string]Script `yaml:"scripts" mapstructure:"scripts"`
 }
 
 type Script struct {
-	Args    string `yaml:"args"`
-	Script  string `yaml:"script"`
-	Order   int    `yaml:"order"`
-	Count   int    `yaml:"count"`
-	Enabled bool   `yaml:"enabled"`
+	Args    string `yaml:"args" mapstructure:"args"`
+	Script  string `yaml:"script" mapstructure:"script"`
+	Order   int    `yaml:"order" mapstructure:"order"`
+	Count   int    `yaml:"count" mapstructure:"count"`
+	Enabled bool   `yaml:"enabled" mapstructure:"enabled"`
 
-	TotalRuns int `yaml:"-"`
+	TotalRuns int `yaml:"-" mapstructure:"-"`
 }
 
 func NewScript(script string, order int, count int, enabled bool) Script {

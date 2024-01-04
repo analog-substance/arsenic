@@ -20,46 +20,46 @@ func Set(c *Config) {
 }
 
 type Config struct {
-	Scripts   Scripts   `yaml:"scripts"`
-	Wordlists Wordlists `yaml:"wordlists"`
-	Blacklist Blacklist `yaml:"blacklist"`
-	Discover  Discover  `yaml:"discover"`
-	Analyze   Analyze   `yaml:"analyze"`
-	Hosts     Hosts     `yaml:"hosts"`
+	Scripts   Scripts   `yaml:"scripts" mapstructure:"scripts"`
+	Wordlists Wordlists `yaml:"wordlists" mapstructure:"wordlists"`
+	Blacklist Blacklist `yaml:"blacklist" mapstructure:"blacklist"`
+	Discover  Discover  `yaml:"discover" mapstructure:"discover"`
+	Analyze   Analyze   `yaml:"analyze" mapstructure:"analyze"`
+	Hosts     Hosts     `yaml:"hosts" mapstructure:"hosts"`
 }
 
 type Wordlists struct {
-	Paths []string            `yaml:"paths"`
-	Types map[string][]string `yaml:"types"`
+	Paths []string            `yaml:"paths" mapstructure:"paths"`
+	Types map[string][]string `yaml:"types" mapstructure:"types"`
 }
 
 type Blacklist struct {
-	RootDomains []string `yaml:"root-domains"`
-	Domains     []string `yaml:"domains"`
-	IPs         []string `yaml:"ips"`
+	RootDomains []string `yaml:"root-domains" mapstructure:"root-domains"`
+	Domains     []string `yaml:"domains" mapstructure:"domains"`
+	IPs         []string `yaml:"ips" mapstructure:"ips"`
 }
 
 type Discover struct {
-	TopTCP        int    `yaml:"top-tcp-count"`
-	TopUDP        int    `yaml:"top-udp-count"`
-	TimingProfile int    `yaml:"timing-profile"`
-	ResolveConf   string `yaml:"resolvconf"`
+	TopTCP        int    `yaml:"top-tcp-count" mapstructure:"top-tcp-count"`
+	TopUDP        int    `yaml:"top-udp-count" mapstructure:"top-udp-count"`
+	TimingProfile int    `yaml:"timing-profile" mapstructure:"timing-profile"`
+	ResolveConf   string `yaml:"resolvconf" mapstructure:"resolvconf"`
 }
 
 type Analyze struct {
-	RequireOpenPorts bool `yaml:"require-open-ports"`
+	RequireOpenPorts bool `yaml:"require-open-ports" mapstructure:"require-open-ports"`
 }
 
 type Hosts struct {
-	NmapXMLGlob    string          `yaml:"nmap-xml-glob"`
-	IgnoreServices []IgnoreService `yaml:"ignore-services"`
+	NmapXMLGlob    string          `yaml:"nmap-xml-glob" mapstructure:"nmap-xml-glob"`
+	IgnoreServices []IgnoreService `yaml:"ignore-services" mapstructure:"ignore-services"`
 }
 
 // Don't know what this should be called, if anyone has any better names, go for it
 type IgnoreService struct {
-	Name  string `yaml:"name"`
-	Ports string `yaml:"ports"`
-	Flag  string `yaml:"flag"` // This is so we can add a flag saying that this was ignored to make people aware that ports were ignored
+	Name  string `yaml:"name" mapstructure:"name"`
+	Ports string `yaml:"ports" mapstructure:"ports"`
+	Flag  string `yaml:"flag" mapstructure:"flag"` // This is so we can add a flag saying that this was ignored to make people aware that ports were ignored
 }
 
 func (s IgnoreService) checkPort(port int) bool {
