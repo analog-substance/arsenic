@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"fmt"
 	"path/filepath"
 	"strings"
 
@@ -114,9 +115,12 @@ func (h *ArsenicHost) sync(args ...tengo.Object) (tengo.Object, error) {
 
 func (h *ArsenicHost) tcpPorts() tengo.Object {
 	var ports []tengo.Object
-	for _, port := range h.Value.Metadata.TCPPorts {
-		ports = append(ports, &tengo.Int{Value: int64(port)})
+	for _, port := range h.Value.Metadata.Ports {
+		if port.Protocol == "tcp" {
+			ports = append(ports, makeArsenicPort(port))
+		}
 	}
+
 	return &tengo.ImmutableArray{
 		Value: ports,
 	}
@@ -124,9 +128,12 @@ func (h *ArsenicHost) tcpPorts() tengo.Object {
 
 func (h *ArsenicHost) udpPorts() tengo.Object {
 	var ports []tengo.Object
-	for _, port := range h.Value.Metadata.UDPPorts {
-		ports = append(ports, &tengo.Int{Value: int64(port)})
+	for _, port := range h.Value.Metadata.Ports {
+		if port.Protocol == "udp" {
+			ports = append(ports, makeArsenicPort(port))
+		}
 	}
+
 	return &tengo.ImmutableArray{
 		Value: ports,
 	}
@@ -188,6 +195,16 @@ func makeArsenicHost(h *host.Host) *ArsenicHost {
 				}
 			},
 		},
+		"ip_addresses": {
+			Get: func() tengo.Object {
+				return interop.GoStrSliceToTArray(h.Metadata.IPAddresses)
+			},
+		},
+		"hostnames": {
+			Get: func() tengo.Object {
+				return interop.GoStrSliceToTArray(h.Metadata.Hostnames)
+			},
+		},
 		"tcp_ports": {
 			Get: arsenicHost.tcpPorts,
 		},
@@ -202,4 +219,48 @@ func makeArsenicHost(h *host.Host) *ArsenicHost {
 	}
 
 	return arsenicHost
+}
+
+type ArsenicPort struct {
+	types.PropObject
+	Value host.Port
+}
+
+func (p *ArsenicPort) TypeName() string {
+	return "arsenic-port"
+}
+
+// String should return a string representation of the type's value.
+func (p *ArsenicPort) String() string {
+	return fmt.Sprintf("%d/%s %s", p.Value.ID, p.Value.Protocol, p.Value.Service)
+}
+
+// IsFalsy should return true if the value of the type should be considered
+// as falsy.
+func (p *ArsenicPort) IsFalsy() bool {
+	return p.Value.ID == 0
+}
+
+// CanIterate should return whether the Object can be Iterated.
+func (p *ArsenicPort) CanIterate() bool {
+	return false
+}
+
+func makeArsenicPort(port host.Port) *ArsenicPort {
+	p := &ArsenicPort{
+		Value: port,
+	}
+
+	properties := map[string]types.Property{
+		"port":     types.StaticProperty(&tengo.Int{Value: int64(port.ID)}),
+		"protocol": types.StaticProperty(interop.GoStrToTStr(port.Protocol)),
+		"service":  types.StaticProperty(interop.GoStrToTStr(port.Service)),
+	}
+
+	p.PropObject = types.PropObject{
+		ObjectMap:  make(map[string]tengo.Object),
+		Properties: properties,
+	}
+
+	return p
 }
