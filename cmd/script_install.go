@@ -25,7 +25,7 @@ var scriptInstallCmd = &cobra.Command{
 			installPath = strings.Replace(installPath, "~", home, 1)
 		}
 
-		if installPath != config.Get().ScriptsDirectory {
+		if installPath != config.Get().Scripts.Directory {
 			viper.Set("scripts-directory", installPath)
 			saveConfig(false)
 			setOrRefreshConfig()

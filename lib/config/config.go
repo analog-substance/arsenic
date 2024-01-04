@@ -20,13 +20,12 @@ func Set(c *Config) {
 }
 
 type Config struct {
-	Scripts          Scripts   `yaml:"scripts"`
-	Wordlists        Wordlists `yaml:"wordlists"`
-	Blacklist        Blacklist `yaml:"blacklist"`
-	ScriptsDirectory string    `yaml:"scripts-directory"`
-	Discover         Discover  `yaml:"discover"`
-	Analyze          Analyze   `yaml:"analyze"`
-	Hosts            Hosts     `yaml:"hosts"`
+	Scripts   Scripts   `yaml:"scripts"`
+	Wordlists Wordlists `yaml:"wordlists"`
+	Blacklist Blacklist `yaml:"blacklist"`
+	Discover  Discover  `yaml:"discover"`
+	Analyze   Analyze   `yaml:"analyze"`
+	Hosts     Hosts     `yaml:"hosts"`
 }
 
 type Wordlists struct {
