@@ -113,6 +113,10 @@ func (s *Script) Run(args []string) error {
 	return s.err
 }
 
+func (s *Script) Error() error {
+	return s.err
+}
+
 func (s *Script) updateFileSet(fileSet *parser.SourceFileSet) {
 	for _, file := range fileSet.Files {
 		if file.Name == "(main)" {

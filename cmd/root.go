@@ -204,7 +204,12 @@ func ExecScript(script config.Script, args []string) error {
 			return err
 		}
 
-		return s.Run(args)
+		err = s.Run(args)
+		if err != nil && err != context.Canceled {
+			return err
+		}
+
+		return nil
 	}
 
 	cmdCtx, cancel := context.WithCancel(context.Background())
