@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/analog-substance/arsenic/lib/config"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"gopkg.in/yaml.v2"
@@ -119,6 +120,18 @@ func saveConfig(saveNew bool) {
 	}
 
 	viper.WriteConfigAs(fileName)
+}
+
+func setOrRefreshConfig() error {
+	var c config.Config
+	err := viper.Unmarshal(&c)
+	if err != nil {
+		return err
+	}
+
+	config.Set(&c)
+
+	return nil
 }
 
 func overwriteInMemConfig(configMap map[string]interface{}) error {

@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"github.com/analog-substance/arsenic/lib/util"
 	"github.com/spf13/cobra"
 )
 
@@ -13,7 +12,7 @@ var discoverCmd = &cobra.Command{
 Scripts should determine what hosts it needs to run against.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		dryRun, _ := cmd.Flags().GetBool("dry-run")
-		util.ExecutePhaseScripts("discover", []string{}, dryRun)
+		ExecutePhaseScripts("discover", []string{}, dryRun)
 	},
 }
 

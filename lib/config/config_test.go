@@ -1,6 +1,8 @@
-package util
+package config
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestIgnoreService_checkPort(t *testing.T) {
 	type fields struct {

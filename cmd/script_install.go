@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/analog-substance/arsenic/lib/config"
 	"github.com/analog-substance/arsenic/scripts"
 	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
@@ -24,9 +25,10 @@ var scriptInstallCmd = &cobra.Command{
 			installPath = strings.Replace(installPath, "~", home, 1)
 		}
 
-		if installPath != viper.GetString("scripts-directory") {
+		if installPath != config.Get().ScriptsDirectory {
 			viper.Set("scripts-directory", installPath)
 			saveConfig(false)
+			setOrRefreshConfig()
 		}
 
 		dirs, err := scripts.All.ReadDir(".")

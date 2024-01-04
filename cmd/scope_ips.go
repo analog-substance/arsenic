@@ -2,13 +2,14 @@ package cmd
 
 import (
 	"fmt"
+
 	"github.com/analog-substance/arsenic/lib/scope"
 
 	"github.com/spf13/cobra"
 )
 
-// ipsCmd represents the ips command
-var ipsCmd = &cobra.Command{
+// scopeIPsCmd represents the ips command
+var scopeIPsCmd = &cobra.Command{
 	Use:   "ips",
 	Short: "Print in scope IP addresses.",
 	Long:  `Print in scope IP addresses.`,
@@ -21,6 +22,5 @@ var ipsCmd = &cobra.Command{
 }
 
 func init() {
-	scopeCmd.AddCommand(ipsCmd)
-
+	scopeCmd.AddCommand(scopeIPsCmd)
 }
