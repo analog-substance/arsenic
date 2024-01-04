@@ -123,6 +123,10 @@ func saveConfig(saveNew bool) {
 }
 
 func setOrRefreshConfig() error {
+	if !configInitialized {
+		initConfig()
+	}
+
 	var c config.Config
 	err := viper.Unmarshal(&c)
 	if err != nil {

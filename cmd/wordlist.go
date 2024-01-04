@@ -19,9 +19,12 @@ var wordlistCmd = &cobra.Command{
 		return lib.GetValidWordlistTypes(), cobra.ShellCompDirectiveDefault
 	},
 	Args: func(cmd *cobra.Command, args []string) error {
+		setOrRefreshConfig()
+
 		if err := cobra.ExactArgs(1)(cmd, args); err != nil {
 			return err
 		}
+
 		if !lib.IsValidWordlistType(args[0]) {
 			return fmt.Errorf("invalid argument %q for %q", args[0], cmd.CommandPath())
 		}
@@ -45,9 +48,7 @@ func init() {
 
 	oldHelp := wordlistCmd.HelpFunc()
 	wordlistCmd.SetHelpFunc(func(c *cobra.Command, s []string) {
-		if !configInitialized {
-			initConfig()
-		}
+		setOrRefreshConfig()
 
 		c.Use = fmt.Sprintf("wordlist (%s)", strings.Join(lib.GetValidWordlistTypes(), "|"))
 		oldHelp(c, s)
