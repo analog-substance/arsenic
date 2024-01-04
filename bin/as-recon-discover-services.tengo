@@ -70,7 +70,7 @@ rootCmd.set_persistent_pre_run(func(cmd, args) {
   }
 
   if len(targets) == 0 {
-    script.stop("No targets specified")
+    script.fatal("No targets specified")
   }
 
   topPorts = cmd.flags.get_int("top")

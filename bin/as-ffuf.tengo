@@ -78,7 +78,7 @@ rootCmd.set_persistent_pre_run(func(cmd, args) {
 	wordlist := cmd.flags.get_string("wordlist")
 
 	if wordlist == "" {
-		script.stop("No wordlist specified")
+		script.fatal("No wordlist specified")
 	}
 
 	wordlistFile = filepath.abs(wordlist)
@@ -101,7 +101,7 @@ rootCmd.set_persistent_pre_run(func(cmd, args) {
 	}
 
 	if len(urls) == 0 {
-		script.stop("No URLs specified")
+		script.fatal("No URLs specified")
 	}
 })
 

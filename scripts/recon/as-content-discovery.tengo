@@ -124,7 +124,7 @@ scanCmd.set_run(func(cmd, args) {
   manual := targetHost != "" && targetURL != ""
 
   if (targetHost != "" && targetURL == "") || (targetHost == "" && targetURL != "") {
-    script.stop("[!] Host and URL must not be empty.")
+    script.fatal("[!] Host and URL must not be empty.")
   }
 
 	autoSelect := func() {

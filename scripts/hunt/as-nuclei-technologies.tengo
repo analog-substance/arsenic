@@ -118,7 +118,7 @@ runCmd.set_run(func(cmd, args) {
     hostURLs := host.urls()
     if is_error(hostURLs) {
       os.remove_all(tempDir)
-      script.stop(hostURLs)
+      script.fatal(hostURLs)
     }
 
     for u in hostURLs {

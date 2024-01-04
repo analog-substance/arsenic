@@ -173,7 +173,7 @@ func (s *Script) add(path string) error {
 func (s *Script) lock(lockFile string, msg string) error {
 	if fileutil.FileExists(lockFile) {
 		log.Warn("can't lock a file that exists")
-		s.stop("")
+		s.fatal("")
 		return nil
 	}
 

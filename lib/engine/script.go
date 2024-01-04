@@ -31,6 +31,12 @@ func (s *Script) ScriptModule() map[string]tengo.Object {
 			Args:    []interop.AdvArg{interop.ObjectArg("message")},
 			Value:   s.tengoStop,
 		},
+		"fatal": &interop.AdvFunction{
+			Name:    "fatal",
+			NumArgs: interop.MaxArgs(1),
+			Args:    []interop.AdvArg{interop.ObjectArg("message")},
+			Value:   s.tengoFatal,
+		},
 		"run_script": &interop.AdvFunction{
 			Name:    "run_script",
 			NumArgs: interop.MinArgs(1),
@@ -194,8 +200,35 @@ func (s *Script) tengoStop(args interop.ArgMap) (tengo.Object, error) {
 	return nil, nil
 }
 
+// tengoFatal is the tengo function version of fatal.
+// Represents 'script.fatal(msg string|error)'
+func (s *Script) tengoFatal(args interop.ArgMap) (tengo.Object, error) {
+	message := ""
+	obj, ok := args.GetObject("message")
+	if ok {
+		message, _ = tengo.ToString(obj)
+	}
+
+	s.stop(message)
+	return nil, nil
+}
+
 // stop prints the message and stops the current script.
 func (s *Script) stop(message string) {
+	message = strings.ReplaceAll(message, `\n`, "\n")
+	message = strings.ReplaceAll(message, `\t`, "\t")
+
+	if message != "" {
+		fmt.Println(message)
+	}
+
+	go func() {
+		s.cancel()
+	}()
+	time.Sleep(1 * time.Millisecond)
+}
+
+func (s *Script) fatal(message string) {
 	message = strings.ReplaceAll(message, `\n`, "\n")
 	message = strings.ReplaceAll(message, `\t`, "\t")
 

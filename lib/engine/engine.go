@@ -124,7 +124,7 @@ func (s *Script) updateFileSet(fileSet *parser.SourceFileSet) {
 
 func (s *Script) Signal() {
 	s.signaled = true
-	s.stop(modexec.ErrSignaled.Error())
+	s.fatal(modexec.ErrSignaled.Error())
 }
 
 func (s *Script) checkErr(args ...tengo.Object) (tengo.Object, error) {
@@ -134,7 +134,7 @@ func (s *Script) checkErr(args ...tengo.Object) (tengo.Object, error) {
 			argMap := interop.ArgMap{
 				"message": errObj,
 			}
-			s.tengoStop(argMap)
+			s.tengoFatal(argMap)
 			break
 		}
 	}

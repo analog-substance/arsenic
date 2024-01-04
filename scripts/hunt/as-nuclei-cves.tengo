@@ -78,7 +78,7 @@ runCmd.set_run(func(cmd, args) {
   autoSelect := func() {
     targetHost = slice.rand_item(getHosts(flags))
     if !targetHost {
-      script.stop("No host found")
+      script.fatal("No host found")
     }
     
     log.warn(format("Auto selected %s", targetHost.name))
@@ -128,10 +128,9 @@ runCmd.set_run(func(cmd, args) {
     }
 
     hostURLs := host.urls()
-    check_err(hostURLs)
     if is_error(hostURLs) {
       os.remove_all(tempDir)
-      script.stop(hostURLs)
+      script.fatal(hostURLs)
     }
 
     for u in hostURLs {
