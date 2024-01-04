@@ -3,6 +3,7 @@ package engine
 import (
 	"context"
 	"os"
+	"os/exec"
 	"path/filepath"
 
 	"github.com/analog-substance/fileutil"
@@ -29,6 +30,15 @@ type Script struct {
 }
 
 func NewScript(path string) (*Script, error) {
+	if !fileutil.FileExists(path) {
+		fullPath, err := exec.LookPath(path)
+		if err != nil {
+			return nil, err
+		}
+
+		path = fullPath
+	}
+
 	ctx, cancel := context.WithCancel(context.Background())
 	script := &Script{
 		path:   path,
