@@ -187,8 +187,8 @@ incrementalCmd.set_run(func(cmd, args) {
     nmapPorts = text.split(text.trim_space(nmapPortsStr), "\n")
   }
 
-  nmapPpopularityCount := len(nmapPorts)
-  popularBatches := int(math.ceil(nmapPpopularityCount / ports)) + 1
+  nmapPopularityCount := len(nmapPorts)
+  popularBatches := int(math.ceil(nmapPopularityCount / ports)) + 1
 
   stdBatchCount := int(math.ceil(maxPortNum / ports)) + 1
 
@@ -208,12 +208,12 @@ incrementalCmd.set_run(func(cmd, args) {
       batchStart := ((batch - 1) * ports)
       batchEnd := batchStart + ports
 
-      if ports < nmapPpopularityCount {
-        log.msg(format("Less ports than nmap services popularity: %d", nmapPpopularityCount))
+      if ports < nmapPopularityCount {
+        log.msg(format("Less ports than nmap services popularity: %d", nmapPopularityCount))
         portsToCheck := nmapPorts[batchStart:batchEnd]
         portArg = text.join(portsToCheck, ",")
       } else {
-        log.msg(format("More ports than nmap services popularity: %d", nmapPpopularityCount))
+        log.msg(format("More ports than nmap services popularity: %d", nmapPopularityCount))
         portArg = text.join(nmapPorts, ",")
       }
     } else {
@@ -242,7 +242,7 @@ incrementalCmd.set_run(func(cmd, args) {
 
     scopeName := text.re_replace("[^0-9a-zA-Z_-]", scopeFile, "-")
     outFile := format("recon/nmap/udp-incremental-%d-%s-%d", ports, scopeName, batch)
-    os.mkdir_all(""recon/nmap/")
+    os.mkdir_all("recon/nmap/")
 
     tackP := format("-p%s", portArg)
 
