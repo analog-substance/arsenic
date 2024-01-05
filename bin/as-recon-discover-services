@@ -1,7 +1,7 @@
 #! /bin/bash
 
 quick_scan() {
-  nmap --privileged --stylesheet /static/nmap.xsl --open -Pn -T3 --host-timeout 30m -n --system-dns -p- $1 -oA recon/nmap-quick-tcp
+  nmap --stylesheet /static/nmap.xsl --open -Pn -T3 --host-timeout 30m -n --system-dns -p- $1 -oA recon/nmap-quick-tcp
 }
 
 accurate_punch(){
@@ -14,7 +14,7 @@ accurate_punch(){
 
   echo "[+] Version scanning $ports"
 
-  nmap --privileged --stylesheet /static/nmap.xsl -Pn -oA recon/nmap-tcp --host-timeout 30m -n --system-dns -A -p$ports $1
+  nmap --stylesheet /static/nmap.xsl -Pn -oA recon/nmap-tcp --host-timeout 30m -n --system-dns -A -p$ports $1
 }
 
 try_punch(){

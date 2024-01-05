@@ -82,10 +82,15 @@ To use arsenic, the following are required:
 
 #### note on nmap
 
-most scans will require nmap to be run as root or have the appropriate capabilities set on the nmap binary.
+Most scans will require nmap to be run as root or have the appropriate capabilities set on the nmap binary ([ref](https://secwiki.org/w/Running_nmap_as_an_unprivileged_user)) and export `NMAP_PRIVILEGED`. 
 
 ```bash
 sudo setcap cap_net_raw,cap_net_admin,cap_net_bind_service+eip /usr/bin/nmap
+```
+
+Then just export `NMAP_PRIVILEGED` in your shell.
+```bash
+export NMAP_PRIVILEGED=""
 ```
 
 #### Optional Prerequisites

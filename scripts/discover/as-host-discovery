@@ -24,7 +24,7 @@ TCP_PORTS=$(echo $(sort -r -k3 /usr/share/nmap/nmap-services | awk '{print $2}' 
 UDP_PORTS=$(echo $(sort -r -k3 /usr/share/nmap/nmap-services | awk '{print $2}' | grep "/udp" | cut -d/ -f1 | head -n $(arsenic config discover.top-udp-count)) | sed 's/ /,/g')
 TIMING_PROFILE=$(arsenic config discover.timing-profile)
 
-nmap --privileged  -sn \
+nmap -sn \
   -PP -PA$TCP_PORTS \
   -PS$TCP_PORTS \
   -PU$UDP_PORTS \
@@ -37,7 +37,7 @@ nmap --privileged  -sn \
 
 cat "$IP_V4_OUT.gnmap" | grep Up | awk '{print $2}' > "$SCOPE_NAME-active-ipv4.txt"
 
-nmap --privileged -6 -sn \
+nmap -6 -sn \
   -PA$TCP_PORTS \
   -PS$TCP_PORTS \
   -PU$UDP_PORTS \

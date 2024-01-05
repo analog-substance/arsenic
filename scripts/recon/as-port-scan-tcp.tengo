@@ -242,7 +242,7 @@ incrementalCmd.set_run(func(cmd, args) {
 
     scopeName := text.re_replace("[^0-9a-zA-Z_-]", scopeFile, "-")
     outFile := format("recon/nmap/tcp-incremental-%d-%s-%d", ports, scopeName, batch)
-    os.mkdir_all("recon/nmap/")
+    os.mkdir_all("recon/nmap/", 0755)
 
     tackP := format("-p%s", portArg)
 
