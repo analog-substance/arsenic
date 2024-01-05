@@ -56,8 +56,8 @@ function scanHost {
 
     cd "hosts/$host"
     _info "Port Scan / UDP / $host / running"
-    sudo nmap --stylesheet /static/nmap.xsl -oA recon/nmap-udp -sUV -p- -Pn --max-rtt-timeout 100ms --min-rate 1000 --version-intensity 0 "$host"
-    sudo chown -R $USER:$USER recon
+    nmap --privileged --stylesheet /static/nmap.xsl -oA recon/nmap-udp -sUV -p- -Pn --max-rtt-timeout 100ms --min-rate 1000 --version-intensity 0 "$host"
+    chown -R $USER:$USER recon
     gitCommit "." "UDP port scan complete: $host"
     cd -
 
