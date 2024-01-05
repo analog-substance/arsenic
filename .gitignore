@@ -4,3 +4,5 @@ mnt
 /opt/*
 test-op
 .vscode/
+
+dist/
