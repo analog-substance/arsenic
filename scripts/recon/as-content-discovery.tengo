@@ -3,7 +3,6 @@
 fmt := import("fmt")
 text := import("text")
 os := import("os")
-os2 := import("os2")
 filepath := import("filepath")
 slice := import("slice")
 arsenic := import("arsenic")
