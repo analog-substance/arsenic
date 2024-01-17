@@ -378,6 +378,8 @@ func (host Host) SaveMetadata() {
 		if err != nil {
 			fmt.Println(err)
 		}
+
+		hostMap[host.Dir] = &host
 	}
 }
 
