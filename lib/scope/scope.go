@@ -132,7 +132,10 @@ func (s *scope) IsIPInScope(checkHostIP string) bool {
 func (s *scope) IsDomainInScope(domain string, forceRootDomainBlacklistPrecedence bool) bool {
 	rootDomain, _ := publicsuffix.EffectiveTLDPlusOne(domain)
 	if rootDomain == domain {
-		rootDomain, _ = publicsuffix.PublicSuffix(domain)
+		suffix, _ := publicsuffix.PublicSuffix(domain)
+		if strings.Contains(suffix, ".") {
+			rootDomain = suffix
+		}
 	}
 
 	if forceRootDomainBlacklistPrecedence {
