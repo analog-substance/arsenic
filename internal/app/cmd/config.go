@@ -85,7 +85,13 @@ Helpful to see what scripts would be executed.`,
 					fmt.Println(err)
 					return
 				}
-				fmt.Print(string(t))
+
+				str := strings.TrimSpace(string(t))
+				if str == `""` {
+					str = ""
+				}
+
+				fmt.Println(str)
 				return
 			}
 
