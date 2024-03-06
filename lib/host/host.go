@@ -12,7 +12,6 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/NoF0rte/gocdp"
 	"github.com/analog-substance/arsenic/lib/scope"
 	"github.com/analog-substance/arsenic/lib/set"
 	"github.com/analog-substance/fileutil"
@@ -658,30 +657,30 @@ func (host Host) flags() []string {
 	if hasGobuster {
 		flags = append(flags, "web-content::gobuster")
 
-		results, _ := gocdp.SmartParseFiles(globbed)
-		if len(results) > 0 {
-			hasResults = true
-		}
+		// results, _ := gocdp.SmartParseFiles(globbed)
+		// if len(results) > 0 {
+		// 	hasResults = true
+		// }
 	}
 
 	hasFfuf := checkGlob("ffuf.*")
 	if hasFfuf {
 		flags = append(flags, "web-content::ffuf")
 
-		results, _ := gocdp.SmartParseFiles(globbed)
-		if !hasResults && len(results) > 0 {
-			hasResults = true
-		}
+		// results, _ := gocdp.SmartParseFiles(globbed)
+		// if !hasResults && len(results) > 0 {
+		// 	hasResults = true
+		// }
 	}
 
 	hasDirb := checkGlob("dirb.*")
 	if hasDirb {
 		flags = append(flags, "web-content::dirb")
 
-		results, _ := gocdp.SmartParseFiles(globbed)
-		if !hasResults && len(results) > 0 {
-			hasResults = true
-		}
+		// results, _ := gocdp.SmartParseFiles(globbed)
+		// if !hasResults && len(results) > 0 {
+		// 	hasResults = true
+		// }
 	}
 
 	if hasGobuster || hasFfuf || hasDirb {
