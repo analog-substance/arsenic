@@ -10,11 +10,11 @@ if [ ! -f "$SCOPE_FILE" ]; then
   cat scope-ips-active* scope-domains-generated-resolv* | sort -n | uniq > $SCOPE_FILE
 fi
 
-SCOPE_NAME=$(echo $SCOPE_FILE | cut -d. -f1)
+SCOPE_NAME=$(basename $SCOPE_FILE | cut -d. -f1)
 
 
-nmap -sL -iL $SCOPE_FILE | tee recon/host-discovery-nmap-sl-ipv4.txt  | grep "report for" | awk '{print $5}' | sort -n | uniq > "$SCOPE_NAME-generated-uniq-ipv4.txt"
-nmap -6 -sL -iL $SCOPE_FILE | tee recon/host-discovery-nmap-sl-ipv6.txt  | grep "report for" | awk '{print $5}' | sort -n | uniq > "$SCOPE_NAME-generated-uniq-ipv6.txt"
+nmap -sL -n -iL $SCOPE_FILE | tee recon/host-discovery-$SCOPE_NAME-nmap-sl-ipv4.txt  | grep "report for" | awk '{print $5}' | sort -n | uniq > "$SCOPE_NAME-generated-uniq-ipv4.txt"
+nmap -6 -sL -n -iL $SCOPE_FILE | tee recon/host-discovery-$SCOPE_NAME-nmap-sl-ipv6.txt  | grep "report for" | awk '{print $5}' | sort -n | uniq > "$SCOPE_NAME-generated-uniq-ipv6.txt"
 
 IP_V4_OUT="recon/nmap-host-discovery-ipv4-$SCOPE_NAME"
 IP_V6_OUT="recon/nmap-host-discovery-ipv6-$SCOPE_NAME"
@@ -23,7 +23,7 @@ TCP_PORTS=$(echo $(sort -r -k3 /usr/share/nmap/nmap-services | awk '{print $2}' 
 UDP_PORTS=$(echo $(sort -r -k3 /usr/share/nmap/nmap-services | awk '{print $2}' | grep "/udp" | cut -d/ -f1 | head -n $(arsenic config discover.top-udp-count)) | sed 's/ /,/g')
 TIMING_PROFILE=$(arsenic config discover.timing-profile)
 
-sudo nmap -sn \
+sudo nmap -n -sn \
   -PP -PA$TCP_PORTS \
   -PS$TCP_PORTS \
   -PU$UDP_PORTS \
@@ -34,9 +34,9 @@ sudo nmap -sn \
   -iL "$SCOPE_NAME-generated-uniq-ipv4.txt" \
   -oA "$IP_V4_OUT"
 
-cat "$IP_V4_OUT.gnmap" | grep Up | awk '{print $2}' > "$SCOPE_NAME-active-ipv4.txt"
+cat "$IP_V4_OUT.gnmap" | grep Up | awk '{print $2}' | sort -u | sort -n > "$SCOPE_NAME-active-ipv4.txt"
 
-sudo nmap -6 -sn \
+sudo nmap -6 -n -sn \
   -PA$TCP_PORTS \
   -PS$TCP_PORTS \
   -PU$UDP_PORTS \
@@ -47,6 +47,6 @@ sudo nmap -6 -sn \
   -iL "$SCOPE_NAME-generated-uniq-ipv6.txt" \
   -oA "$IP_V6_OUT"
 
-cat "$IP_V6_OUT.gnmap" | grep Up | awk '{print $2}' > "$SCOPE_NAME-active-ipv6.txt"
+cat "$IP_V6_OUT.gnmap" | grep Up | awk '{print $2}' | sort -u | sort -n > "$SCOPE_NAME-active-ipv6.txt"
 
-cat "$SCOPE_NAME-active-"* | sort -n > "$SCOPE_NAME-active.txt"
+cat "$SCOPE_NAME-active-"* | sort -u  | sort -n > "$SCOPE_NAME-active.txt"
