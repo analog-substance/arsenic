@@ -19,7 +19,7 @@ require (
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.18.0
-	golang.org/x/net v0.22.0
+	golang.org/x/net v0.23.0
 	gopkg.in/yaml.v2 v2.4.0
 )
 
