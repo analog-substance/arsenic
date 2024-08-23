@@ -22,5 +22,5 @@ var scopeIPsCmd = &cobra.Command{
 }
 
 func init() {
-	scopeCmd.AddCommand(scopeIPsCmd)
+	//scopeCmd.AddCommand(scopeIPsCmd)
 }

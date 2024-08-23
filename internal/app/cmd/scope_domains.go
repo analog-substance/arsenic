@@ -32,8 +32,8 @@ This will prune blacklisted domains, and blacklisted root domains.
 }
 
 func init() {
-	scopeCmd.AddCommand(scopeDomainsCmd)
-
-	scopeDomainsCmd.Flags().BoolP("root-domains", "r", false, "show only non-blacklisted root domains")
-	scopeDomainsCmd.Flags().Bool("all-root-domains", false, "show all root domains")
+	//scopeCmd.AddCommand(scopeDomainsCmd)
+	//
+	//scopeDomainsCmd.Flags().BoolP("root-domains", "r", false, "show only non-blacklisted root domains")
+	//scopeDomainsCmd.Flags().Bool("all-root-domains", false, "show all root domains")
 }

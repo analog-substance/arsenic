@@ -8,6 +8,8 @@ github.com/analog-substance/fileutil v0.0.3 h1:XL32jRq6AUl9R6hH6i4OTaxpTHzeJ+ai7
 github.com/analog-substance/fileutil v0.0.3/go.mod h1:rQ5hl9ESB8jXhoEjGFOQzwx7wZVYoIIxPaSSHuGFNGQ=
 github.com/analog-substance/nmap/v3 v3.0.2 h1:wUiNkE/JiYTJmMEImPKptk7kXVJ+wwFu7TRZfgQEDRI=
 github.com/analog-substance/nmap/v3 v3.0.2/go.mod h1:PE2PY7j0w37MJdsa0kZDzCDc7L3ftVvBPU+P9mSUHgA=
+github.com/analog-substance/scopious v0.1.6 h1:Pb9GOFVbqtMKPkouiPY9F9KeYT1zjYv5CcQk+0w7A9o=
+github.com/analog-substance/scopious v0.1.6/go.mod h1:isMiAblwHSpCE5w9RtQymX/DVSZvIyY5ZtbdbJ8zODo=
 github.com/analog-substance/tengo/v2 v2.13.2 h1:9fEMlGn55P4wEZOReHLICDJchcauDYXyrAkFT974wwI=
 github.com/analog-substance/tengo/v2 v2.13.2/go.mod h1:C/tj9BF8bQ4j8IRKzEfHXSktCUvbSyYuP9xjDYMjkdQ=
 github.com/analog-substance/tengomod v0.6.0 h1:ZGarFbs5vlkJGQ47Gy57kctqzNhngZ+tiFmE1g/2hk0=

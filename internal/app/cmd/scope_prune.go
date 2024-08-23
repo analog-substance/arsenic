@@ -34,7 +34,7 @@ var scopePruneCmd = &cobra.Command{
 }
 
 func init() {
-	scopeCmd.AddCommand(scopePruneCmd)
-
-	scopePruneCmd.Flags().BoolP("root-domains", "r", false, "remove domains that belong to a blacklisted root domain, even if they are in the scope-domains.txt")
+	//scopeCmd.AddCommand(scopePruneCmd)
+	//
+	//scopePruneCmd.Flags().BoolP("root-domains", "r", false, "remove domains that belong to a blacklisted root domain, even if they are in the scope-domains.txt")
 }
