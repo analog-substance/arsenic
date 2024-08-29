@@ -308,6 +308,7 @@ This will create a single host for hostnames that resolve to the same IPs`,
 		if !nmapFlag {
 			fmt.Println("\n[+] IP processing started")
 
+			// TODO: Scopious - make more efficient
 			scopeIps, err := fileutil.ReadLines("scope-ips.txt")
 			if err != nil {
 				fmt.Println(err)

@@ -23,6 +23,7 @@ function root_domain_recon {
   mkdir -p "recon/domains/$domain"
 
   # always write in scope subdomains to a txt file
+  ## TODO: SCOPIUS - Update to be more efficient
   grep -P "$(echo "$domain" |  sed 's/\([\.\-]\)/\\\1/g' )\$" scope-domains.txt > "recon/domains/$domain/subdomains-scope.txt"
 
   # we do not need to skip out of scope root domains here, since we are combining what was generated
@@ -41,7 +42,7 @@ function root_domain_recon {
 
 # Recon root domains
 _ "Getting subdomains for root domains"
-arsenic scope domains --all-root-domains | while read domain; do
+arsenic scope domains -r | while read domain; do
   root_domain_recon "$domain"
 done
 
