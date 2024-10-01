@@ -13,7 +13,7 @@ var captureCmd = &cobra.Command{
 	Long:    `capture exec`,
 	Run: func(cmd *cobra.Command, args []string) {
 		scopeDir, _ := cmd.Flags().GetString("scope-dir")
-		capture.Run(scopeDir, args)
+		capture.InteractiveRun(scopeDir, args)
 	},
 }
 

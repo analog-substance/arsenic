@@ -28,6 +28,7 @@ var logger *slog.Logger
 
 var cfgFile string
 var configInitialized bool = false
+var debug bool = false
 
 func SetVersionInfo(versionStr, commitStr string) {
 	rootCmd.Version = fmt.Sprintf("%s-%s", versionStr, commitStr)
@@ -43,6 +44,10 @@ var rootCmd = &cobra.Command{
 `,
 	Args: cobra.ArbitraryArgs,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		if debug {
+			log.LogLevel(slog.LevelDebug)
+		}
+		logger.Debug("debug mode", "debug", debug)
 		return setOrRefreshConfig()
 	},
 	Run: func(cmd *cobra.Command, args []string) {
@@ -78,6 +83,7 @@ func init() {
 
 	cobra.OnInitialize(initConfig)
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "the arsenic.yaml config file")
+	rootCmd.PersistentFlags().BoolVar(&debug, "debug", false, "the arsenic.yaml config file")
 }
 
 // initConfig reads in config file and ENV variables if set.
