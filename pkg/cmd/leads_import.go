@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/analog-substance/arsenic/pkg/lead"
@@ -31,13 +30,15 @@ var importCmd = &cobra.Command{
 				fileContents, err := os.ReadFile(file)
 
 				if err != nil {
-					log.Fatalln(err)
+					logger.Error("failed to read nessus file", "err", err, "file", file)
+					os.Exit(2)
 				}
 
 				nessusData, err := nessus.Parse(fileContents)
 
 				if err != nil {
-					log.Fatalln(err)
+					logger.Error("failed to pase nessus file", "err", err, "file", file)
+					os.Exit(2)
 				}
 
 				for _, host := range nessusData.Report.ReportHosts {
@@ -86,13 +87,6 @@ var importCmd = &cobra.Command{
 			for s, v := range summary {
 				fmt.Println(s, v)
 			}
-
-			//b, err := json.MarshalIndent(findings, "", "  ")
-			//if err != nil {
-			//	log.Fatal(err)
-			//}
-			//
-			//fmt.Println(string(b))
 		}
 	},
 }
