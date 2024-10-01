@@ -1,3 +1,5 @@
+github.com/NoF0rte/cmd-builder v0.0.0-20220305223538-e35bfeabbbff h1:GQV4BEXtKM7owGsl9LodHtQEA4+YmylqBIFbaDzA/4Q=
+github.com/NoF0rte/cmd-builder v0.0.0-20220305223538-e35bfeabbbff/go.mod h1:BW980ODOiAtIbHttRfkCrP+zdJAXjE5uEwzT73Xu98k=
 github.com/NoF0rte/gocdp v0.0.12 h1:Iefgt7pkhqM3BAhk/eqQp4s7/u8U8/0DVatlwJSCf9Y=
 github.com/NoF0rte/gocdp v0.0.12/go.mod h1:0xEKrDvFXLZTsgJ21+vULveH+z/0+3IL2pBcJPO7LJA=
 github.com/ahmetb/go-linq/v3 v3.2.0 h1:BEuMfp+b59io8g5wYzNoFe9pWPalRklhlhbiU3hYZDE=

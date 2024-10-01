@@ -1,6 +1,8 @@
 package main
 
-import "github.com/analog-substance/arsenic/internal/app/cmd"
+import (
+	"github.com/analog-substance/arsenic/pkg/cmd"
+)
 
 var version = "v0.0.0"
 var commit = "replace"

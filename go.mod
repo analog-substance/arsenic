@@ -5,6 +5,7 @@ go 1.23.0
 toolchain go1.23.1
 
 require (
+	github.com/NoF0rte/cmd-builder v0.0.0-20220305223538-e35bfeabbbff
 	github.com/NoF0rte/gocdp v0.0.12
 	github.com/ahmetb/go-linq/v3 v3.2.0
 	github.com/analog-substance/fileutil v0.0.3
@@ -73,3 +74,5 @@ require (
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+replace github.com/analog-substance/scopious => /home/operator/codes/workspace/github.com/analog-substance/scopious
