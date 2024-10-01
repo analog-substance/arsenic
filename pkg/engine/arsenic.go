@@ -2,6 +2,7 @@ package engine
 
 import (
 	"errors"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -11,6 +12,12 @@ import (
 	"github.com/analog-substance/tengo/v2"
 	"github.com/analog-substance/tengomod/interop"
 )
+
+var logger *slog.Logger
+
+func init() {
+	logger = log.WithGroup("engine")
+}
 
 func (s *Script) ArsenicModule() map[string]tengo.Object {
 	return map[string]tengo.Object{
@@ -83,7 +90,7 @@ func (s *Script) lockedFiles(args interop.ArgMap) (tengo.Object, error) {
 	for _, match := range matches {
 		data, err := os.ReadFile(match)
 		if err != nil {
-			log.Warn(err)
+			logger.Warn(err.Error())
 			continue
 		}
 

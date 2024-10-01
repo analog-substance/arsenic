@@ -7,7 +7,6 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/analog-substance/arsenic/pkg/log"
 	"github.com/analog-substance/fileutil"
 	"github.com/analog-substance/tengo/v2"
 	"github.com/analog-substance/tengomod/interop"
@@ -45,7 +44,7 @@ func (s *Script) pull(rebase bool) error {
 
 	err := runWithError(exec.Command("git", args...))
 	if err != nil {
-		log.Warn("pull failed")
+		logger.Warn("git pull failed", "err", err)
 		return err
 	}
 
@@ -99,7 +98,8 @@ func (s *Script) tengoCommit(args ...tengo.Object) (tengo.Object, error) {
 }
 
 func (s *Script) hardReset() {
-	log.Warn("reset to origin")
+
+	logger.Warn("git reset to origin")
 
 	rebaseCmd := exec.Command("git", "rebase", "--abort")
 	rebaseCmd.Stdout = os.Stdout
@@ -140,11 +140,11 @@ func (s *Script) commit(path string, msg string, mode string) error {
 		return nil
 	}
 
-	log.Warn("First push failed: ", err)
+	logger.Warn("first git pull failed", "err", err)
 
 	err = s.pull(true)
 	if err != nil {
-		log.Warn("pull rebase failed: ", err)
+		logger.Warn("git rebase failed", "err", err)
 		if mode == "reset" {
 			s.hardReset()
 		}
@@ -172,7 +172,7 @@ func (s *Script) add(path string) error {
 
 func (s *Script) lock(lockFile string, msg string) error {
 	if fileutil.FileExists(lockFile) {
-		log.Warn("can't lock a file that exists")
+		logger.Warn("can't lock a file that exists")
 		s.fatal("")
 		return nil
 	}

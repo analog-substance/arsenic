@@ -1,13 +1,20 @@
 package profiler
 
 import (
-	"log"
+	"github.com/analog-substance/arsenic/pkg/log"
+	"log/slog"
 	"time"
 )
+
+var logger *slog.Logger
+
+func init() {
+	logger = log.WithGroup("time")
+}
 
 func Timer(name string) func() {
 	start := time.Now()
 	return func() {
-		log.Printf("%s took %v\n", name, time.Since(start))
+		logger.Info("completed", "name", name, "duration", time.Since(start))
 	}
 }

@@ -1,7 +1,6 @@
 package log
 
 import (
-	"fmt"
 	"log/slog"
 	"os"
 )
@@ -23,20 +22,4 @@ func WithGroup(groupName string) *slog.Logger {
 
 func LogLevel(level slog.Level) {
 	logLevel.Set(level)
-}
-
-func Msg(args ...interface{}) {
-	log("[+]", args...)
-}
-func Warn(args ...interface{}) {
-	log("[!]", args...)
-}
-func Info(args ...interface{}) {
-	log("[-]", args...)
-}
-
-func log(prefix string, args ...interface{}) {
-	fmt.Printf("%s ", prefix)
-	fmt.Print(args...)
-	fmt.Println()
 }

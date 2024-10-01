@@ -3,13 +3,21 @@ package capture
 import (
 	"fmt"
 	builder "github.com/NoF0rte/cmd-builder"
+	"github.com/analog-substance/arsenic/pkg/log"
 	"io"
+	"log/slog"
 	"os"
 	"path"
 	"regexp"
 	"strings"
 	"time"
 )
+
+var logger *slog.Logger
+
+func init() {
+	logger = log.WithGroup("capture")
+}
 
 func Run(scopeDir string, cmdSlice []string) {
 
@@ -20,7 +28,7 @@ func Run(scopeDir string, cmdSlice []string) {
 	outputDir := path.Join("data", scopeDir, "output", cmdBase)
 	err := os.MkdirAll(outputDir, 0755)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
+		logger.Error(err.Error())
 		return
 	}
 
@@ -28,7 +36,7 @@ func Run(scopeDir string, cmdSlice []string) {
 
 	fileName := re.ReplaceAllString(strings.Join(cmdArgs, "_"), "__")
 
-	fmt.Println("filename:", fileName)
+	logger.Debug("capture file", "fileName", fileName)
 	outputFileName := fmt.Sprintf("%d__%s", time.Now().Unix(), fileName)
 	cmdFileName := fmt.Sprintf("%d__%s.cmd", time.Now().Unix(), fileName)
 
@@ -40,13 +48,13 @@ func Run(scopeDir string, cmdSlice []string) {
 	cmdFilecontents := fmt.Sprintf("%s%s", cmdToRun, strings.Join(cmdArgs, " "))
 	err = os.WriteFile(cmdFilePath, []byte(cmdFilecontents), 0755)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
+		logger.Error(err.Error())
 		return
 	}
 
 	file, err := os.OpenFile(outputFilePath, os.O_WRONLY^os.O_CREATE, 0644)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
+		logger.Error(err.Error())
 		return
 	}
 	defer file.Close()
@@ -58,7 +66,7 @@ func Run(scopeDir string, cmdSlice []string) {
 
 	err = wrapped.Run()
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
+		logger.Error(err.Error())
 	}
 
 }

@@ -2,8 +2,9 @@ package pkg
 
 import (
 	"bufio"
+	"github.com/analog-substance/arsenic/pkg/log"
 	"io"
-	"log"
+	"log/slog"
 	"os"
 	"path"
 	"regexp"
@@ -14,6 +15,12 @@ import (
 	"github.com/analog-substance/arsenic/pkg/set"
 	"github.com/analog-substance/fileutil"
 )
+
+var logger *slog.Logger
+
+func init() {
+	logger = log.WithGroup("wordlists")
+}
 
 var validWordlistTypes []string
 
@@ -30,7 +37,7 @@ func GetWordlists(wordlistType string) []string {
 
 	cwd, err := os.Getwd()
 	if err != nil {
-		log.Println(err)
+		logger.Error(err.Error())
 	}
 
 	c := config.Get()

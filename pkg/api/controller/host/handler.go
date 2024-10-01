@@ -4,7 +4,8 @@ import (
 	"errors"
 	"github.com/analog-substance/arsenic/pkg/api/controller"
 	"github.com/analog-substance/arsenic/pkg/api/models"
-	"log"
+	"github.com/analog-substance/arsenic/pkg/log"
+	"log/slog"
 	"strings"
 
 	"github.com/NoF0rte/gocdp"
@@ -13,6 +14,12 @@ import (
 	"github.com/analog-substance/arsenic/pkg/util"
 	"github.com/gin-gonic/gin"
 )
+
+var logger *slog.Logger
+
+func init() {
+	logger = log.WithGroup("api.host")
+}
 
 func AddRoutes(router *gin.RouterGroup) {
 	router.POST("/review", ReviewHost)
@@ -23,7 +30,7 @@ func ReviewHost(c *gin.Context) {
 	var reviewHost models.ReviewHost
 	err := c.BindJSON(&reviewHost)
 	if err != nil {
-		log.Printf("reviewHost: %v\n", err)
+		logger.Error("reviewHost BindJSON error", "err", err)
 		controller.Error(c, err)
 		return
 	}
@@ -36,7 +43,7 @@ func ReviewHost(c *gin.Context) {
 	if len(hosts) == 0 {
 		escaped := strings.Replace(reviewHost.Host, "\n", "", -1)
 		escaped = strings.Replace(escaped, "\r", "", -1)
-		log.Printf("reviewHost: No hosts matched - %s\n", escaped)
+		logger.Error("reviewHost: no host matched", "escaped", escaped)
 		controller.GenericError(c)
 		return
 	}
@@ -54,7 +61,7 @@ func GetContentDiscovery(c *gin.Context) {
 	var request models.HostContentDiscovery
 	err := c.BindJSON(&request)
 	if err != nil {
-		log.Printf("getContentDiscovery: %v\n", err)
+		logger.Error("getContentDiscovery error", "err", err)
 		controller.Error(c, err)
 		return
 	}
@@ -62,21 +69,21 @@ func GetContentDiscovery(c *gin.Context) {
 	host := host.GetFirst(request.Host)
 	if host == nil {
 		err = errors.New("host not found")
-		log.Printf("getContentDiscovery: %v\n", err)
+		logger.Error("getContentDiscovery error", "err", err)
 		controller.Error(c, err)
 		return
 	}
 
 	files, err := host.Files("recon/ffuf*", "recon/gobuster*", "recon/dirb*")
 	if err != nil {
-		log.Printf("getContentDiscovery: %v\n", err)
+		logger.Error("getContentDiscovery error", "err", err)
 		controller.Error(c, err) // return generic error? Would be more secure...
 		return
 	}
 
 	results, err := gocdp.SmartParseFiles(files)
 	if err != nil {
-		log.Printf("getContentDiscovery: %v\n", err)
+		logger.Error("getContentDiscovery error", "err", err)
 		controller.Error(c, err)
 		return
 	}

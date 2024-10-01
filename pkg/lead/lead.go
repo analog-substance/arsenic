@@ -4,8 +4,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/analog-substance/arsenic/pkg/log"
 	"io"
-	"log"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -23,7 +24,12 @@ var (
 	reconLeadsDir     string = filepath.FromSlash("recon/leads")
 	dataLeadFile      string = filepath.FromSlash(".hugo/data/leads.json")
 	reportFindingsDir string = filepath.FromSlash("report/findings")
+	logger            *slog.Logger
 )
+
+func init() {
+	logger = log.WithGroup("lead")
+}
 
 type HugoLeadData struct {
 	Ignored []string `json:"ignored"`
@@ -161,7 +167,8 @@ func FromNessusFinding(finding *NessusFinding) *Lead {
 
 	pluginInt, err := strconv.Atoi(finding.ReportItem.PluginID)
 	if err != nil {
-		log.Fatalln(err)
+		logger.Error(err.Error())
+		os.Exit(3)
 	}
 	ID := fmt.Sprintf("deadbeef-cafe-babe-f007-%012d", pluginInt)
 
