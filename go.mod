@@ -10,10 +10,11 @@ require (
 	github.com/ahmetb/go-linq/v3 v3.2.0
 	github.com/analog-substance/fileutil v0.0.3
 	github.com/analog-substance/nmap/v3 v3.0.2
-	github.com/analog-substance/scopious v0.1.9
+	github.com/analog-substance/scopious v0.1.10
 	github.com/analog-substance/tengo/v2 v2.13.2
 	github.com/analog-substance/tengomod v0.6.0
 	github.com/bmatcuk/doublestar/v4 v4.6.1
+	github.com/charmbracelet/huh v0.6.0
 	github.com/gin-contrib/cors v1.7.2
 	github.com/gin-gonic/gin v1.10.0
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
@@ -35,11 +36,10 @@ require (
 	github.com/bytedance/sonic/loader v0.2.0 // indirect
 	github.com/catppuccin/go v0.2.0 // indirect
 	github.com/charmbracelet/bubbles v0.20.0 // indirect
-	github.com/charmbracelet/bubbletea v1.1.0 // indirect
-	github.com/charmbracelet/huh v0.6.0 // indirect
+	github.com/charmbracelet/bubbletea v1.1.1 // indirect
 	github.com/charmbracelet/lipgloss v0.13.0 // indirect
-	github.com/charmbracelet/x/ansi v0.2.3 // indirect
-	github.com/charmbracelet/x/exp/strings v0.0.0-20240722160745-212f7b056ed0 // indirect
+	github.com/charmbracelet/x/ansi v0.3.2 // indirect
+	github.com/charmbracelet/x/exp/strings v0.0.0-20240919170804-a4978c8e603a // indirect
 	github.com/charmbracelet/x/term v0.2.0 // indirect
 	github.com/cloudwego/base64x v0.1.4 // indirect
 	github.com/cloudwego/iasm v0.2.0 // indirect
@@ -71,7 +71,7 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/muesli/ansi v0.0.0-20230316100256-276c6243b2f6 // indirect
 	github.com/muesli/cancelreader v0.2.2 // indirect
-	github.com/muesli/termenv v0.15.3-0.20240618155329-98d742f6907a // indirect
+	github.com/muesli/termenv v0.15.3-0.20240912151726-82936c5ea257 // indirect
 	github.com/otiai10/copy v1.14.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.3 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
@@ -95,3 +95,4 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
+replace github.com/analog-substance/scopious => /home/operator/codes/workspace/github.com/analog-substance/scopious
