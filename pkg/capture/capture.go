@@ -38,20 +38,20 @@ func InteractiveRun(scopeDir string, cmdSlice []string) {
 func injectOutputArgs(outputFile, cmd string, args []string) []string {
 	newArgs := []string{}
 
-	alreadyHasOutputFlag := false
+	//alreadyHasOutputFlag := false
 
 	if cmd == "nmap" {
-		for _, arg := range args {
-			if strings.HasPrefix("-o", arg) {
-				alreadyHasOutputFlag = true
-				break
-			}
-		}
+		//for _, arg := range args {
+		//	if strings.HasPrefix("-o", arg) {
+		//		alreadyHasOutputFlag = true
+		//		break
+		//	}
+		//}
 
-		if !alreadyHasOutputFlag {
-			logger.Debug("injecting output", "outputFile", outputFile)
-			newArgs = append([]string{"-oA", outputFile}, newArgs...)
-		}
+		//if !alreadyHasOutputFlag {
+		logger.Debug("injecting output", "outputFile", outputFile)
+		newArgs = append([]string{"-oA", outputFile}, newArgs...)
+		//}
 	}
 	return append(newArgs, args...)
 }
@@ -80,6 +80,51 @@ type WrappedCommand struct {
 	Command string
 	Args    []string
 	Runs    []*WrappedOutput
+}
+
+func GetWrappedCommands(scopeDir string) []*WrappedCommand {
+
+	wrappedCommands := []*WrappedCommand{}
+
+	outputDir := filepath.Join("data", scopeDir, "output")
+	cmdDirs, err := os.ReadDir(outputDir)
+	if err != nil {
+		logger.Error(err.Error())
+		return wrappedCommands
+	}
+
+	for _, cmdDir := range cmdDirs {
+		if cmdDir.IsDir() {
+			commandName := cmdDir.Name()
+			runs, err := os.ReadDir(filepath.Join(outputDir, commandName))
+			if err != nil {
+				logger.Error(err.Error())
+				continue
+			}
+
+			for _, run := range runs {
+				cmdFiles, err := filepath.Glob(filepath.Join(outputDir, cmdDir.Name(), run.Name(), "*.cmd"))
+				if err != nil {
+					logger.Error(err.Error())
+					continue
+				}
+				for _, cmdFile := range cmdFiles {
+					fileBytes, err := os.ReadFile(cmdFile)
+					if err != nil {
+						logger.Error(err.Error())
+						continue
+					}
+
+					cmdLine := strings.Split(string(fileBytes), " ")
+
+					wrappedCommands = append(wrappedCommands, NewWrappedCommand(scopeDir, cmdDir.Name(), cmdLine[1:]))
+					break
+				}
+			}
+		}
+	}
+
+	return wrappedCommands
 }
 
 func (wc *WrappedCommand) GetRuns() []*WrappedOutput {
