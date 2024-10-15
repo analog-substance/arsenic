@@ -187,3 +187,45 @@ export REVIEWER='defektive'
 arsenic hosts -u
 ```
 ***** -->
+
+## Brainstorming space
+
+```go
+
+type Domain {
+  Value string
+}
+
+type IP {
+  Version int
+  Value string
+  Private bool
+}
+
+type Host struct {
+  Domains []Domain
+  IPs []IP
+}
+
+type DNSRecord struct {
+  Domain Domain
+  Type string
+  Value string
+  TTL int
+}
+
+type Port struct {
+  IP IP
+  Port int
+  Protocol string
+  Service string
+  Fingerprint string
+}
+
+type Content struct {
+  URL string
+  HTTPStatusCode int
+}
+
+
+```

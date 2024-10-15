@@ -6,3 +6,5 @@ test-op
 .vscode/
 
 dist/
+data
+/arsenic
