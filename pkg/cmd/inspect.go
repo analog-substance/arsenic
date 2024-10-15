@@ -12,6 +12,6 @@ var inspectCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(inspectCmd)
+	RootCmd.AddCommand(inspectCmd)
 	inspectCmd.PersistentFlags().StringP("scope-dir", "s", scopious.DefaultScope, "Scope dir to use")
 }

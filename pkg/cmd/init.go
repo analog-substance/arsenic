@@ -21,6 +21,6 @@ var initCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(initCmd)
+	RootCmd.AddCommand(initCmd)
 	initCmd.Flags().BoolP("dry-run", "d", false, "Dry run")
 }

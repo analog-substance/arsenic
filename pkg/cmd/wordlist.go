@@ -38,7 +38,7 @@ var wordlistCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(wordlistCmd)
+	RootCmd.AddCommand(wordlistCmd)
 
 	oldUsage := wordlistCmd.UsageFunc()
 	wordlistCmd.SetUsageFunc(func(c *cobra.Command) error {

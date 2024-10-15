@@ -46,7 +46,7 @@ var serveCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(serveCmd)
+	RootCmd.AddCommand(serveCmd)
 
 	serveCmd.Flags().IntP("port", "p", 7433, "The port to listen on")
 	serveCmd.Flags().StringP("hugo", "H", "", "The path to the hugo directory")

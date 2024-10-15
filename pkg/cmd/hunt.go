@@ -16,6 +16,6 @@ var huntCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(huntCmd)
+	RootCmd.AddCommand(huntCmd)
 	huntCmd.Flags().BoolP("dry-run", "d", false, "Dry run")
 }

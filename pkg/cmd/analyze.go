@@ -655,7 +655,7 @@ func reviewIps(keepPrivateIPs bool) {
 // }
 
 func init() {
-	rootCmd.AddCommand(analyzeCmd)
+	RootCmd.AddCommand(analyzeCmd)
 
 	analyzeCmd.Flags().BoolP("create", "c", false, "really create hosts")
 	analyzeCmd.Flags().BoolP("update", "u", false, "only update existing hosts, dont create new ones")

@@ -18,6 +18,6 @@ var captureCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(captureCmd)
+	RootCmd.AddCommand(captureCmd)
 	captureCmd.Flags().StringP("scope-dir", "s", scopious.DefaultScope, "Scope dir to use")
 }

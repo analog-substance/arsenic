@@ -223,7 +223,7 @@ func splitIntoParentChild(key string) (string, string) {
 }
 
 func init() {
-	rootCmd.AddCommand(configCmd)
+	RootCmd.AddCommand(configCmd)
 	configCmd.Flags().BoolP("save", "s", false, "save the current configuration")
 	configCmd.Flags().BoolP("sub-keys", "k", false, "display only the sub-keys")
 	configCmd.Flags().BoolP("remove-reset", "r", false, "remove key from the config or reset to default")

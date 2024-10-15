@@ -15,6 +15,6 @@ var leadsCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(leadsCmd)
+	RootCmd.AddCommand(leadsCmd)
 
 }

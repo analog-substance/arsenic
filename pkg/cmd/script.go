@@ -48,7 +48,7 @@ var scriptCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(scriptCmd)
+	RootCmd.AddCommand(scriptCmd)
 	scriptCmd.Flags().StringP("name", "n", "", "Name of the script to run")
 	scriptCmd.RegisterFlagCompletionFunc("name", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		scriptsDir := config.Get().Scripts.Directory

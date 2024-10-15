@@ -270,7 +270,7 @@ Port:
 }
 
 func init() {
-	rootCmd.AddCommand(hostsCmd)
+	RootCmd.AddCommand(hostsCmd)
 	hostsCmd.Flags().StringSliceP("add-flags", "a", []string{}, "flag(s) to add")
 	hostsCmd.Flags().StringSliceP("remove-flags", "r", []string{}, "flag(s) to remove")
 	hostsCmd.Flags().StringSliceP("protocols", "p", []string{}, "print protocol strings")

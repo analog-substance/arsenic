@@ -26,8 +26,8 @@ var scopeCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(scopeCmd)
+	RootCmd.AddCommand(scopeCmd)
 
 	scopiousCmd.RootCmd.Use = "dev-scope"
-	rootCmd.AddCommand(scopiousCmd.RootCmd)
+	RootCmd.AddCommand(scopiousCmd.RootCmd)
 }

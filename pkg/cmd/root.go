@@ -30,11 +30,7 @@ var cfgFile string
 var configInitialized bool = false
 var debug bool = false
 
-func SetVersionInfo(versionStr, commitStr string) {
-	rootCmd.Version = fmt.Sprintf("%s-%s", versionStr, commitStr)
-}
-
-var rootCmd = &cobra.Command{
+var RootCmd = &cobra.Command{
 	Use:     "arsenic",
 	Version: "v0.2.0",
 	Short:   "Pentesting conventions",
@@ -69,10 +65,10 @@ var rootCmd = &cobra.Command{
 
 func Execute() {
 	if len(os.Args) > 1 && strings.Contains(os.Args[1], fmt.Sprintf("%c", os.PathSeparator)) {
-		rootCmd.DisableFlagParsing = true
+		RootCmd.DisableFlagParsing = true
 	}
 
-	if err := rootCmd.Execute(); err != nil {
+	if err := RootCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
@@ -82,8 +78,8 @@ func init() {
 	logger = log.WithGroup("arsenic.cmd")
 
 	cobra.OnInitialize(initConfig)
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "the arsenic.yaml config file")
-	rootCmd.PersistentFlags().BoolVar(&debug, "debug", false, "the arsenic.yaml config file")
+	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "the arsenic.yaml config file")
+	RootCmd.PersistentFlags().BoolVar(&debug, "debug", false, "the arsenic.yaml config file")
 }
 
 // initConfig reads in config file and ENV variables if set.

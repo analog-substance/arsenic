@@ -17,6 +17,6 @@ Scripts should determine what hosts it needs to run against.`,
 }
 
 func init() {
-	rootCmd.AddCommand(reconCmd)
+	RootCmd.AddCommand(reconCmd)
 	reconCmd.Flags().BoolP("dry-run", "d", false, "Dry run")
 }
