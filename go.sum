@@ -22,6 +22,8 @@ github.com/analog-substance/nex v0.1.5 h1:az8Uk9DYaK6XQZ1DJ9p6smpDh7vN3FKEwXA0bJ
 github.com/analog-substance/nex v0.1.5/go.mod h1:qmcbObSWS727OIFP5rD6CoKhMbC9Utt6af/7/iK32Kg=
 github.com/analog-substance/nex v0.1.6 h1:RveK31t+XbwNESG/9Z8caTYtBRNKktpFmY3zCcw/vYo=
 github.com/analog-substance/nex v0.1.6/go.mod h1:+JGVDbiKN/ZEbu5RMBgJcBXReAEtgNwMnJzksf7DGlg=
+github.com/analog-substance/nex v0.1.7 h1:Vy+kM1euo4mIbpv+lROh/+9QxGUvObnxccb3f4qie/0=
+github.com/analog-substance/nex v0.1.7/go.mod h1:+JGVDbiKN/ZEbu5RMBgJcBXReAEtgNwMnJzksf7DGlg=
 github.com/analog-substance/nmap/v3 v3.0.2 h1:wUiNkE/JiYTJmMEImPKptk7kXVJ+wwFu7TRZfgQEDRI=
 github.com/analog-substance/nmap/v3 v3.0.2/go.mod h1:PE2PY7j0w37MJdsa0kZDzCDc7L3ftVvBPU+P9mSUHgA=
 github.com/analog-substance/scopious v0.1.14 h1:iFQbVRsOa9fH8KRT4uJWFVNdvIDiHnDUVwh0PuSas4o=
