@@ -249,6 +249,12 @@ arsenic capture -- nmap -iL $(arsenic dev-scope get -d) -sL --resolve-all
 arsenic capture -- nmap -iL $(arsenic dev-scope get -4) -sL --resolve-all
 ```
 
+
+```bash
+git add data
+git commit -m "expanded scope"
+```
+
 #### Discovery: Alive hosts
 
 Save public IPs to a tmp location
@@ -258,7 +264,7 @@ arsenic inspect hosts --ips --public > tmp/public-ips.txt
 
 run host discovery
 ```bash
-as-nmap-host-discovery.tengo -f tmp/public-ips.txt
+as-nmap-host-discovery.tengo -f tmp/public-ips.txt -T5
 ```
 
 ```bash
@@ -296,6 +302,7 @@ While we wait. Let's go look at the wildcard domains.
 ```bash
 cat hackerone-scope.json | jq '.[]|select(.eligible_for_bounty == "true")|select(.eligible_for_submission == "true")| .identifier' -r | grep "\*"
 ```
+
 This should return something like:
 ```txt
 https://*.hackerone-ext-content.com
