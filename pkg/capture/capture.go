@@ -37,7 +37,7 @@ func InteractiveRun(scopeDir string, cmdSlice []string) {
 	}
 }
 
-func injectOutputArgs(outputFile, cmd string, args []string, inputFile string) []string {
+func injectOutputArgs(outputDir, cmd string, args []string, inputFile string) []string {
 	newArgs := []string{}
 
 	inputFileReplaced := false
@@ -56,9 +56,25 @@ func injectOutputArgs(outputFile, cmd string, args []string, inputFile string) [
 		}
 
 		//if !alreadyHasOutputFlag {
-		logger.Debug("injecting output", "outputFile", outputFile)
-		newArgs = append([]string{"-oA", outputFile}, newArgs...)
+		logger.Debug("injecting output", "outputDir", outputDir)
+		newArgs = append([]string{"-oA", outputDir}, newArgs...)
 		//}
+	} else if cmd == "subfinder" {
+		for index, arg := range args {
+			if strings.HasPrefix("-dL", arg) {
+				args[index+1] = inputFile
+				inputFileReplaced = true
+				break
+			}
+		}
+
+		if !inputFileReplaced {
+			newArgs = append(newArgs, "-dL", inputFile)
+		}
+
+		newArgs = append(newArgs, "-json")
+		newArgs = append([]string{"-oD", outputDir}, newArgs...)
+		logger.Debug("injecting output", "outputDir", outputDir)
 	}
 	return append(newArgs, args...)
 }
@@ -239,6 +255,13 @@ func (wc *WrappedCommand) getInput() []string {
 		} else if wc.Command == "radon" {
 			for index, arg := range wc.Args {
 				if strings.HasPrefix("-d", arg) || strings.HasPrefix("--domains-file", arg) {
+					inputList = wc.Args[index+1]
+					break
+				}
+			}
+		} else if wc.Command == "subfinder" {
+			for index, arg := range wc.Args {
+				if strings.HasPrefix("-dL", arg) || strings.HasPrefix("--domains-file", arg) {
 					inputList = wc.Args[index+1]
 					break
 				}
