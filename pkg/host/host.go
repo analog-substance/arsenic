@@ -14,7 +14,6 @@ import (
 
 	"github.com/analog-substance/arsenic/pkg/scope"
 	"github.com/analog-substance/arsenic/pkg/set"
-	"github.com/analog-substance/fileutil"
 	"github.com/bmatcuk/doublestar/v4"
 
 	"github.com/analog-substance/nmap/v3"
@@ -22,6 +21,7 @@ import (
 	"github.com/ahmetb/go-linq/v3"
 	"github.com/analog-substance/arsenic/pkg/config"
 	"github.com/analog-substance/arsenic/pkg/util"
+	"github.com/analog-substance/util/fileutil"
 )
 
 const (

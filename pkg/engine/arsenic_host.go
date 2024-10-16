@@ -2,12 +2,12 @@ package engine
 
 import (
 	"fmt"
+	"github.com/analog-substance/util/fileutil"
 	"path/filepath"
 	"strings"
 
 	"github.com/NoF0rte/gocdp"
 	"github.com/analog-substance/arsenic/pkg/host"
-	"github.com/analog-substance/fileutil"
 	"github.com/analog-substance/tengo/v2"
 	"github.com/analog-substance/tengo/v2/stdlib"
 	"github.com/analog-substance/tengomod/interop"

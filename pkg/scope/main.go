@@ -2,6 +2,7 @@ package scope
 
 import (
 	"fmt"
+	"github.com/analog-substance/util/fileutil"
 	"path/filepath"
 	"regexp"
 	"sort"
@@ -9,7 +10,6 @@ import (
 
 	"github.com/analog-substance/arsenic/pkg/set"
 	"github.com/analog-substance/arsenic/pkg/util"
-	"github.com/analog-substance/fileutil"
 	"golang.org/x/net/publicsuffix"
 )
 
@@ -50,7 +50,7 @@ func GetScope(scopeType string) ([]string, error) {
 	scope := set.NewStringSet()
 
 	for _, filename := range files {
-		lines, err := fileutil.ReadLineByLine(filename)
+		lines, err := fileutil.ReadLineByLineChan(filename)
 		if err != nil {
 			return nil, err
 		}
@@ -77,7 +77,7 @@ func GetConstScope(scopeType string) ([]string, error) {
 	file := fmt.Sprintf("scope-%s.txt", scopeType)
 	scope := set.NewStringSet()
 
-	lines, err := fileutil.ReadLineByLine(file)
+	lines, err := fileutil.ReadLineByLineChan(file)
 	if err != nil {
 		return nil, err
 	}

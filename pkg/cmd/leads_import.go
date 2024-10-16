@@ -2,10 +2,10 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/analog-substance/util/fileutil"
 	"os"
 
 	"github.com/analog-substance/arsenic/pkg/lead"
-	"github.com/analog-substance/fileutil"
 	nessus "github.com/reapertechlabs/go_nessus"
 	"github.com/spf13/cobra"
 )

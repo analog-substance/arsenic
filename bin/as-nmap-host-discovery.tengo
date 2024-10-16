@@ -1,0 +1,181 @@
+#!/usr/bin/env arsenic
+
+fmt := import("fmt")
+text := import("text")
+os := import("os")
+filepath := import("filepath")
+slice := import("slice")
+arsenic := import("arsenic")
+url := import("url")
+script := import("script")
+times := import("times")
+log := import("log")
+rand := import("rand")
+git := import("git")
+math := import("math")
+cobra := import("cobra")
+
+flags := []
+
+rootCmd := cobra.root_cmd(script.name, "Perform host discovery scans port scans against the scope")
+//rootCmd.persistent_flags.string_slicep("flags", "f", [], "Filter hosts by flags")
+rootCmd.flags.stringp("scope", "s", "default", "scope name")
+rootCmd.flags.stringp("file", "f", "", "file with targets to nmap")
+rootCmd.flags.intp("port-count", "p", 5000, "number of ports to scan")
+rootCmd.flags.intp("batch", "b", 1, "what batch to scan (1 = ports 1-[port-count], 2 = [port-count + 1] - [port-count * batch])")
+rootCmd.flags.boolp("udp", "U", false, "do a UDP port scan")
+
+rootCmd.set_run(func(cmd, args) {
+  getNmapPortsByPopularityCmd := "sort -r -k3 /usr/share/nmap/nmap-services | awk '{print $2}' | grep '/tcp' | cut -d/ -f1"
+  maxPortNum :=  65535
+  scope := cmd.flags.get_string("scope")
+  targetsFile := cmd.flags.get_string("file")
+  ports := cmd.flags.get_int("port-count")
+  startBatch := cmd.flags.get_int("batch")
+  isUDPScan := cmd.flags.get_bool("udp")
+
+  
+  if targetsFile == "" || !filepath.file_exists(targetsFile) {
+    script.fatal("[!] Target file must not be empty.")
+  }
+
+
+  cmd := os.exec("bash", "-c", getNmapPortsByPopularityCmd)
+  check_err(cmd)
+  nmapPortsStr := cmd.output()
+  nmapPorts := []
+
+  if len(nmapPortsStr) > 0 {
+    nmapPorts = text.split(text.trim_space(nmapPortsStr), "\n")
+  }
+
+  nmapPpopularityCount := len(nmapPorts)
+  popularBatches := int(math.ceil(nmapPpopularityCount / ports)) + 1
+
+  stdBatchCount := int(math.ceil(maxPortNum / ports)) + 1
+
+  totalBatches := popularBatches + stdBatchCount
+
+  log.msg(format("batch info: %d / %d / %d", popularBatches, stdBatchCount, totalBatches))
+
+  for batch := startBatch; batch <= totalBatches; batch++ {
+
+    portArg := ""
+    excludePortArg := ""
+    portsToCheck := ""
+    excludePorts := []
+
+    if batch <= popularBatches {
+      batchStart := ((batch - 1) * ports)
+      batchEnd := batchStart + ports
+
+      if ports < nmapPpopularityCount {
+        log.msg(format("Less ports than nmap services popularity: %d", nmapPpopularityCount))
+        portsToCheck := nmapPorts[batchStart:batchEnd]
+        portArg = text.join(portsToCheck, ",")
+      } else {
+        log.msg(format("More ports than nmap services popularity: %d", nmapPpopularityCount))
+        portArg = text.join(nmapPorts, ",")
+      }
+    } else {
+
+      // going through all the port ranges now
+      realBS := ((batch - 1 - popularBatches) * ports) + 1
+      realBE := realBS + ports - 1
+
+      if realBE > maxPortNum {
+        realBE = maxPortNum
+      }
+
+      portArg = format("%d-%d", realBS, realBE)
+
+      log.msg(format("realBS: %d", realBS))
+
+      for _, p in nmapPorts {
+        portInt := int(p)
+        if realBS < portInt && realBE > portInt {
+          excludePorts = append(excludePorts, portInt)
+        }
+      }
+
+      excludePortArg = text.join(excludePorts, ",")
+    }
+
+    scanParams := [
+      "-sS",
+      "-sV",
+      "--min-hostgroup",
+      "255",
+      "--min-rtt-timeout",
+      "25ms",
+      "--max-retries",
+      "1",
+      "--max-scan-delay",
+      "0"
+    ]
+
+    if isUDPScan {
+      scanParams = [
+        "-sUV",
+        "--version-intensity",
+        "0"
+      ]
+    }
+
+    tackP := format("-p%s", portArg)
+
+    nmapCmd := [
+      "arsenic",
+      "wrapture",
+      "-s",
+      scope,
+      "--",
+      "nmap",
+      "-n",
+      "-sn",
+      "-PP",
+      "-PA",
+      "-PU",
+      "--open",
+      "--resolve-all",
+      tackP,
+      "-iL",
+      targetsFile
+    ]
+
+sudo nmap -n -sn \
+-PP -PA$TCP_PORTS \
+-PS$TCP_PORTS \
+-PU$UDP_PORTS \
+--randomize-hosts \
+--scan-delay 50ms \
+--resolve-all \
+-T$TIMING_PROFILE \
+-iL "$SCOPE_NAME-generated-uniq-ipv4.txt" \
+-oA "$IP_V4_OUT"
+
+
+
+
+nmapCmd = append(nmapCmd, scanParams...)
+
+    if excludePortArg != "" {
+      log.msg(format("appending exclude ports: %s", excludePortArg))
+      nmapCmd = append(nmapCmd, "--exclude-ports", excludePortArg)
+    }
+
+    log.msg(text.join(nmapCmd, " "))
+
+    progress := int((math.abs(batch) /  math.abs(totalBatches)) * 100)
+    log.msg(format("Starting batch: %d of %d (%d%%)", batch, totalBatches, progress))
+
+    ncmd := os.exec(nmapCmd...)
+
+    ncmdOut := ncmd.output()
+    check_err(ncmd)
+    log.msg(ncmdOut)
+  }
+})
+
+err := rootCmd()
+check_err(err)

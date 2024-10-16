@@ -5,11 +5,13 @@ import (
 	"fmt"
 	builder "github.com/NoF0rte/cmd-builder"
 	"github.com/analog-substance/arsenic/pkg/log"
-	"github.com/analog-substance/fileutil"
+	"github.com/analog-substance/util/fileutil"
 	"github.com/charmbracelet/huh"
 	"io"
 	"log/slog"
 	"path/filepath"
+	"regexp"
+	"slices"
 	"sort"
 	"strconv"
 
@@ -35,18 +37,23 @@ func InteractiveRun(scopeDir string, cmdSlice []string) {
 	}
 }
 
-func injectOutputArgs(outputFile, cmd string, args []string) []string {
+func injectOutputArgs(outputFile, cmd string, args []string, inputFile string) []string {
 	newArgs := []string{}
 
-	//alreadyHasOutputFlag := false
+	inputFileReplaced := false
 
 	if cmd == "nmap" {
-		//for _, arg := range args {
-		//	if strings.HasPrefix("-o", arg) {
-		//		alreadyHasOutputFlag = true
-		//		break
-		//	}
-		//}
+		for index, arg := range args {
+			if strings.HasPrefix("-iL", arg) {
+				args[index+1] = inputFile
+				inputFileReplaced = true
+				break
+			}
+		}
+
+		if !inputFileReplaced {
+			newArgs = append(newArgs, "-iL", inputFile)
+		}
 
 		//if !alreadyHasOutputFlag {
 		logger.Debug("injecting output", "outputFile", outputFile)
@@ -80,6 +87,8 @@ type WrappedCommand struct {
 	Command string
 	Args    []string
 	Runs    []*WrappedOutput
+
+	input []string
 }
 
 func GetWrappedCommands(scopeDir string) []*WrappedCommand {
@@ -135,7 +144,7 @@ func (wc *WrappedCommand) GetRuns() []*WrappedOutput {
 		}
 
 		for _, file := range files {
-			wc.Runs = append(wc.Runs, WrappedOutputFromCmd(filepath.Join(wc.Path, file)))
+			wc.Runs = append(wc.Runs, WrappedOutputFromCmdFile(file))
 		}
 	}
 	return wc.Runs
@@ -143,11 +152,11 @@ func (wc *WrappedCommand) GetRuns() []*WrappedOutput {
 
 func (wc *WrappedCommand) Run() error {
 
-	shouldContine, err := wc.MaybeAskToRerun()
+	shouldContinue, err := wc.MaybeAskToRerun()
 	if err != nil {
 		return err
 	}
-	if !shouldContine {
+	if !shouldContinue {
 		return fmt.Errorf("did not want to re-run command: %s %s", wc.Command, wc.Path)
 	}
 
@@ -159,8 +168,17 @@ func (wc *WrappedCommand) Run() error {
 	filename := fmt.Sprintf("%d", time.Now().Unix())
 	logger.Debug("capture file", "fileName", filename)
 
+	input := wc.GetInputNotUsedYet()
+	inputFile := wc.getPathFor(filename, "input")
+	if len(input) > 0 {
+		err = os.WriteFile(inputFile, []byte(strings.Join(input, "\n")+"\n"), 0755)
+		if err != nil {
+			return err
+		}
+	}
+
 	cmdFilePath := wc.getPathFor(filename, "cmd")
-	wc.Args = injectOutputArgs(filepath.Join(wc.Path, filename), wc.Command, wc.Args)
+	wc.Args = injectOutputArgs(filepath.Join(wc.Path, filename), wc.Command, wc.Args, inputFile)
 	cmdFileContents := fmt.Sprintf("%s %s", wc.Command, strings.Join(wc.Args, " "))
 	err = os.WriteFile(cmdFilePath, []byte(cmdFileContents), 0755)
 	if err != nil {
@@ -192,9 +210,100 @@ func (wc *WrappedCommand) Run() error {
 	return wrapped.Run()
 }
 
+func (wc *WrappedCommand) getInput() []string {
+	if len(wc.input) == 0 {
+		var inputList string
+		var potentialTarget []string
+
+		if wc.Command == "nmap" {
+			singleTackFlags := `-(6|A|F|O|PE|PP|PM|PO|PS|PA|PU|PY|Pn|V|d|h|n|R|r|sC|sL|sN|sF|sX|sO|sS|sT|sA|sW|sM|sU|sV|sY|sZ|sn|v)`
+			doubleTackFlags := `--(append\-output|badsum|iflist|noninteractive|no\-stylesheet|open|osscan\-guess|osscan\-limit|packet\-trace|privileged|reason|script\-args\-file|script\-trace|script\-updatedb|send\-eth|send\-ip|system\-dns|traceroute|unprivileged|version\-all|version\-light|version\-trace|webxml)`
+
+			valuelessArgsRE := regexp.MustCompile(`^((` + singleTackFlags + `)|(` + doubleTackFlags + `))`)
+
+			for index, arg := range wc.Args {
+				if strings.HasPrefix("-iL", arg) {
+					inputList = wc.Args[index+1]
+					break
+				}
+				if index > 0 && !strings.HasPrefix(arg, "-") {
+					// current arg is not a nmap flag/option
+					// it could be a target specification
+					if valuelessArgsRE.MatchString(wc.Args[index-1]) {
+						// last arg was an option/switch that didn't need an argument
+						potentialTarget = append(potentialTarget, arg)
+					}
+				}
+			}
+		}
+
+		if inputList != "" {
+			logger.Debug("found input list", "cmd", wc.Command, "inputList", inputList)
+			lines, err := fileutil.ReadLowerLines(inputList)
+			if err != nil {
+				logger.Error("failed to read input list", "err", err)
+			} else {
+				potentialTarget = append(potentialTarget, lines...)
+			}
+		}
+
+		if len(potentialTarget) > 0 {
+			logger.Debug("found potential targets", "cmd", wc.Command, "potentialTarget", potentialTarget)
+		}
+
+		targetMap := make(map[string]bool)
+		for _, target := range potentialTarget {
+			targetMap[target] = true
+		}
+
+		potentialTarget = []string{}
+		for target := range targetMap {
+			potentialTarget = append(potentialTarget, target)
+		}
+
+		sort.Strings(potentialTarget)
+
+		wc.input = potentialTarget
+	}
+
+	return wc.input
+}
+
+func (wc *WrappedCommand) GetInputNotUsedYet() []string {
+	inputAlreadyUsed := []string{}
+	runs := wc.GetRuns()
+	for _, input := range wc.getInput() {
+		for _, run := range runs {
+			if run.UsedInput(input) {
+				inputAlreadyUsed = append(inputAlreadyUsed, input)
+				break
+			}
+		}
+	}
+	if len(inputAlreadyUsed) > 0 {
+		inputNotUsed := []string{}
+		for _, input := range wc.getInput() {
+			if !slices.Contains(inputAlreadyUsed, input) {
+				inputNotUsed = append(inputNotUsed, input)
+			}
+		}
+
+		logger.Debug("command already ran with input", "inputAlreadyUsed", inputAlreadyUsed, "inputNotUsed", inputNotUsed)
+		return inputNotUsed
+	}
+
+	return []string{}
+}
+
 func (wc *WrappedCommand) MaybeAskToRerun() (bool, error) {
 	if !fileutil.DirExists(wc.Path) {
 		// file doesn't exist, lets roll!
+		return true, nil
+	}
+
+	inputNotUsed := wc.GetInputNotUsedYet()
+	if len(inputNotUsed) > 0 {
+		// run with unused inputs
 		return true, nil
 	}
 
@@ -228,13 +337,17 @@ func (wc *WrappedCommand) MaybeAskToRerun() (bool, error) {
 
 type WrappedOutput struct {
 	Created         time.Time
+	Path            string
 	StdErrFile      string
 	StdOutFile      string
 	AdditionalFiles []string
+
+	input map[string]bool
 }
 
-func WrappedOutputFromCmd(cmdFile string) *WrappedOutput {
+func WrappedOutputFromCmdFile(cmdFile string) *WrappedOutput {
 
+	dir := filepath.Dir(cmdFile)
 	fileBase := filepath.Base(cmdFile)
 	timeStampStr := strings.Split(fileBase, ".")[0]
 	i, err := strconv.ParseInt(timeStampStr, 10, 64)
@@ -244,8 +357,36 @@ func WrappedOutputFromCmd(cmdFile string) *WrappedOutput {
 	timeStamp := time.Unix(i, 0)
 
 	return &WrappedOutput{
+		Path:    dir,
 		Created: timeStamp,
 	}
+}
+
+func (wo *WrappedOutput) GetInput() (map[string]bool, error) {
+	if len(wo.input) == 0 {
+		inputFile := filepath.Join(wo.Path, fmt.Sprintf("%d.input", wo.Created.Unix()))
+		lines, err := fileutil.ReadLowerLineMap(inputFile)
+		if err != nil {
+			logger.Debug("error loading input", "inputFile", inputFile, "err", err)
+			return nil, err
+		}
+		wo.input = lines
+	}
+	return wo.input, nil
+}
+
+func (wo *WrappedOutput) UsedInput(input string) bool {
+
+	inputMap, err := wo.GetInput()
+	logger.Debug("run used input?", "input", input, "currentInput", inputMap)
+	if err != nil {
+		return false
+	}
+
+	if _, ok := inputMap[input]; ok {
+		return true
+	}
+	return false
 }
 
 func NewWrappedCommandFromDir(cmdDir string) *WrappedCommand {

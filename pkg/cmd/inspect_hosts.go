@@ -28,10 +28,10 @@ var inspectHostsCmd = &cobra.Command{
 
 		var opts []nmap.Option
 		//if upOnly {
-		//	opts = append(opts, nmap.WithUpOnly())
+		//opts = append(opts, nmap.WithUpOnly())
 		//}
 		//if openOnly {
-		opts = append(opts, nmap.WithOpenOnly())
+		//opts = append(opts, nmap.WithOpenOnly())
 		//}
 
 		run, err := nmap.XMLMerge(nmapXMLFiles, opts...)

@@ -3,6 +3,7 @@ package pkg
 import (
 	"bufio"
 	"github.com/analog-substance/arsenic/pkg/log"
+	"github.com/analog-substance/util/fileutil"
 	"io"
 	"log/slog"
 	"os"
@@ -13,7 +14,6 @@ import (
 
 	"github.com/analog-substance/arsenic/pkg/config"
 	"github.com/analog-substance/arsenic/pkg/set"
-	"github.com/analog-substance/fileutil"
 )
 
 var logger *slog.Logger

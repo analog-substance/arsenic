@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/analog-substance/util/fileutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -12,8 +13,7 @@ import (
 
 	"github.com/analog-substance/arsenic/pkg/config"
 	"github.com/analog-substance/arsenic/pkg/scope"
-	"github.com/analog-substance/fileutil"
-	"github.com/analog-substance/fileutil/grep"
+	"github.com/analog-substance/util/grep"
 
 	"github.com/ahmetb/go-linq/v3"
 	"github.com/analog-substance/arsenic/pkg/host"

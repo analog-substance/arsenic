@@ -3,6 +3,7 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/analog-substance/util/fileutil"
 	"path/filepath"
 	"sort"
 	"strconv"
@@ -11,7 +12,6 @@ import (
 	"github.com/analog-substance/arsenic/pkg/host"
 	"github.com/analog-substance/arsenic/pkg/set"
 	"github.com/analog-substance/arsenic/pkg/util"
-	"github.com/analog-substance/fileutil"
 	"github.com/spf13/cobra"
 )
 
@@ -32,7 +32,7 @@ var ingestNaabuCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		hostMap := make(map[string][]string)
 		for _, file := range args {
-			lines, err := fileutil.ReadLineByLine(file)
+			lines, err := fileutil.ReadLineByLineChan(file)
 			if err != nil {
 				return err
 			}
