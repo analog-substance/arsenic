@@ -18,6 +18,10 @@ github.com/analog-substance/ffufwrap v0.0.2 h1:b6kt11kKl/bDwm6HiDYGUzA71Ml8QeBeZ
 github.com/analog-substance/ffufwrap v0.0.2/go.mod h1:kG9mlIG0acNoZKWeavfSTh0cG6deDTwytlC+fcNnVF8=
 github.com/analog-substance/nex v0.1.4 h1:RYUIH1h63fAD0489BxOsAcgaiaZz6HCyGHY8XVkp9dE=
 github.com/analog-substance/nex v0.1.4/go.mod h1:qmcbObSWS727OIFP5rD6CoKhMbC9Utt6af/7/iK32Kg=
+github.com/analog-substance/nex v0.1.5 h1:az8Uk9DYaK6XQZ1DJ9p6smpDh7vN3FKEwXA0bJQF5z8=
+github.com/analog-substance/nex v0.1.5/go.mod h1:qmcbObSWS727OIFP5rD6CoKhMbC9Utt6af/7/iK32Kg=
+github.com/analog-substance/nex v0.1.6 h1:RveK31t+XbwNESG/9Z8caTYtBRNKktpFmY3zCcw/vYo=
+github.com/analog-substance/nex v0.1.6/go.mod h1:+JGVDbiKN/ZEbu5RMBgJcBXReAEtgNwMnJzksf7DGlg=
 github.com/analog-substance/nmap/v3 v3.0.2 h1:wUiNkE/JiYTJmMEImPKptk7kXVJ+wwFu7TRZfgQEDRI=
 github.com/analog-substance/nmap/v3 v3.0.2/go.mod h1:PE2PY7j0w37MJdsa0kZDzCDc7L3ftVvBPU+P9mSUHgA=
 github.com/analog-substance/scopious v0.1.14 h1:iFQbVRsOa9fH8KRT4uJWFVNdvIDiHnDUVwh0PuSas4o=
@@ -61,6 +65,8 @@ github.com/charmbracelet/x/exp/golden v0.0.0-20240815200342-61de596daa2b h1:MnAM
 github.com/charmbracelet/x/exp/golden v0.0.0-20240815200342-61de596daa2b/go.mod h1:wDlXFlCrmJ8J+swcL/MnGUuYnqgQdW9rhSD61oNMb6U=
 github.com/charmbracelet/x/exp/strings v0.0.0-20241011142426-46044092ad91 h1:Y5+kHShAqg0WJ0RQzBwhUm2qjiT+N97PQSFpIgcvZHg=
 github.com/charmbracelet/x/exp/strings v0.0.0-20241011142426-46044092ad91/go.mod h1:pBhA0ybfXv6hDjQUZ7hk1lVxBiUbupdw5R31yPUViVQ=
+github.com/charmbracelet/x/exp/strings v0.0.0-20241016014612-3b4d04043233 h1:V3v/OpJ/1GnsycZs/Rh1ThkKNG/KnsHACuArq4inFDM=
+github.com/charmbracelet/x/exp/strings v0.0.0-20241016014612-3b4d04043233/go.mod h1:pBhA0ybfXv6hDjQUZ7hk1lVxBiUbupdw5R31yPUViVQ=
 github.com/charmbracelet/x/term v0.2.0 h1:cNB9Ot9q8I711MyZ7myUR5HFWL/lc3OpU8jZ4hwm0x0=
 github.com/charmbracelet/x/term v0.2.0/go.mod h1:GVxgxAbjUrmpvIINHIQnJJKpMlHiZ4cktEQCN6GWyF0=
 github.com/cloudwego/base64x v0.1.4 h1:jwCgWpFanWmN8xoIUHa2rtzmkd5J2plF/dnLS6Xd/0Y=
@@ -220,6 +226,8 @@ github.com/ugorji/go/codec v1.2.12/go.mod h1:UNopzCgEMSXjBc6AOMqYvWC1ktqTAfzJZUZ
 github.com/yuin/goldmark v1.7.1/go.mod h1:uzxRWxtg69N339t3louHJ7+O03ezfj6PlliRlaOzY1E=
 github.com/yuin/goldmark v1.7.7 h1:5m9rrB1sW3JUMToKFQfb+FGt1U7r57IHu5GrYrG2nqU=
 github.com/yuin/goldmark v1.7.7/go.mod h1:uzxRWxtg69N339t3louHJ7+O03ezfj6PlliRlaOzY1E=
+github.com/yuin/goldmark v1.7.8 h1:iERMLn0/QJeHFhxSt3p6PeN9mGnvIKSpG9YYorDMnic=
+github.com/yuin/goldmark v1.7.8/go.mod h1:uzxRWxtg69N339t3louHJ7+O03ezfj6PlliRlaOzY1E=
 github.com/yuin/goldmark-emoji v1.0.4 h1:vCwMkPZSNefSUnOW2ZKRUjBSD5Ok3W78IXhGxxAEF90=
 github.com/yuin/goldmark-emoji v1.0.4/go.mod h1:tTkZEbwu5wkPmgTcitqddVxY9osFZiavD+r4AzQrh1U=
 go.uber.org/multierr v1.11.0 h1:blXXJkSxSSfBVBlC76pxqeO+LN3aDfLQo+309xJstO0=

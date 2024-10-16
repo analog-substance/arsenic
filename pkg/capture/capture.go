@@ -236,6 +236,13 @@ func (wc *WrappedCommand) getInput() []string {
 					}
 				}
 			}
+		} else if wc.Command == "radon" {
+			for index, arg := range wc.Args {
+				if strings.HasPrefix("-d", arg) || strings.HasPrefix("--domains-file", arg) {
+					inputList = wc.Args[index+1]
+					break
+				}
+			}
 		}
 
 		if inputList != "" {
