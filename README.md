@@ -190,6 +190,25 @@ arsenic hosts -u
 
 ## Brainstorming space
 
+Currently, lots of duplicate scanning can occur if scope is added after the initial discovery phase. it takes a decent
+amount of effort to make sure you don't perform duplicate scans.
+
+thoughts on how to best perform initial recon.
+
+1. expand in scope IPs.
+2. resolve domains to IPs.
+3. host discovery on unique IPs.
+4. port scans on discovered hosts.
+5. content enumeration on web ports.
+6. pull domains from tls certs (go to #2)
+7. perform subdomain enumeration (go to #2)
+8. search for subdomain takeovers
+9. nuclei tech detection
+10. nuclei templates
+
+If we keep track of what commands are executed and detect what input is passed in, we can determine if a particular
+scope item has had a specific program run against it.
+
 ```go
 
 type Domain {

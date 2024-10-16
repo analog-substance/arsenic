@@ -126,7 +126,7 @@ rootCmd.set_run(func(cmd, args) {
 
     nmapCmd := [
       "arsenic",
-      "wrapture",
+      "capture",
       "-s",
       scope,
       "--",

@@ -2,7 +2,9 @@
 
 fmt := import("fmt")
 text := import("text")
+os2 := import("os2")
 os := import("os")
+exec := import("exec")
 filepath := import("filepath")
 slice := import("slice")
 arsenic := import("arsenic")
@@ -15,166 +17,75 @@ git := import("git")
 math := import("math")
 cobra := import("cobra")
 
-flags := []
+
+getNmapPortArg := func (portCount, portType) {
+
+    popularPorts := format("sort -r -k3 /usr/share/nmap/nmap-services | awk '{print $2}' | grep '/%s' | cut -d/ -f1 | head -n %d", portType, portCount)
+
+    cmd := os.exec("bash", "-c", popularPorts)
+    check_err(cmd)
+    nmapPortOut := cmd.output()
+
+    if len(nmapPortOut) > 0 {
+        nmapPorts := text.split(text.trim_space(nmapPortOut), "\n")
+        return text.join(nmapPorts, ",")
+    }
+
+    return ""
+}
 
 rootCmd := cobra.root_cmd(script.name, "Perform host discovery scans port scans against the scope")
-//rootCmd.persistent_flags.string_slicep("flags", "f", [], "Filter hosts by flags")
 rootCmd.flags.stringp("scope", "s", "default", "scope name")
 rootCmd.flags.stringp("file", "f", "", "file with targets to nmap")
-rootCmd.flags.intp("port-count", "p", 5000, "number of ports to scan")
-rootCmd.flags.intp("batch", "b", 1, "what batch to scan (1 = ports 1-[port-count], 2 = [port-count + 1] - [port-count * batch])")
-rootCmd.flags.boolp("udp", "U", false, "do a UDP port scan")
+rootCmd.flags.intp("port-count", "p", 100, "number of ports to use for host discovery")
+rootCmd.flags.intp("timing-profile", "T", 4, "timing profile")
+rootCmd.flags.boolp("ipv6", "6", false, "do a ipv6 port scan")
 
 rootCmd.set_run(func(cmd, args) {
-  getNmapPortsByPopularityCmd := "sort -r -k3 /usr/share/nmap/nmap-services | awk '{print $2}' | grep '/tcp' | cut -d/ -f1"
-  maxPortNum :=  65535
-  scope := cmd.flags.get_string("scope")
-  targetsFile := cmd.flags.get_string("file")
-  ports := cmd.flags.get_int("port-count")
-  startBatch := cmd.flags.get_int("batch")
-  isUDPScan := cmd.flags.get_bool("udp")
+    ports := cmd.flags.get_int("port-count")
+    timingProfile := cmd.flags.get_int("timing-profile")
+    popularTCPPorts := format("sort -r -k3 /usr/share/nmap/nmap-services | awk '{print $2}' | grep '/tcp' | cut -d/ -f1 | head -n %d", ports)
+    popularUDPPorts := format("sort -r -k3 /usr/share/nmap/nmap-services | awk '{print $2}' | grep '/udp' | cut -d/ -f1 | head -n %d", ports)
+    scope := cmd.flags.get_string("scope")
+    targetsFile := cmd.flags.get_string("file")
+    isIPv6 := cmd.flags.get_bool("ipv6")
 
-  
-  if targetsFile == "" || !filepath.file_exists(targetsFile) {
-    script.fatal("[!] Target file must not be empty.")
-  }
-
-
-  cmd := os.exec("bash", "-c", getNmapPortsByPopularityCmd)
-  check_err(cmd)
-  nmapPortsStr := cmd.output()
-  nmapPorts := []
-
-  if len(nmapPortsStr) > 0 {
-    nmapPorts = text.split(text.trim_space(nmapPortsStr), "\n")
-  }
-
-  nmapPpopularityCount := len(nmapPorts)
-  popularBatches := int(math.ceil(nmapPpopularityCount / ports)) + 1
-
-  stdBatchCount := int(math.ceil(maxPortNum / ports)) + 1
-
-  totalBatches := popularBatches + stdBatchCount
-
-  log.msg(format("batch info: %d / %d / %d", popularBatches, stdBatchCount, totalBatches))
-
-  for batch := startBatch; batch <= totalBatches; batch++ {
-
-    portArg := ""
-    excludePortArg := ""
-    portsToCheck := ""
-    excludePorts := []
-
-    if batch <= popularBatches {
-      batchStart := ((batch - 1) * ports)
-      batchEnd := batchStart + ports
-
-      if ports < nmapPpopularityCount {
-        log.msg(format("Less ports than nmap services popularity: %d", nmapPpopularityCount))
-        portsToCheck := nmapPorts[batchStart:batchEnd]
-        portArg = text.join(portsToCheck, ",")
-      } else {
-        log.msg(format("More ports than nmap services popularity: %d", nmapPpopularityCount))
-        portArg = text.join(nmapPorts, ",")
-      }
-    } else {
-
-      // going through all the port ranges now
-      realBS := ((batch - 1 - popularBatches) * ports) + 1
-      realBE := realBS + ports - 1
-
-      if realBE > maxPortNum {
-        realBE = maxPortNum
-      }
-
-      portArg = format("%d-%d", realBS, realBE)
-
-      log.msg(format("realBS: %d", realBS))
-
-      for _, p in nmapPorts {
-        portInt := int(p)
-        if realBS < portInt && realBE > portInt {
-          excludePorts = append(excludePorts, portInt)
-        }
-      }
-
-      excludePortArg = text.join(excludePorts, ",")
+    if targetsFile == "" || !filepath.file_exists(targetsFile) {
+        script.fatal(format("[!] Target file must not be empty. %s", targetsFile))
     }
 
-    scanParams := [
-      "-sS",
-      "-sV",
-      "--min-hostgroup",
-      "255",
-      "--min-rtt-timeout",
-      "25ms",
-      "--max-retries",
-      "1",
-      "--max-scan-delay",
-      "0"
-    ]
-
-    if isUDPScan {
-      scanParams = [
-        "-sUV",
-        "--version-intensity",
-        "0"
-      ]
-    }
-
-    tackP := format("-p%s", portArg)
+    nmapTCPPortArg := getNmapPortArg(ports, "tcp")
+    nmapUDPPortArg := getNmapPortArg(ports, "udp")
 
     nmapCmd := [
-      "arsenic",
-      "wrapture",
-      "-s",
-      scope,
-      "--",
-      "nmap",
-      "-n",
-      "-sn",
-      "-PP",
-      "-PA",
-      "-PU",
-      "--open",
-      "--resolve-all",
-      tackP,
-      "-iL",
-      targetsFile
+        "arsenic",
+        "capture",
+        "-s",
+        scope,
+        "--",
+        "nmap",
+        "-n",
+        "-sn",
+        "-PP",
+        format("-PA%s", nmapTCPPortArg),
+        format("-PS%s", nmapTCPPortArg),
+        format("-PU%s", nmapUDPPortArg),
+        "--resolve-all",
+        "--randomize-hosts",
+        format("-T%d", timingProfile),
+        "--scan-delay",
+        "50ms",
+        "-iL",
+        targetsFile
     ]
 
-sudo nmap -n -sn \
--PP -PA$TCP_PORTS \
--PS$TCP_PORTS \
--PU$UDP_PORTS \
---randomize-hosts \
---scan-delay 50ms \
---resolve-all \
--T$TIMING_PROFILE \
--iL "$SCOPE_NAME-generated-uniq-ipv4.txt" \
--oA "$IP_V4_OUT"
-
-
-
-
-nmapCmd = append(nmapCmd, scanParams...)
-
-    if excludePortArg != "" {
-      log.msg(format("appending exclude ports: %s", excludePortArg))
-      nmapCmd = append(nmapCmd, "--exclude-ports", excludePortArg)
+    if isIPv6 {
+        nmapCmd = append(nmapCmd, "-6")
     }
 
-    log.msg(text.join(nmapCmd, " "))
-
-    progress := int((math.abs(batch) /  math.abs(totalBatches)) * 100)
-    log.msg(format("Starting batch: %d of %d (%d%%)", batch, totalBatches, progress))
-
-    ncmd := os.exec(nmapCmd...)
-
-    ncmdOut := ncmd.output()
-    check_err(ncmd)
-    log.msg(ncmdOut)
-  }
+    cmd := exec.cmd(nmapCmd[0], nmapCmd[1:]...)
+    check_err(cmd)
+    cmd.run()
 })
 
 err := rootCmd()

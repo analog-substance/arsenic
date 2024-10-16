@@ -171,6 +171,7 @@ func (wc *WrappedCommand) Run() error {
 	input := wc.GetInputNotUsedYet()
 	inputFile := wc.getPathFor(filename, "input")
 	if len(input) > 0 {
+		logger.Debug("input for command", "input", input)
 		err = os.WriteFile(inputFile, []byte(strings.Join(input, "\n")+"\n"), 0755)
 		if err != nil {
 			return err
@@ -271,6 +272,8 @@ func (wc *WrappedCommand) getInput() []string {
 
 func (wc *WrappedCommand) GetInputNotUsedYet() []string {
 	inputAlreadyUsed := []string{}
+	inputNotUsed := []string{}
+
 	runs := wc.GetRuns()
 	for _, input := range wc.getInput() {
 		for _, run := range runs {
@@ -279,20 +282,13 @@ func (wc *WrappedCommand) GetInputNotUsedYet() []string {
 				break
 			}
 		}
-	}
-	if len(inputAlreadyUsed) > 0 {
-		inputNotUsed := []string{}
-		for _, input := range wc.getInput() {
-			if !slices.Contains(inputAlreadyUsed, input) {
-				inputNotUsed = append(inputNotUsed, input)
-			}
+		if !slices.Contains(inputAlreadyUsed, input) {
+			inputNotUsed = append(inputNotUsed, input)
 		}
-
-		logger.Debug("command already ran with input", "inputAlreadyUsed", inputAlreadyUsed, "inputNotUsed", inputNotUsed)
-		return inputNotUsed
 	}
 
-	return []string{}
+	logger.Debug("command already ran with input", "inputAlreadyUsed", inputAlreadyUsed, "inputNotUsed", inputNotUsed)
+	return inputNotUsed
 }
 
 func (wc *WrappedCommand) MaybeAskToRerun() (bool, error) {

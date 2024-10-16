@@ -7,8 +7,8 @@ import (
 )
 
 var captureCmd = &cobra.Command{
-	Use:     "wrapture", // lolz typo ftw
-	Aliases: []string{"capture"},
+	Use:     "capture", // lolz typo ftw
+	Aliases: []string{"wrapture"},
 	Short:   "capture exec",
 	Long:    `capture exec`,
 	Run: func(cmd *cobra.Command, args []string) {
