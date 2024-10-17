@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/analog-substance/arsenic/pkg"
-	"github.com/analog-substance/arsenic/pkg/set"
+	"github.com/analog-substance/util/set"
 	"github.com/spf13/cobra"
 )
 

@@ -8,8 +8,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/analog-substance/arsenic/pkg/set"
 	"github.com/analog-substance/arsenic/pkg/util"
+	"github.com/analog-substance/util/set"
 	"golang.org/x/net/publicsuffix"
 )
 

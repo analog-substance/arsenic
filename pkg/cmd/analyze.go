@@ -17,8 +17,8 @@ import (
 
 	"github.com/ahmetb/go-linq/v3"
 	"github.com/analog-substance/arsenic/pkg/host"
-	"github.com/analog-substance/arsenic/pkg/set"
 	"github.com/analog-substance/arsenic/pkg/util"
+	"github.com/analog-substance/util/set"
 	"github.com/spf13/cobra"
 )
 

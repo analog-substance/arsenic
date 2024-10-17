@@ -13,7 +13,7 @@ import (
 	"strings"
 
 	"github.com/analog-substance/arsenic/pkg/config"
-	"github.com/analog-substance/arsenic/pkg/set"
+	"github.com/analog-substance/util/set"
 )
 
 var logger *slog.Logger

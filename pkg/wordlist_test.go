@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/analog-substance/arsenic/pkg/config"
-	"github.com/analog-substance/arsenic/pkg/set"
+	"github.com/analog-substance/util/set"
 	"github.com/spf13/viper"
 )
 

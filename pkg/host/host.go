@@ -13,7 +13,7 @@ import (
 	"sync"
 
 	"github.com/analog-substance/arsenic/pkg/scope"
-	"github.com/analog-substance/arsenic/pkg/set"
+	"github.com/analog-substance/util/set"
 	"github.com/bmatcuk/doublestar/v4"
 
 	"github.com/analog-substance/nmap/v3"

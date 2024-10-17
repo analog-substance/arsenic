@@ -4,10 +4,10 @@ import (
 	"os"
 
 	"github.com/analog-substance/arsenic/pkg"
-	"github.com/analog-substance/arsenic/pkg/set"
 	"github.com/analog-substance/tengo/v2"
 	"github.com/analog-substance/tengo/v2/stdlib"
 	"github.com/analog-substance/tengomod/interop"
+	"github.com/analog-substance/util/set"
 )
 
 func (s *Script) WordlistModule() map[string]tengo.Object {

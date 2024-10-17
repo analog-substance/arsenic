@@ -10,8 +10,8 @@ import (
 
 	"github.com/NoF0rte/gocdp"
 	"github.com/analog-substance/arsenic/pkg/host"
-	"github.com/analog-substance/arsenic/pkg/set"
 	"github.com/analog-substance/arsenic/pkg/util"
+	"github.com/analog-substance/util/set"
 	"github.com/gin-gonic/gin"
 )
 
