@@ -38,7 +38,8 @@ var inspectHostsCmd = &cobra.Command{
 			check(fmt.Errorf("no files found"))
 		}
 
-		run, err := nmap.XMLMerge(files, []nmap.Option{}...)
+		var opts []nmap.Option
+		run, err := nmap.XMLMerge(files, opts...)
 		check(err)
 
 		nmapView := nmap.NewNmapView(run)
@@ -61,54 +62,44 @@ var inspectHostsCmd = &cobra.Command{
 			return true
 		})
 
+		viewOptions := nmap.ViewOptions(0)
+		if includePublic {
+			viewOptions = viewOptions | nmap.ViewPublic
+		}
+
+		if includePrivate {
+			viewOptions = viewOptions | nmap.ViewPrivate
+		}
+
+		if upOnly {
+			viewOptions = viewOptions | nmap.ViewAliveHosts
+		}
+
+		if openOnly {
+			viewOptions = viewOptions | nmap.ViewOpenPorts
+		}
+
 		if jsonOutput {
-			err = nmapView.PrintJSON()
+			err = nmapView.PrintJSON(viewOptions)
 			check(err)
 			return
 		}
 
-		viewOptions := nmap.ListViewOptions(0)
-		if listHostnames {
-			if includePublic {
-				viewOptions = viewOptions | nmap.ListViewPublicHostnames
+		if listHostnames || listIPs {
+			if listHostnames {
+				viewOptions = viewOptions | nmap.ListHostnames
 			}
-			if includePrivate {
-				viewOptions = viewOptions | nmap.ListViewPrivateHostnames
+			if listIPs {
+				viewOptions = viewOptions | nmap.ListIPs
 			}
-		}
 
-		if listIPs {
-			if includePublic {
-				viewOptions = viewOptions | nmap.ListViewPublicIPs
-			}
-			if includePrivate {
-				viewOptions = viewOptions | nmap.ListViewPrivateIPs
-			}
-		}
-
-		if viewOptions > 0 {
 			nmapView.PrintList(viewOptions)
 			return
 		}
 
-		tableViewOptions := nmap.TableViewOptions(0)
-		if includePublic {
-			tableViewOptions = tableViewOptions | nmap.TableViewPublic
-		}
-		if includePrivate {
-			tableViewOptions = tableViewOptions | nmap.TableViewPrivate
-		}
-
-		if upOnly {
-			tableViewOptions = tableViewOptions | nmap.TableViewAliveHosts
-		}
-		if openOnly {
-			tableViewOptions = tableViewOptions | nmap.TableViewOpenPorts
-		}
-
 		sortBy, _ := cmd.Flags().GetString("sort-by")
 		// no options specified
-		nmapView.PrintTable(sortBy, tableViewOptions)
+		nmapView.PrintTable(sortBy, viewOptions)
 
 	},
 }

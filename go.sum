@@ -16,8 +16,8 @@ github.com/alecthomas/repr v0.4.0 h1:GhI2A8MACjfegCPVq9f1FLvIBS+DrQ2KQBFZP1iFzXc
 github.com/alecthomas/repr v0.4.0/go.mod h1:Fr0507jx4eOXV7AlPV6AVZLYrLIuIeSOWtW57eE/O/4=
 github.com/analog-substance/ffufwrap v0.0.2 h1:b6kt11kKl/bDwm6HiDYGUzA71Ml8QeBeZuizLZg0PC0=
 github.com/analog-substance/ffufwrap v0.0.2/go.mod h1:kG9mlIG0acNoZKWeavfSTh0cG6deDTwytlC+fcNnVF8=
-github.com/analog-substance/nex v0.1.11 h1:OUqmtio+42DwYq+y25IFYi7oOv77fi2ClxI4idh9/dU=
-github.com/analog-substance/nex v0.1.11/go.mod h1:+JGVDbiKN/ZEbu5RMBgJcBXReAEtgNwMnJzksf7DGlg=
+github.com/analog-substance/nex v0.2.0 h1:GHqqEazzzwtllZ8+Wo+yuU6Kj3TQ8PQOIBjhSgiDtFo=
+github.com/analog-substance/nex v0.2.0/go.mod h1:+JGVDbiKN/ZEbu5RMBgJcBXReAEtgNwMnJzksf7DGlg=
 github.com/analog-substance/nmap/v3 v3.0.2 h1:wUiNkE/JiYTJmMEImPKptk7kXVJ+wwFu7TRZfgQEDRI=
 github.com/analog-substance/nmap/v3 v3.0.2/go.mod h1:PE2PY7j0w37MJdsa0kZDzCDc7L3ftVvBPU+P9mSUHgA=
 github.com/analog-substance/scopious v0.2.0 h1:Fl3MGA5iK8mzmHNlpu0uFgL8HcoTmiG8z6+D12+kHRU=
@@ -26,8 +26,8 @@ github.com/analog-substance/tengo/v2 v2.13.2 h1:9fEMlGn55P4wEZOReHLICDJchcauDYXy
 github.com/analog-substance/tengo/v2 v2.13.2/go.mod h1:C/tj9BF8bQ4j8IRKzEfHXSktCUvbSyYuP9xjDYMjkdQ=
 github.com/analog-substance/tengomod v0.6.1 h1:aq31B0EAvTxR1yt+ry7XEpctQv4daHzQAK95ItwnrS8=
 github.com/analog-substance/tengomod v0.6.1/go.mod h1:HoFcFxxLuI804oriBdJoCSKF3i0dwmCupBGUsXA+8fQ=
-github.com/analog-substance/util v1.0.8 h1:oMIfyUkGCsHzpgtFE4x8HvW4Fr+fe7YhzRUOBpGG7sc=
-github.com/analog-substance/util v1.0.8/go.mod h1:jzxxvad0YeU5jWV5lpk3aVuZUI4ogjhtQZxci2PceEs=
+github.com/analog-substance/util v1.1.0 h1:/8IYlRYCEQHuC36ZIzfD9i7sYsr0JAjYeJAydrdR7RI=
+github.com/analog-substance/util v1.1.0/go.mod h1:rBWsqdi8cyu56eH/qQSJpxbA4ZIpScXBtSj4+9CM81o=
 github.com/atotto/clipboard v0.1.4 h1:EH0zSVneZPSuFR11BlR9YppQTVDbh5+16AmcJi4g1z4=
 github.com/atotto/clipboard v0.1.4/go.mod h1:ZY9tmq7sm5xIbd9bOK4onWV4S6X0u6GY7Vn0Yu86PYI=
 github.com/aymanbagabas/go-osc52/v2 v2.0.1 h1:HwpRHbFMcZLEVr42D4p7XBqjyuxQH5SMiErDT4WkJ2k=

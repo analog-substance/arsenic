@@ -8,12 +8,12 @@ require (
 	github.com/NoF0rte/cmd-builder v0.0.0-20220305223538-e35bfeabbbff
 	github.com/NoF0rte/gocdp v0.0.12
 	github.com/ahmetb/go-linq/v3 v3.2.0
-	github.com/analog-substance/nex v0.1.11
+	github.com/analog-substance/nex v0.2.0
 	github.com/analog-substance/nmap/v3 v3.0.2
 	github.com/analog-substance/scopious v0.2.0
 	github.com/analog-substance/tengo/v2 v2.13.2
 	github.com/analog-substance/tengomod v0.6.1
-	github.com/analog-substance/util v1.0.8
+	github.com/analog-substance/util v1.1.0
 	github.com/bmatcuk/doublestar/v4 v4.7.1
 	github.com/charmbracelet/huh v0.6.0
 	github.com/gin-contrib/cors v1.7.2

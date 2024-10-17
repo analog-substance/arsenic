@@ -24,6 +24,7 @@ rootCmd.flags.stringp("file", "f", "", "file with targets to nmap")
 rootCmd.flags.intp("port-count", "p", 5000, "number of ports to scan")
 rootCmd.flags.intp("batch", "b", 1, "what batch to scan (1 = ports 1-[port-count], 2 = [port-count + 1] - [port-count * batch])")
 rootCmd.flags.boolp("udp", "U", false, "do a UDP port scan")
+rootCmd.flags.boolp("rerun", "R", false, "Rerun option for arsenic capture")
 
 rootCmd.set_run(func(cmd, args) {
   getNmapPortsByPopularityCmd := "sort -r -k3 /usr/share/nmap/nmap-services | awk '{print $2}' | grep '/tcp' | cut -d/ -f1"
@@ -33,6 +34,7 @@ rootCmd.set_run(func(cmd, args) {
   ports := cmd.flags.get_int("port-count")
   startBatch := cmd.flags.get_int("batch")
   isUDPScan := cmd.flags.get_bool("udp")
+  rerun := cmd.flags.get_bool("rerun")
 
   
   if targetsFile == "" || !filepath.file_exists(targetsFile) {
@@ -124,11 +126,18 @@ rootCmd.set_run(func(cmd, args) {
 
     tackP := format("-p%s", portArg)
 
-    nmapCmd := [
+    arsenicCaptureParams := [
       "arsenic",
       "capture",
       "-s",
-      scope,
+      scope
+    ]
+
+    if rerun {
+      arsenicCaptureParams = append(arsenicCaptureParams, "-R")
+    }
+
+    nmapCmdParams := [
       "--",
       "nmap",
       "--max-rtt-timeout",
@@ -143,6 +152,7 @@ rootCmd.set_run(func(cmd, args) {
       targetsFile
     ]
 
+    nmapCmd := append(arsenicCaptureParams, nmapCmdParams...)
     nmapCmd = append(nmapCmd, scanParams...)
 
     if excludePortArg != "" {
