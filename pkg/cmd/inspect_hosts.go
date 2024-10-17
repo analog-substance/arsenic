@@ -3,7 +3,9 @@ package cmd
 import (
 	"fmt"
 	"github.com/analog-substance/nex/pkg/nmap"
+	"github.com/analog-substance/scopious/pkg/scopious"
 	"github.com/spf13/cobra"
+	"net"
 	"os"
 	"path/filepath"
 )
@@ -23,7 +25,10 @@ var inspectHostsCmd = &cobra.Command{
 		openOnly, _ := cmd.Flags().GetBool("open")
 		upOnly, _ := cmd.Flags().GetBool("up")
 
-		files, err := filepath.Glob(fmt.Sprintf("data/%s/output/nmap/*/*.xml", scopeDir))
+		scoper := scopious.FromPath("data")
+		scope := scoper.GetScope(scopeDir)
+
+		files, err := filepath.Glob(filepath.Join(scope.Path, "output", "nmap", "*", "*.xml"))
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
@@ -33,18 +38,28 @@ var inspectHostsCmd = &cobra.Command{
 			check(fmt.Errorf("no files found"))
 		}
 
-		var opts []nmap.Option
-		if upOnly {
-			opts = append(opts, nmap.WithUpOnly())
-		}
-		if openOnly {
-			opts = append(opts, nmap.WithOpenOnly())
-		}
-
-		run, err := nmap.XMLMerge(files, opts...)
+		run, err := nmap.XMLMerge(files, []nmap.Option{}...)
 		check(err)
 
 		nmapView := nmap.NewNmapView(run)
+
+		nmapView.SetFilter(func(hostnames []string, ips []string) bool {
+			for _, hostname := range hostnames {
+				if !scope.IsDomainInScope(hostname, false) {
+					return false
+				}
+			}
+			for _, ip := range ips {
+				ip := net.ParseIP(ip)
+				if ip == nil {
+					continue
+				}
+				if !scope.IsIPInScope(&ip, false) {
+					return false
+				}
+			}
+			return true
+		})
 
 		if jsonOutput {
 			err = nmapView.PrintJSON()
@@ -84,6 +99,13 @@ var inspectHostsCmd = &cobra.Command{
 			tableViewOptions = tableViewOptions | nmap.TableViewPrivate
 		}
 
+		if upOnly {
+			tableViewOptions = tableViewOptions | nmap.TableViewAliveHosts
+		}
+		if openOnly {
+			tableViewOptions = tableViewOptions | nmap.TableViewOpenPorts
+		}
+
 		sortBy, _ := cmd.Flags().GetString("sort-by")
 		// no options specified
 		nmapView.PrintTable(sortBy, tableViewOptions)
@@ -94,7 +116,7 @@ var inspectHostsCmd = &cobra.Command{
 func init() {
 	inspectCmd.AddCommand(inspectHostsCmd)
 
-	inspectHostsCmd.Flags().String("sort-by", "Name;asc", "Sort by the specified column. Format: column[;(asc|dsc)]")
+	inspectHostsCmd.Flags().String("sort-by", "hostnames;asc", "Sort by the specified column. Format: column[;(asc|dsc)]")
 	inspectHostsCmd.Flags().Bool("open", false, "Show only hosts with open ports")
 	inspectHostsCmd.Flags().Bool("up", false, "Show only hosts that are up")
 	inspectHostsCmd.Flags().Bool("hostnames", false, "Just list hostnames")

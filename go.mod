@@ -8,7 +8,7 @@ require (
 	github.com/NoF0rte/cmd-builder v0.0.0-20220305223538-e35bfeabbbff
 	github.com/NoF0rte/gocdp v0.0.12
 	github.com/ahmetb/go-linq/v3 v3.2.0
-	github.com/analog-substance/nex v0.1.10
+	github.com/analog-substance/nex v0.1.11
 	github.com/analog-substance/nmap/v3 v3.0.2
 	github.com/analog-substance/scopious v0.1.14
 	github.com/analog-substance/tengo/v2 v2.13.2
@@ -16,7 +16,6 @@ require (
 	github.com/analog-substance/util v1.0.8
 	github.com/bmatcuk/doublestar/v4 v4.7.1
 	github.com/charmbracelet/huh v0.6.0
-	github.com/charmbracelet/lipgloss v0.13.0
 	github.com/gin-contrib/cors v1.7.2
 	github.com/gin-gonic/gin v1.10.0
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
@@ -43,6 +42,7 @@ require (
 	github.com/charmbracelet/bubbles v0.20.0 // indirect
 	github.com/charmbracelet/bubbletea v1.1.1 // indirect
 	github.com/charmbracelet/glamour v0.8.0 // indirect
+	github.com/charmbracelet/lipgloss v0.13.0 // indirect
 	github.com/charmbracelet/x/ansi v0.3.2 // indirect
 	github.com/charmbracelet/x/exp/strings v0.0.0-20241016014612-3b4d04043233 // indirect
 	github.com/charmbracelet/x/term v0.2.0 // indirect
