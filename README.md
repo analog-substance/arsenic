@@ -1,7 +1,12 @@
-# Arsenic [as]
+---
+title: Arsenic
+linkTitle: Docs
+menu: {main: {weight: 20}}
+---
+> Conventions and automation for offensive operations.
+> https://analog-substance.github.io/arsenic/
 
-Now with moar go!!!
-*******
+## Purpose
 
 Arsenic aims to set conventions around how pentest data is stored. It is nothing more than a directory structure and file naming conventions. By itself it is nothing fancy, but when combined with things like [arsenic-hugo](https://github.com/analog-substance/arsenic-hugo), it should make operations fun again!
 
@@ -118,11 +123,11 @@ To start an op, run the following:
 ```bash
 arsenic init op_name
 ```
-![Arsenic Init Example](docs/examples/arsenic-init.gif)
+![Arsenic Init Example](/docs/examples/arsenic-init.gif)
 
 #### Customization
 
-If you want to customize the op creation process for whatever reason, there are two ways to do so. The first is by adding custom scripts to the `scripts.init` section of the config file located in your home directory. Refer to the "[Adding Custom Scripts](docs/config.md#adding-custom-scripts)" section of the config documentation for more information.
+If you want to customize the op creation process for whatever reason, there are two ways to do so. The first is by adding custom scripts to the `scripts.init` section of the config file located in your home directory. Refer to the "[Adding Custom Scripts](docs/docs/config.md#adding-custom-scripts)" section of the config documentation for more information.
 
 The second way is by creating an init hook script. The `arsenic init` command will run `as-init-op.sh` scripts located at `opt/*/scripts`, where the opt directory is where the Arsenic repository is located. Assuming the Arsenic repository is located at `$HOME/opt/arsenic`, create a script at `$HOME/opt/custom-arsenic/scripts/as-init-op.sh`. Anything in this script will execute when running `arsenic init`.
 
@@ -137,13 +142,13 @@ echo 127.0.0.1 >> scope-ips.txt
 
 After the scope has been filled out, we can now run `arsenic discover` which will use the scope to discover subdomains and IP addresses using various tools/services.
 
-![Arsenic Discover](docs/examples/arsenic-discover.gif)
+![Arsenic Discover](docs/example/arsenic-discover.gif)
 
 To see everything that was discovered, run `arsenic scope`
 
-![Arsenic Discover Scope](docs/examples/arsenic-discover-scope.gif)
+![Arsenic Discover Scope](docs/example/arsenic-discover-scope.gif)
 
-There may be subdomains and IPs that were discovered but that are not in scope. Refer to the [blacklist](docs/config.md#blacklist) section of the config documentation for more information on how to update the blacklisted domains and IPs. If you do want to re-run the `discover` command after updating the blacklist, remove the `scope-domains-*` and `scope-ips-*` files along with the `recon/domains/*` and `recon/ips/*` directories.
+There may be subdomains and IPs that were discovered but that are not in scope. Refer to the [blacklist](docs/docs/config.md#blacklist) section of the config documentation for more information on how to update the blacklisted domains and IPs. If you do want to re-run the `discover` command after updating the blacklist, remove the `scope-domains-*` and `scope-ips-*` files along with the `recon/domains/*` and `recon/ips/*` directories.
 
 Now that we have discovered more subdomains and IPs, we can use Arsenic to analyze the data and group the hosts by common IP.
 
@@ -151,7 +156,7 @@ Now that we have discovered more subdomains and IPs, we can use Arsenic to analy
 arsenic analyze -c
 ```
 
-![Arsenic Analyze](docs/examples/arsenic-analyze.gif)
+![Arsenic Analyze](docs/example/arsenic-analyze.gif)
 
 This will create your directories in `hosts/`. Now you can run.
 
@@ -165,15 +170,15 @@ This will probably take a while... but when its done you should have port scans,
 
 ### Config
 
-Refer to the [config](docs/config.md) documentation for more information.
+Refer to the [config](docs/docs/config.md) documentation for more information.
 
 ### Tengo Scripting
 Currently some of the arsenic scripts are written in the [tengo](https://github.com/d5/tengo) scripting language. These scripts use tengo builtin functions and modules along with custom functions and modules only available to arsenic scripts.
 
 #### References
-- [Standard Library](docs/tengo/stdlib.md)
-- [Builtin Functions](docs/tengo/builtin.md)
-- [Scripting with Arsenic](docs/tengo/scripting.md)
+- [Standard Library](docs/docs/tengo/stdlib.md)
+- [Builtin Functions](docs/docs/tengo/builtin.md)
+- [Scripting with Arsenic](docs/docs/tengo/scripting.md)
 
 ## Collaboration
 

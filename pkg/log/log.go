@@ -17,7 +17,7 @@ func Logger() *slog.Logger {
 }
 
 func WithGroup(groupName string) *slog.Logger {
-	return logger.With(slog.Group("carbon", slog.String("pkg", groupName)))
+	return logger.With(slog.Group("arsenic", slog.String("pkg", groupName)))
 }
 
 func LogLevel(level slog.Level) {

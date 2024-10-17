@@ -8,5 +8,15 @@ test-op
 dist/
 data
 /arsenic
-/tmp/tmp
 /tmp
+
+.hugo/public
+.hugo/resources/
+node_modules/# Ignore packer output directories
+output-*
+
+overrides.yaml
+test/
+node_modules/
+.hugo_build.lock
+scratch
