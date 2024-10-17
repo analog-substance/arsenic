@@ -26,12 +26,12 @@ func init() {
 	logger = log.WithGroup("capture")
 }
 
-func InteractiveRun(scopeDir string, cmdSlice []string) {
+func InteractiveRun(scopeDir string, cmdSlice []string, rerun bool) {
 	cmdToRun := cmdSlice[0]
 	cmdArgs := cmdSlice[1:]
 	wrappedCmd := NewWrappedCommand(scopeDir, cmdToRun, cmdArgs)
 
-	err := wrappedCmd.Run()
+	err := wrappedCmd.Run(rerun)
 	if err != nil {
 		logger.Error("failed to run command", "err", err)
 	}
@@ -166,17 +166,18 @@ func (wc *WrappedCommand) GetRuns() []*WrappedOutput {
 	return wc.Runs
 }
 
-func (wc *WrappedCommand) Run() error {
-
-	shouldContinue, err := wc.MaybeAskToRerun()
-	if err != nil {
-		return err
+func (wc *WrappedCommand) Run(rerun bool) error {
+	if !rerun {
+		shouldContinue, err := wc.MaybeAskToRerun()
+		if err != nil {
+			return err
+		}
+		if !shouldContinue {
+			return fmt.Errorf("did not want to re-run command: %s %s", wc.Command, wc.Path)
+		}
 	}
-	if !shouldContinue {
-		return fmt.Errorf("did not want to re-run command: %s %s", wc.Command, wc.Path)
-	}
 
-	err = os.MkdirAll(wc.Path, 0755)
+	err := os.MkdirAll(wc.Path, 0755)
 	if err != nil {
 		return err
 	}
@@ -184,7 +185,12 @@ func (wc *WrappedCommand) Run() error {
 	filename := fmt.Sprintf("%d", time.Now().Unix())
 	logger.Debug("capture file", "fileName", filename)
 
-	input := wc.GetInputNotUsedYet()
+	var input []string
+	if rerun {
+		input = wc.getInput()
+	} else {
+		input = wc.GetInputNotUsedYet()
+	}
 	inputFile := wc.getPathFor(filename, "input")
 	if len(input) > 0 {
 		logger.Debug("input for command", "input", input)

@@ -13,11 +13,13 @@ var captureCmd = &cobra.Command{
 	Long:    `capture exec`,
 	Run: func(cmd *cobra.Command, args []string) {
 		scopeDir, _ := cmd.Flags().GetString("scope-dir")
-		capture.InteractiveRun(scopeDir, args)
+		rerun, _ := cmd.Flags().GetBool("rerun")
+		capture.InteractiveRun(scopeDir, args, rerun)
 	},
 }
 
 func init() {
 	RootCmd.AddCommand(captureCmd)
 	captureCmd.Flags().StringP("scope-dir", "s", scopious.DefaultScope, "Scope dir to use")
+	captureCmd.Flags().BoolP("rerun", "R", false, "Rerun")
 }
