@@ -18,6 +18,8 @@ github.com/analog-substance/ffufwrap v0.0.2 h1:b6kt11kKl/bDwm6HiDYGUzA71Ml8QeBeZ
 github.com/analog-substance/ffufwrap v0.0.2/go.mod h1:kG9mlIG0acNoZKWeavfSTh0cG6deDTwytlC+fcNnVF8=
 github.com/analog-substance/nex v0.2.0 h1:GHqqEazzzwtllZ8+Wo+yuU6Kj3TQ8PQOIBjhSgiDtFo=
 github.com/analog-substance/nex v0.2.0/go.mod h1:+JGVDbiKN/ZEbu5RMBgJcBXReAEtgNwMnJzksf7DGlg=
+github.com/analog-substance/nex v0.2.3 h1:w09Aex7vNWyKKeNmqG2zIiybxody5CoW/4uAU4X4uK8=
+github.com/analog-substance/nex v0.2.3/go.mod h1:AKBSvSyaspSsXHgowH22pYhoozstPQUItWNFGM7pY7s=
 github.com/analog-substance/nmap/v3 v3.0.2 h1:wUiNkE/JiYTJmMEImPKptk7kXVJ+wwFu7TRZfgQEDRI=
 github.com/analog-substance/nmap/v3 v3.0.2/go.mod h1:PE2PY7j0w37MJdsa0kZDzCDc7L3ftVvBPU+P9mSUHgA=
 github.com/analog-substance/scopious v0.2.0 h1:Fl3MGA5iK8mzmHNlpu0uFgL8HcoTmiG8z6+D12+kHRU=
