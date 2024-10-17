@@ -1,5 +1,5 @@
 ---
-title: Wrapture
+title: Capture
 description: capture exec
 ---
 
@@ -8,13 +8,13 @@ description: capture exec
 capture exec
 
 ```
-arsenic wrapture [flags]
+arsenic capture [flags]
 ```
 
 ## Options
 
 ```
-  -h, --help               help for wrapture
+  -h, --help               help for capture
   -s, --scope-dir string   Scope dir to use (default "default")
 ```
 

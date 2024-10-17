@@ -10,7 +10,15 @@ arsenic inspect hosts [flags]
 ## Options
 
 ```
-  -h, --help   help for hosts
+  -h, --help             help for hosts
+      --hostnames        Just list hostnames
+      --ips              Just list IP addresses
+      --json             Print JSON
+      --open             Show only hosts with open ports
+      --private          Only show hosts with private IPs
+      --public           Only show hosts with public IPs
+      --sort-by string   Sort by the specified column. Format: column[;(asc|dsc)] (default "hostnames;asc")
+      --up               Show only hosts that are up
 ```
 
 ## Options inherited from parent commands

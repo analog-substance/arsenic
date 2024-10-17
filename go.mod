@@ -10,7 +10,7 @@ require (
 	github.com/ahmetb/go-linq/v3 v3.2.0
 	github.com/analog-substance/nex v0.1.11
 	github.com/analog-substance/nmap/v3 v3.0.2
-	github.com/analog-substance/scopious v0.1.14
+	github.com/analog-substance/scopious v0.2.0
 	github.com/analog-substance/tengo/v2 v2.13.2
 	github.com/analog-substance/tengomod v0.6.1
 	github.com/analog-substance/util v1.0.8

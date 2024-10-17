@@ -4,8 +4,6 @@ import (
 	"fmt"
 
 	"github.com/analog-substance/arsenic/pkg/scope"
-	scopiousCmd "github.com/analog-substance/scopious/pkg/cmd"
-
 	"github.com/spf13/cobra"
 )
 
@@ -27,7 +25,4 @@ var scopeCmd = &cobra.Command{
 
 func init() {
 	RootCmd.AddCommand(scopeCmd)
-
-	scopiousCmd.RootCmd.Use = "dev-scope"
-	RootCmd.AddCommand(scopiousCmd.RootCmd)
 }
