@@ -8,6 +8,7 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"slices"
 )
 
 // inspectHostsCmd represents the ingest command
@@ -17,6 +18,7 @@ var inspectHostsCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		scopeDir, _ := cmd.Flags().GetString("scope-dir")
 
+		includeThings, _ := cmd.Flags().GetStringSlice("include")
 		includePublic, _ := cmd.Flags().GetBool("public")
 		includePrivate, _ := cmd.Flags().GetBool("private")
 		listIPs, _ := cmd.Flags().GetBool("ips")
@@ -59,6 +61,19 @@ var inspectHostsCmd = &cobra.Command{
 				if !scope.IsIPInScope(&ip, false) {
 					return false
 				}
+			}
+
+			if len(includeThings) > 0 {
+				for _, include := range includeThings {
+					if slices.Contains(hostnames, include) {
+						return true
+					}
+
+					if slices.Contains(ips, include) {
+						return true
+					}
+				}
+				return false
 			}
 			return true
 		})
