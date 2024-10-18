@@ -24,6 +24,7 @@ var inspectHostsCmd = &cobra.Command{
 		jsonOutput, _ := cmd.Flags().GetBool("json")
 		openOnly, _ := cmd.Flags().GetBool("open")
 		upOnly, _ := cmd.Flags().GetBool("up")
+		noTCPWrapped, _ := cmd.Flags().GetBool("no-tcpwrapped")
 
 		scoper := scopious.FromPath("data")
 		scope := scoper.GetScope(scopeDir)
@@ -78,6 +79,9 @@ var inspectHostsCmd = &cobra.Command{
 		if openOnly {
 			viewOptions = viewOptions | nmap.ViewOpenPorts
 		}
+		if noTCPWrapped {
+			viewOptions = viewOptions | nmap.IgnoreTCPWrapped
+		}
 
 		if jsonOutput {
 			err = nmapView.PrintJSON(viewOptions)
@@ -114,6 +118,7 @@ func init() {
 	inspectHostsCmd.Flags().Bool("ips", false, "Just list IP addresses")
 	inspectHostsCmd.Flags().Bool("private", false, "Only show hosts with private IPs")
 	inspectHostsCmd.Flags().Bool("public", false, "Only show hosts with public IPs")
+	inspectHostsCmd.Flags().Bool("no-tcpwrapped", false, "Do not show ports that are tcpwrapped")
 	inspectHostsCmd.Flags().Bool("json", false, "Print JSON")
 }
 
