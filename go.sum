@@ -16,8 +16,8 @@ github.com/alecthomas/repr v0.4.0 h1:GhI2A8MACjfegCPVq9f1FLvIBS+DrQ2KQBFZP1iFzXc
 github.com/alecthomas/repr v0.4.0/go.mod h1:Fr0507jx4eOXV7AlPV6AVZLYrLIuIeSOWtW57eE/O/4=
 github.com/analog-substance/ffufwrap v0.0.2 h1:b6kt11kKl/bDwm6HiDYGUzA71Ml8QeBeZuizLZg0PC0=
 github.com/analog-substance/ffufwrap v0.0.2/go.mod h1:kG9mlIG0acNoZKWeavfSTh0cG6deDTwytlC+fcNnVF8=
-github.com/analog-substance/nex v0.2.6 h1:EptMjyCgn0pv2BcZ4Jn4uxJEs5HLVbsnq1trqD+EgxE=
-github.com/analog-substance/nex v0.2.6/go.mod h1:AKBSvSyaspSsXHgowH22pYhoozstPQUItWNFGM7pY7s=
+github.com/analog-substance/nex v0.2.9 h1:p15yHLK5f5qi7yjNLjNLd/eTw4OMAUkUFBbSep/B4L0=
+github.com/analog-substance/nex v0.2.9/go.mod h1:AKBSvSyaspSsXHgowH22pYhoozstPQUItWNFGM7pY7s=
 github.com/analog-substance/nmap/v3 v3.0.2 h1:wUiNkE/JiYTJmMEImPKptk7kXVJ+wwFu7TRZfgQEDRI=
 github.com/analog-substance/nmap/v3 v3.0.2/go.mod h1:PE2PY7j0w37MJdsa0kZDzCDc7L3ftVvBPU+P9mSUHgA=
 github.com/analog-substance/scopious v0.2.2 h1:SmxGdWNYO+gitSmwfuBYD2Kq87Teeak5s4xfhybxKao=
