@@ -14,7 +14,7 @@ require (
 	github.com/analog-substance/tengo/v2 v2.13.2
 	github.com/analog-substance/tengomod v0.6.1
 	github.com/analog-substance/util v1.1.0
-	github.com/bmatcuk/doublestar/v4 v4.8.0
+	github.com/bmatcuk/doublestar/v4 v4.8.1
 	github.com/charmbracelet/huh v0.6.0
 	github.com/gin-contrib/cors v1.7.3
 	github.com/gin-gonic/gin v1.10.0
