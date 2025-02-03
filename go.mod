@@ -13,7 +13,7 @@ require (
 	github.com/analog-substance/scopious v0.2.2
 	github.com/analog-substance/tengo/v2 v2.13.2
 	github.com/analog-substance/tengomod v0.6.1
-	github.com/analog-substance/util v1.1.0
+	github.com/analog-substance/util v1.1.3
 	github.com/bmatcuk/doublestar/v4 v4.8.1
 	github.com/charmbracelet/huh v0.6.0
 	github.com/gin-contrib/cors v1.7.3
@@ -23,7 +23,7 @@ require (
 	github.com/reapertechlabs/go_nessus v0.1.2
 	github.com/ryanuber/columnize v2.1.2+incompatible
 	github.com/spf13/cobra v1.8.1
-	github.com/spf13/pflag v1.0.5
+	github.com/spf13/pflag v1.0.6
 	github.com/spf13/viper v1.19.0
 	golang.org/x/net v0.34.0
 	gopkg.in/yaml.v2 v2.4.0
@@ -43,7 +43,7 @@ require (
 	github.com/charmbracelet/bubbletea v1.2.4 // indirect
 	github.com/charmbracelet/glamour v0.8.0 // indirect
 	github.com/charmbracelet/lipgloss v1.0.0 // indirect
-	github.com/charmbracelet/x/ansi v0.6.0 // indirect
+	github.com/charmbracelet/x/ansi v0.8.0 // indirect
 	github.com/charmbracelet/x/exp/strings v0.0.0-20250113133550-1814328524c0 // indirect
 	github.com/charmbracelet/x/term v0.2.1 // indirect
 	github.com/cloudwego/base64x v0.1.4 // indirect
