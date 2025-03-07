@@ -199,7 +199,7 @@ Port:
 		if len(protocols) > 0 {
 			hostURLs := set.NewSet("")
 			for _, host := range hosts {
-				hostURLs.AddRange(host.URLs())
+				hostURLs.AddRange(host.Metadata.URLs)
 			}
 
 			validHostURLs := set.NewSet("")

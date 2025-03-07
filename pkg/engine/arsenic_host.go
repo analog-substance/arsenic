@@ -2,9 +2,10 @@ package engine
 
 import (
 	"fmt"
-	"github.com/analog-substance/util/fileutil"
 	"path/filepath"
 	"strings"
+
+	"github.com/analog-substance/util/fileutil"
 
 	"github.com/NoF0rte/gocdp"
 	"github.com/analog-substance/arsenic/pkg/host"
@@ -46,7 +47,7 @@ func (h *ArsenicHost) urls(args interop.ArgMap) (tengo.Object, error) {
 	}
 
 	var urls []string
-	for _, hostURL := range h.Value.URLs() {
+	for _, hostURL := range h.Value.Metadata.URLs {
 		for _, proto := range protocols {
 			if strings.HasPrefix(hostURL, proto) || proto == "all" {
 				urls = append(urls, hostURL)

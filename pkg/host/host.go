@@ -53,6 +53,7 @@ type Metadata struct {
 	TCPPorts    []int
 	UDPPorts    []int
 	Ports       []Port
+	URLs        []string
 	ReviewedBy  string
 	existing    string
 	changed     bool
@@ -296,6 +297,8 @@ func (h *Host) SyncMetadata(options SyncOptions) error {
 	metadata.TCPPorts = tcpPorts
 	metadata.UDPPorts = udpPorts
 
+	metadata.URLs = h.URLs()
+
 	return nil
 }
 
@@ -396,6 +399,16 @@ func (host Host) Hostnames() []string {
 
 func (host Host) URLs() []string {
 	urlSet := set.NewStringSet()
+
+	httpxFile := filepath.Join(host.Dir, "recon/httpx.txt")
+	hasHttpx := fileutil.FileExists(httpxFile)
+	if hasHttpx {
+		urls, err := fileutil.ReadLines(httpxFile)
+		if err == nil {
+			urlSet.AddRange(urls)
+		}
+	}
+
 	httpProtocolRe := regexp.MustCompile(`^https?`)
 	for _, port := range host.Metadata.Ports {
 		proto := port.Service
@@ -413,9 +426,13 @@ func (host Host) URLs() []string {
 			urlPort = ""
 		}
 
-		urlSet.Add(fmt.Sprintf("%s://%s%s", proto, host.Metadata.Name, urlPort))
+		// Only add HTTP(S) URLs if httpx doesn't exist
+		// httpx is a lot better at determining HTTP ports than nmap
+		if !strings.HasPrefix(proto, "http") || !hasHttpx {
+			urlSet.Add(fmt.Sprintf("%s://%s%s", proto, host.Metadata.Name, urlPort))
+		}
 
-		if strings.HasPrefix(proto, "http") {
+		if strings.HasPrefix(proto, "http") && !hasHttpx {
 			// we have an http or https port, we should loop through hostnames
 			for _, hostname := range host.Metadata.Hostnames {
 				urlSet.Add(fmt.Sprintf("%s://%s%s", proto, hostname, urlPort))
@@ -879,6 +896,7 @@ func defaultMetadata() Metadata {
 		TCPPorts:    []int{},
 		UDPPorts:    []int{},
 		Ports:       []Port{},
+		URLs:        []string{},
 		ReviewedBy:  "",
 	}
 }

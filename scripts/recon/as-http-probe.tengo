@@ -1,0 +1,161 @@
+#!/usr/bin/env arsenic
+
+fmt := import("fmt")
+text := import("text")
+os := import("os")
+filepath := import("filepath")
+slice := import("slice")
+arsenic := import("arsenic")
+scope := import("scope")
+script := import("script")
+log := import("log")
+git := import("git")
+set := import("set")
+cobra := import("cobra")
+wordlist := import("wordlist")
+os2 := import("os2")
+exec := import("exec")
+
+flags := []
+
+getHosts := func(flags) {
+	hosts := []
+	allHosts := arsenic.hosts(flags)
+	check_err(allHosts)
+
+	for host in allHosts {
+		exists := host.file_exists(filepath.from_slash("recon/httpx.txt"))
+		if exists || len(host.tcp_ports) == 0 {
+			continue
+		}
+
+		hosts = append(hosts, host)
+	}
+
+	return hosts
+}
+
+rootCmd := cobra.root_cmd(script.name, "Run HTTP probes to discover web services")
+rootCmd.persistent_flags.string_slicep("flags", "f", [], "Filter hosts by flags")
+rootCmd.add_disable_git_flag()
+
+rootCmd.set_persistent_pre_run(func(cmd, args) {
+	flags = cmd.flags.get_string_slice("flags")
+})
+
+listCmd := cobra.cmd("list", "Lists the hosts that need probed")
+rootCmd.add_command(listCmd)
+
+listCmd.set_run(func(cmd, args) {
+	hosts := getHosts(flags)
+	for h in hosts {
+		fmt.println(h)
+	}
+})
+
+scanCmd := cobra.cmd("scan", "Scan hosts that need probed")
+scanCmd.flags.stringp("host", "H", "", "Host to scan.")
+scanCmd.flags.stringp("proxy", "x", "", "Proxy URL (SOCKS5 or HTTP). For example: http://127.0.0.1:8080 or socks5://127.0.0.1:8080")
+rootCmd.add_command(scanCmd)
+rootCmd.set_run(scanCmd)
+
+scanCmd.set_run(func(cmd, args) {
+	if is_error(os.exec_look_path("httpx")) {
+		log.warn("httpx not installed")
+		return
+	}
+
+	targetHost := undefined
+	targetHostName := cmd.flags.get_string("host")
+	proxy := cmd.flags.get_string("proxy")
+
+	manual := targetHostName != ""
+
+	autoSelect := func() {
+		targetHost = slice.rand_item(getHosts(flags))
+		if !targetHost {
+			files := arsenic.locked_files("hosts/*/recon/httpx.txt")
+			check_err(files)
+
+			if len(files) > 0 {
+				log.warn("other HTTP probes are still running... lets wait before continuing")
+				script.stop()
+			}
+
+			script.stop("No host found")
+		}
+		
+		log.warn(format("Auto selected %s", targetHost.name))
+		}
+
+		scanHost := func(host) {
+		if !host {
+			return
+		}
+
+		if len(host.tcp_ports) == 0 {
+			log.msg(format("HTTP Probe / %s / no ports - skipping", host.name))
+			return
+		}
+
+		log.msg(format("HTTP Probe / %s / checking", host.name))
+
+		err := os2.temp_chdir(host.dir, func() {
+			reconPath := "recon"
+			os.mkdir_all(reconPath, 0755)
+
+			outputPath := filepath.join(reconPath, "httpx.txt")
+			if host.file_exists(outputPath) {
+				return
+			}
+
+			log.info(format("HTTP Probe / %s / preparing", host.name))
+
+			err := git.lock(outputPath, format("HTTP probe lock: %s", host.name))
+			check_err(err)
+
+			log.info(format("HTTP Probe / %s / running", host.name))
+
+			httpxArgs := ["httpx", "-o", outputPath]
+			if proxy != "" {
+				httpxArgs = append(httpxArgs, "-proxy", proxy)
+			}
+
+			for hostname in host.hostnames {
+				for port in host.tcp_ports {
+					httpxArgs = append(httpxArgs, "-u", format("%s:%d", hostname, port.port))
+				}
+			}
+
+			err = exec.run_with_sig_handler(httpxArgs...)
+			check_err(err)
+
+			err = git.commit(".", format("HTTP probe complete: %s", host.name))
+			check_err(err)
+
+			log.info(format("HTTP Probe / %s / complete", host.name))
+		})
+	}
+
+	if manual {
+		targetHost = arsenic.host(targetHostName)
+		check_err(targetHost)
+	} else {
+		log.warn("no args found, autodetecting")
+
+		autoSelect()
+	}
+
+	for {
+		scanHost(targetHost)
+
+		if manual {
+			break
+		}
+
+		autoSelect()
+	}
+})
+
+err := rootCmd()
+check_err(err)
