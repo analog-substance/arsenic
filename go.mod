@@ -16,7 +16,7 @@ require (
 	github.com/analog-substance/util v1.1.5
 	github.com/bmatcuk/doublestar/v4 v4.8.1
 	github.com/charmbracelet/huh v0.6.0
-	github.com/gin-contrib/cors v1.7.3
+	github.com/gin-contrib/cors v1.7.4
 	github.com/gin-gonic/gin v1.10.0
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/mitchellh/go-homedir v1.1.0
