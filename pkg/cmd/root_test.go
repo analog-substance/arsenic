@@ -36,7 +36,7 @@ func Test_executePhaseScripts(t *testing.T) {
 				phase := config.Phase{
 					Scripts: map[string]config.Script{
 						"script-1": {
-							Script:  "../../../tests/lib/util/normal.sh",
+							Script:  "../../tests/lib/util/normal.sh",
 							Enabled: true,
 							Order:   1,
 							Count:   1,
@@ -58,7 +58,7 @@ func Test_executePhaseScripts(t *testing.T) {
 				phase := config.Phase{
 					Scripts: map[string]config.Script{
 						"script-1": {
-							Script:  "../../../tests/lib/util/exit-255.sh",
+							Script:  "../../tests/lib/util/exit-255.sh",
 							Enabled: true,
 							Order:   1,
 							Count:   1,
@@ -72,7 +72,7 @@ func Test_executePhaseScripts(t *testing.T) {
 				phase: "test",
 			},
 			statusWant: false,
-			scriptWant: "../../../tests/lib/util/exit-255.sh",
+			scriptWant: "../../tests/lib/util/exit-255.sh",
 		},
 	}
 	for _, tt := range tests {
@@ -103,7 +103,7 @@ func TestExecScript(t *testing.T) {
 			name: "Exit 0",
 			args: args{
 				script: config.Script{
-					Script: "../../../tests/lib/util/normal.sh",
+					Script: "../../tests/lib/util/normal.sh",
 				},
 			},
 			wantErr: false,
@@ -112,7 +112,7 @@ func TestExecScript(t *testing.T) {
 			name: "Exit 255",
 			args: args{
 				script: config.Script{
-					Script: "../../../tests/lib/util/exit-255.sh",
+					Script: "../../tests/lib/util/exit-255.sh",
 				},
 			},
 			wantErr: true,
