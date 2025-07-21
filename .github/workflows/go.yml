@@ -19,7 +19,7 @@ jobs:
           go-version: '1.23'
 
       - name: TruffleHog OSS
-        uses: trufflesecurity/trufflehog@90190deac64289cb10bb694894be8db9ead8790b # v3.88.29
+        uses: trufflesecurity/trufflehog@907ac64fd42b18dab2ceba2fda39834d3f8ba7e3 # v3.90.1
         with:
           extra_args: --results=verified,unknown
 
