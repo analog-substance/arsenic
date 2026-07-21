@@ -1,7 +1,8 @@
 #! /bin/bash
 DOMAIN=$1
+mkdir -p "recon/domains/$DOMAIN"
 
-curl -s 'https://crt.sh/?q=%25.'$DOMAIN \
+curl -s 'https://crt.sh/json?q=%25.'$DOMAIN \
 	-H 'authority: crt.sh' \
 	-H 'cache-control: max-age=0' \
 	-H 'dnt: 1' \
@@ -15,10 +16,8 @@ curl -s 'https://crt.sh/?q=%25.'$DOMAIN \
 	-H 'accept-encoding: gzip, deflate, br' \
 	-H 'accept-language: en-US,en;q=0.9' \
   --compressed \
-	| grep "$DOMAIN" \
-	| grep "TD" \
-	| grep -v "outer"\
-	| sed 's/\s*<\/\?TD>//g' \
-	| sed 's/<BR>/\n/g' \
-	| sed 's/^\*\.//g' \
-	| sort -u
+	| tee "recon/domains/$DOMAIN/crtsh.json" \
+	| jq '.[] | .common_name, .name_value ' -r \
+	| sed 's/\*\.//' \
+	| sort -u \
+	| grep "$DOMAIN"
